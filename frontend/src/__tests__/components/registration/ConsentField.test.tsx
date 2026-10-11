@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ConsentField } from "@/components/registration/ConsentField";
@@ -6,6 +6,8 @@ import { ConsentField } from "@/components/registration/ConsentField";
 vi.setConfig({ testTimeout: 15_000 });
 
 const ERROR = "Você deve aceitar os termos para continuar.";
+const READ_TEXT_BUTTON = "Ler o texto completo";
+const DIALOG_TITLE = "Termos de Uso e Política de Privacidade";
 
 function renderField(props: Partial<Parameters<typeof ConsentField>[0]> = {}) {
   const onChange = vi.fn();
@@ -72,5 +74,45 @@ describe("ConsentField", () => {
     renderField();
 
     expect(screen.queryByText(ERROR)).toBeNull();
+  });
+
+  it("opens the full text dialog with both texts without checking the checkbox", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { onChange } = renderField();
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+
+    await user.click(screen.getByRole("button", { name: READ_TEXT_BUTTON }));
+
+    expect(screen.getByRole("dialog", { name: DIALOG_TITLE })).toBeTruthy();
+    expect(screen.getByText(/Dúvidas sobre estes termos/)).toBeTruthy();
+    expect(screen.getByText(/Encarregado pelo tratamento de dados/)).toBeTruthy();
+    expect(checkbox.checked).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("closes the dialog with the Fechar button and keeps the checkbox unchecked", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { onChange } = renderField();
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+
+    await user.click(screen.getByRole("button", { name: READ_TEXT_BUTTON }));
+    await user.click(screen.getByRole("button", { name: "Fechar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(checkbox.checked).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("closes the dialog with the Escape key without checking the checkbox", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { onChange } = renderField();
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+
+    await user.click(screen.getByRole("button", { name: READ_TEXT_BUTTON }));
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(checkbox.checked).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
