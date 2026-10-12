@@ -1,213 +1,366 @@
+<div align="center">
+
 # Talent Valley
 
-Talent Valley is the career platform for Rio Pomba Valley. It will maintain trusted student profiles and help authorized recruiters discover talent through structured search.
+**[🇺🇸 English](#english) · [🇧🇷 Português](#portugues)**
 
-## Stack
+[Live demo / Demo online](https://talent-valley-dw6o.vercel.app/)
 
-- Frontend: Next.js, React, TypeScript, MUI / Material UI, Material Icons, Tailwind CSS, Framer Motion, and GSAP.
-- Backend: ASP.NET Core Web API, ASP.NET Core Identity support, JWT bearer support, Entity Framework Core, and SQLite.
+![Next.js](https://img.shields.io/badge/Next.js-000?logo=nextdotjs&logoColor=fff)
+![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)
+![.NET](https://img.shields.io/badge/.NET_10-512BD4?logo=dotnet&logoColor=fff)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=fff)
+![Status](https://img.shields.io/badge/status-MVP-orange)
 
-## Repository structure
+</div>
 
-```text
+---
+
+<a id="english"></a>
+
+## 🇺🇸 English
+
+> **The career platform for Rio Pomba Valley.** Trusted student profiles and structured talent discovery for authorized recruiters. · [Ir para Português](#portugues)
+
+### Overview
+
+Talent Valley connects the students of the Rio Pomba Valley ecosystem with recruiters. Students maintain a complete professional profile; **authorized** recruiters search, compare and shortlist talent using structured filters instead of scrolling through unstructured résumés.
+
+The project started as a showcase for a technology fair (team of 5) and, after strong reception, is being developed into a real product.
+
+### Key features
+
+#### For students
+- Complete professional profile: basic data, bio, contact, competencies, languages, availability and work modalities
+- Education, work experience and up to **2 featured projects** (with technologies)
+- Private uploads: photo (JPEG/PNG/WebP, up to 5 MB), résumé and certificates (PDF, up to 10 MB)
+- **RPV verification**: Rio Pomba Valley formations can be validated by admins through a certificate review flow
+- Career timeline combining education and experience
+
+#### For recruiters
+- Talent search with combinable filters: name, city/state, competencies, formation type/name/status, RPV-verified, availability and work modality
+- Sorting by relevance (transparent scoring), most recent or name
+- Full talent profile with protected access to photo, résumé and certificates
+- Favorites list and **side-by-side comparison** of two talents (factual only: no scores or recommendations)
+- Personal dashboard: profiles updated and new students since last login
+
+#### For admins
+- Dashboard with aggregate indicators (active students/recruiters, pending validations, most-used competencies)
+- RPV validation queue: approve, reject or revoke, with an audit trail
+- Account creation with activation by e-mail
+
+### Tech stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | Next.js, React, TypeScript, MUI (Material UI), Tailwind CSS, Framer Motion, GSAP |
+| Backend | ASP.NET Core Web API (.NET 10), ASP.NET Core Identity, JWT, Entity Framework Core |
+| Database | SQLite (WAL mode, foreign keys enforced) |
+| E-mail | Brevo (production) |
+| Hosting | Vercel (frontend) |
+| CI | GitHub Actions |
+
+### Security highlights
+
+- JWT (HS256) delivered **only** via `HttpOnly` cookie (`SameSite=Lax`, `Secure` outside Development) and never exposed in JSON
+- CSRF protection (antiforgery token in `X-XSRF-TOKEN`) on every state-changing request
+- Role + **live account status** check on every protected request: blocking a user takes effect immediately, even with a valid token
+- Lockout after 5 failed logins (15 min), e-mail confirmation required, generic responses to prevent account enumeration
+- Host-header filtering (`AllowedHosts`)
+- Uploads validated by size, extension, MIME type and file signature; files are never served statically, and storage keys/paths never leave the API
+- Integration tests running the real Identity/JWT/antiforgery pipeline
+
+### Architecture
+
+```
 talent-valley/
-|-- .agents/                  Repository skills
-|-- frontend/                 Next.js application
-`-- backend/
-    |-- TalentValley.Api/     ASP.NET Core Web API
-    |-- TalentValley.Api.Tests/ Identity/security integration tests
-    `-- TalentValley.slnx     Backend solution
+├── .agents/                    Repository skills
+├── .github/workflows/          CI
+├── frontend/                   Next.js application
+└── backend/
+    ├── TalentValley.Api/       ASP.NET Core Web API
+    ├── TalentValley.Api.Tests/ Identity/security integration tests
+    └── TalentValley.slnx       Backend solution
 ```
 
-## Prerequisites
+File access goes through `IFileStorage` (currently `LocalFileStorage`), so the storage provider can be swapped without touching application workflows.
 
-- Node.js 20.9 or newer
-- npm
+### Getting started
+
+#### Prerequisites
+- Node.js 20.9+ and npm
 - .NET 10 SDK
 
-## Run the frontend
-
+#### 1. Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
 Open `http://localhost:3000`.
 
-## Run the backend
+#### 2. Backend
 
+**Set the JWT signing key** (Base64, at least 32 random bytes; never commit it):
+```powershell
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+dotnet user-secrets set 'Jwt:SigningKey' ([Convert]::ToBase64String($bytes)) --project backend/TalentValley.Api
+```
+
+**Apply the migrations** (the API never migrates on startup):
+```bash
+dotnet tool restore
+dotnet ef database update --project backend/TalentValley.Api
+```
+
+**Run the API:**
 ```bash
 cd backend/TalentValley.Api
-dotnet restore
-# Configure secrets and apply the migration below before first startup.
-dotnet run --launch-profile https
+dotnet run --launch-profile http
 ```
 
-In Development, the OpenAPI document is available at `https://localhost:7102/openapi/v1.json`.
+> Use the `http` profile (`http://localhost:5087`) when working with the frontend on `http://localhost:3000`, so both share the same scheme with `SameSite=Lax` cookies. The `https` profile (`https://localhost:7102`) is for API tools. In Development, the OpenAPI document is at `/openapi/v1.json`.
 
-For browser requests from `http://localhost:3000`, run the API with `--launch-profile http` at `http://localhost:5087` so both use the same scheme with SameSite=Lax cookies. The HTTPS profile remains available for API tools or an HTTPS frontend (configure its origin accordingly). HTTPS redirection remains enabled; the HTTP-only Development profile has no HTTPS endpoint to redirect to.
-
-## Current phase
-
-Phase 10: admin dashboard completed. Phase 0–9 behavior remains intact.
-
-`GET /api/admin/dashboard` requires a current admin session and returns aggregate indicators: active students (`Aluno.Ativo`), active recruiters (`Status == ATIVO`), pending RPV validations (`EhRioPombaValley` formations with `StatusValidacaoRpv == PENDENTE`), and active-student profiles updated in the last 7 days (`Aluno.AtualizadoEm >= UtcNow - 7 days`). It also returns the verified RPV formation count and up to five most-used general competencies among active students, ordered by student count descending, normalized name ascending, and competency ID ascending. RPV administrative validation does not modify `Aluno.AtualizadoEm`, so it never falsely counts as a profile update.
-
-Active recruiters can add and remove favorites idempotently at `POST/DELETE /api/recrutador/favoritos/{slug}` and list their visible favorites, 10 per page, at `GET /api/recrutador/favoritos?page=1`. Existing favorites of blocked students remain stored but hidden and reappear with their original timestamp after reactivation. Talent search and detail responses now include a recruiter-specific `favorito` flag without affecting search ranking or order.
-
-`GET /api/recrutador/comparar?slugs=a&slugs=b` requires exactly two distinct active talents, preserves request order, and returns both complete professional profiles plus deterministic intersections of general competencies, availability, and modalities. It is factual only: no winner, score, recommendation, persistence, or project-only competency intersection.
-
-`GET /api/recrutador/dashboard` returns only profiles updated since the previous login, new active student accounts since that boundary, the current recruiter's visible favorite count, and up to five recent visible favorites. The boundary is `LoginAnteriorEm`; dashboard reads it without mutation. On first login the boundary is null and both since-last-access counters are zero.
-
-Active recruiters can search active students with `GET /api/talentos`, open a complete professional profile at `GET /api/talentos/{slug}`, and read its protected photo, curriculum, and formation certificates through the corresponding `/api/talentos/{slug}/...` routes. Inactive students are hidden as 404 from every slug/file route, and current database state immediately blocks an inactive recruiter even when its existing JWT is still valid.
-
-The search page size is fixed at 10. Supported query groups are `nome`, `cidade`, `uf`, repeated `competenciaIds`, repeated `tiposFormacao`, `formacaoNome`, repeated `statusFormacao`, `rpvVerificado=true`, repeated `disponibilidades`, and repeated `modalidades`. Repeated values use normal ASP.NET Core query-array binding, for example `?competenciaIds=1&competenciaIds=4`; values within a group are OR, while different groups are AND. All supplied education criteria must match the same formation. City matching is trimmed, exact, and SQLite `NOCASE` case-insensitive; name and formation name use normalized substring matching.
-
-Sort modes are `relevancia`, `recentes`, and `nome`. The default is relevance when a real filter is active and recent otherwise. Relevance awards each requested general competency 2 points, each requested project-only competency 1 point, never double-counts the same competency, and awards 1 point per other active filter group. Relevance ties use profile update descending, normalized name, then student ID; recent and name sorting use their documented deterministic name/ID tie-breakers. `rpvVerificado=false` is accepted as no RPV filter; only `true` activates the verified-RPV condition.
-
-Admins have a paginated pending queue at `GET /api/admin/validacoes-rpv`, formation detail and protected certificate access, plus commands to approve, reject, or remove a verification. The state machine is `PENDENTE -> VERIFICADO`, `PENDENTE -> REJEITADO`, and `VERIFICADO -> PENDENTE`; invalid transitions return conflict. Approval requires the referenced physical certificate. Every real transition and its audit entry commit atomically, competing admin actions cannot both succeed, and administrative validation changes only `StatusValidacaoRpv`/`ValidadoEm`—it does not change `Aluno.AtualizadoEm` or `Formacao.AtualizadoEm`.
-
-`GET /api/admin/dashboard` requires a current admin session and returns: active students, active recruiters, pending RPV validations, profiles updated in the last 7 days, verified RPV count, and up to five most-used general competencies. Anonymous users receive 401; students and recruiters receive 403.
-
-Uploaded files are private and are delivered only through active-student authorized API endpoints. Photos accept validated JPEG, PNG, or WebP files up to 5 MB; curricula and certificates accept validated PDFs up to 10 MB. Validation checks size, extension, declared MIME type, and file signature. Curriculum and certificate responses consistently download with safe filenames (`curriculo.pdf` and `certificado.pdf`); photos are inline. Files are never exposed through static-file middleware, and storage keys and physical paths never appear in API responses.
-
-`IFileStorage` keeps application workflows independent of the initial `LocalFileStorage` provider. By default, Development resolves `Storage:RootPath=App_Data/storage` beneath the API content root and uses the controlled `fotos`, `curriculos`, and `certificados` subdirectories. Deployments must configure `Storage:RootPath` to a persistent mounted volume; container-local ephemeral storage will lose uploads. Uploaded contents are ignored by Git.
-
-Replacement writes a new opaque GUID key, commits the database reference, and only then removes the old file. Deletes clear the database reference first. Changing an RPV formation certificate resets its validation to `PENDENTE` and clears `ValidadoEm`; non-RPV formations keep a null validation state. Successful student deletion cleans all associated physical files after its database/Identity transaction commits.
-
-New student self-service endpoints (all require the active-student policy; student ID is always derived from the authenticated JWT `sub`):
-
-- `GET /api/alunos/me` returns the complete profile aggregate, including full formation, experience, and project DTOs with project technologies; `fotoUrl` is `/api/alunos/me/foto` only when a photo exists; storage keys are never exposed.
-- `PUT /api/alunos/me/dados-basicos` updates name/city/UF, refreshes `NomeBusca` on name change, keeps the slug stable, and returns 204.
-- `PUT /api/alunos/me/sobre` updates the bio (trimmed; blank becomes null; max 1500 chars) and returns 204.
-- `PUT /api/alunos/me/contato` updates phone/professional email/URLs (http/https only; 204).
-- `PUT /api/alunos/me/competencias` full-replaces the student's competencies by catalog ID (unknown IDs → 400).
-- `PUT /api/alunos/me/idiomas` full-replaces languages with string enum levels (BASICO–NATIVO; unknown IDs/duplicates → 400).
-- `PUT /api/alunos/me/disponibilidade` full-replaces availability and work modalities (string enums; unknown values → 400).
-
-The competency catalog at `GET /api/competencias?search=rea` is available to active students and active recruiters; `GET /api/idiomas` remains an active-student catalog. Both return controlled, alphabetically ordered catalogs (filtering runs in SQL). Catalogs are seeded idempotently at startup with normalized `NomeBusca`; they never expose IDs to hardcode and never duplicate existing rows. Meaningful mutations set `Aluno.AtualizadoEm`; idempotent requests do not.
-
-Phase 5 endpoints (same active-student policy, JWT `sub` ownership, and CSRF protection):
-
-- `GET/POST /api/alunos/me/formacoes`, `PUT/DELETE /api/alunos/me/formacoes/{id}`.
-- `GET/POST /api/alunos/me/experiencias`, `PUT/DELETE /api/alunos/me/experiencias/{id}`.
-- `GET/POST /api/alunos/me/projetos`, `PUT/DELETE /api/alunos/me/projetos/{id}`.
-- `GET /api/alunos/me/trajetoria` combines formations and experiences, excluding projects. Ordering is current/ongoing first, start date descending, item kind (FORMACAO before EXPERIENCIA), then ID ascending. Formation status `EM_ANDAMENTO` and experience `Atual` determine current items.
-
-Creates return 201 with a DTO, updates 200 with a DTO, and deletes 204. Unknown or not-owned IDs return the same 404. Invalid input returns a problem 400. Student requests cannot set owner IDs, validation state, or storage keys. Calendar dates use `DateOnly`; completed formations require an end date. Current experiences/projects clear the end date. Real changes update resource and student timestamps; normalized no-op PUTs preserve both.
-
-At most one formation is principal; selecting a new principal atomically unsets the previous one. Unsetting/deleting the principal allows zero, without promotion. RPV formations start `PENDENTE`; relevant student edits reset verified/rejected validation to `PENDENTE` and clear `ValidadoEm`. Principal-only changes retain validation. Non-RPV formations use `StatusValidacaoRpv = null` (validation does not apply), including when RPV is turned off. Responses expose only `possuiCertificado`, never its storage key. The new `FormationOptionalWorkload` migration makes `CargaHoraria` nullable; provided values must be positive.
-
-Projects are limited to two (third create returns 409), with unique orders 1/2. Creating into an occupied order moves the existing project to the free order; updating into an occupied order swaps both projects transactionally. Because SQLite enforces both unique order and the 1/2 check immediately, a swap removes/reinserts the other project and its technologies inside the transaction, preserving IDs, creation timestamps, and content. Deletion compacts the survivor to order 1. Write transactions serialize count/order decisions. Technologies fully replace catalog references, reject unknown/duplicate IDs, and never change general student competencies.
-
-## Host validation
-
-The API restricts incoming requests by `Host` header via ASP.NET Core's host-filtering middleware. Development accepts `localhost`. Production **must** configure the real domain through the `AllowedHosts` environment variable to prevent request smuggling and host-header injection.
-
-Example for a Vercel or Railway deployment with domain `talent.example`:
-
-```powershell
-# via environment variable
-$env:AllowedHosts = "talent.example"
-dotnet run
-```
-
-In containerized deployments, set it through your orchestration system (Docker ENV, Kubernetes env, etc.):
-
-```dockerfile
-ENV AllowedHosts=talent.example
-```
-
-## Authentication configuration
-
-Run from the repository root in PowerShell. Generate a random signing key locally; never commit it:
-
-```powershell
-$jwtBytes = New-Object byte[] 32
-$jwtRandom = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$jwtRandom.GetBytes($jwtBytes)
-$jwtRandom.Dispose()
-$jwtKey = [Convert]::ToBase64String($jwtBytes)
-dotnet user-secrets set 'Jwt:SigningKey' $jwtKey --project backend/TalentValley.Api
-Remove-Variable jwtKey, jwtBytes, jwtRandom
-```
-
-`Jwt:SigningKey` must be Base64 encoding at least 32 cryptographically random bytes. Missing, short, or repetitive keys fail startup in every environment. Development configuration supplies `Jwt:Issuer=TalentValley.Api`, `Jwt:Audience=TalentValley.Frontend`, `Jwt:ExpirationHours=8`, and `Frontend:BaseUrl=http://localhost:3000`. Lifetime must be greater than 0 and at most 24 hours.
-
-Outside Development, supply:
-- `AllowedHosts`: the production domain (e.g., `talent.example`) to reject requests with incorrect Host headers.
-- `Jwt:SigningKey`: base64-encoded 32-byte key.
-- `Jwt:Issuer`, `Jwt:Audience`, and `Frontend:BaseUrl`: production HTTPS origin.
-- `ConnectionStrings:DefaultConnection`: production database connection string.
-
-CORS only permits the configured Development origin with credentials; Production uses same-origin routing.
-
-Identity requires a unique email and passwords with at least 8 characters, uppercase, lowercase, and a digit; symbols are optional. Five failed password attempts lock sign-in for 15 minutes. Accounts require activation/email confirmation before sign-in. Successful login shifts `UltimoLoginEm` into `LoginAnteriorEm` and records the current UTC time.
-
-JWTs use HS256, validated issuer/audience/signature/lifetime, and 30 seconds of clock skew. Identity claims are only `sub`, `role`, and `name`, alongside standard issuer/audience/lifetime metadata. JWTs are read exclusively from `tv_access`: HttpOnly, SameSite=Lax, Path=/, Secure outside Development, with expiration matching the JWT. They are never returned in JSON. Logout deletes the browser cookie; this MVP has no refresh tokens or JWT revocation list.
-
-`RequireAdmin`, `RequireActiveStudent`, and `RequireActiveRecruiter` verify current role membership. Student/recruiter policies also read `Aluno.Ativo` / `Recrutador.Status=ATIVO` from the database on each protected request. The default and fallback policies apply the same current-account check. Blocking an account or removing its role invalidates protected access immediately, including `/api/auth/me`.
-
-### Optional Development admin
-
-Configure all three settings to enable bootstrap. Choose a local password satisfying the policy; this example prompts for it instead of putting a credential in the command history:
-
-```powershell
+**Optional: bootstrap an admin (Development)**
+```bash
 dotnet user-secrets set 'BootstrapAdmin:Email' 'admin@example.test' --project backend/TalentValley.Api
 dotnet user-secrets set 'BootstrapAdmin:Name' 'Local Administrator' --project backend/TalentValley.Api
-$bootstrapPassword = Read-Host 'Local admin password' -AsSecureString
-$bootstrapCredential = New-Object System.Net.NetworkCredential('', $bootstrapPassword)
-dotnet user-secrets set 'BootstrapAdmin:Password' $bootstrapCredential.Password --project backend/TalentValley.Api
-Remove-Variable bootstrapPassword, bootstrapCredential
+dotnet user-secrets set 'BootstrapAdmin:Password' '<strong-password>' --project backend/TalentValley.Api
 ```
+Bootstrap is idempotent and never overwrites an existing account. In Development, activation/reset links are printed to the API console, so no e-mail provider is needed.
 
-Missing/incomplete settings log an informational skip and startup continues (a valid JWT key and migrated DB are still required). Bootstrap runs in Development or when `BootstrapAdmin:Enabled` is true, is idempotent, normalizes `NomeBusca`, and never resets an existing admin password or promotes an existing non-admin. No student/recruiter/demo accounts are seeded. Remove the bootstrap password secret after the initial account is created if bootstrap is no longer needed.
+### Configuration (production)
 
-### API and antiforgery request flow
+| Variable | Purpose |
+|---|---|
+| `AllowedHosts` | Production domain (host-header validation) |
+| `Jwt__SigningKey` | Base64-encoded key, ≥ 32 random bytes |
+| `Jwt__Issuer` / `Jwt__Audience` | JWT issuer and audience |
+| `Frontend__BaseUrl` | Production HTTPS origin (used in activation/reset links) |
+| `ConnectionStrings__DefaultConnection` | Database connection string |
+| `Storage__RootPath` | Path to a **persistent volume**. Ephemeral container storage will lose uploads |
+| `DataProtection__KeysPath` | Persistent path so activation/reset tokens survive restarts |
+| `Brevo__ApiKey`, `Brevo__SenderAddress`, `Brevo__SenderName` | Transactional e-mail (all three required) |
 
-1. Fetch `GET /api/auth/csrf` with `credentials: 'include'`. It returns `{ "token": "..." }` for JavaScript and sets a separate HttpOnly antiforgery cookie. Keep the request token in memory.
-2. Send that token in `X-XSRF-TOKEN`, with credentials, on all POST/PUT/PATCH/DELETE API requests, including login, logout, activation, forgot-password, and reset-password. Missing/invalid antiforgery returns a generic 400 problem response. GET/HEAD/OPTIONS do not require a request token.
-3. Login with `{ "email": "...", "senha": "..." }` at `POST /api/auth/login`. The response has `usuario` and `destinoInicial`: `/meu-perfil`, `/recrutador`, or `/admin`. Login errors are 400 validation, generic 401 credentials, 403 blocked access, or 423 lockout.
-4. Fetch a new CSRF token after login and after logout because antiforgery tokens are bound to the current identity. Use `GET /api/auth/me` for `{ id, nome, email, role }` and `POST /api/auth/logout` to clear the session (204). Blocked or expired sessions can still obtain a CSRF token and log out.
+Missing or weak `Jwt:SigningKey` aborts startup in every environment.
 
-`POST /api/auth/activate-account` accepts `{ email, token, senha }`; `POST /api/auth/forgot-password` accepts `{ email }`; `POST /api/auth/reset-password` accepts `{ email, token, novaSenha }`. Activation/reset return 204 or a generic 400 and do not log in. Forgot-password returns the same generic 202 for eligible, missing, or unactivated accounts. Malformed requests still receive standard validation problems.
+### Tests and checks
 
-`AccountTokenService` generates activation tokens/links for an admin-created user and can send them through `IEmailSender`. Links target `${Frontend:BaseUrl}/ativar-conta` and `/redefinir-senha` with URL-encoded `email` and `token`. Activation tokens use a dedicated Identity purpose; reset uses Identity password-reset tokens. Both use Identity's default Data Protection token lifetime (one day) and are invalidated after successful use. Activation sets the first password and confirms email atomically. Unactivated accounts cannot use reset as an activation shortcut.
-
-The `DevelopmentEmailSender` logs the destination email and full activation/reset URL in the API console; no external provider is needed and it never logs passwords or JWTs. Outside Development the API uses `BrevoEmailSender` when `Brevo__ApiKey`, `Brevo__SenderAddress`, and `Brevo__SenderName` are all configured; otherwise it uses `UnavailableEmailSender`, which logs an error and throws on attempted delivery. Forgot-password catches that delivery failure, preserves its generic 202 to prevent enumeration, and does not claim delivery succeeded. Production requires the three Brevo settings and a persistent Data Protection keys path (`DataProtection:KeysPath`) so activation/reset tokens survive restarts.
-
-## Backend checks
-
-```powershell
+```bash
 dotnet restore backend/TalentValley.slnx
 dotnet build backend/TalentValley.slnx --no-restore
 dotnet test backend/TalentValley.slnx --no-build
 dotnet ef migrations has-pending-model-changes --project backend/TalentValley.Api
-git diff --check
 ```
 
-Tests run the actual Identity/JWT/antiforgery pipeline with a separate temporary SQLite database per test, apply migrations explicitly during test setup, and clean up afterward. They never use the developer database. Test-only policy probe endpoints are loaded solely by the test host.
+Each test runs against its own temporary SQLite database; the developer database is never touched.
 
-## Database migrations
+### API at a glance
 
-Run from the repository root (PowerShell):
+| Area | Endpoints |
+|---|---|
+| Auth | `GET /api/auth/csrf`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `POST /api/auth/activate-account`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password` |
+| Student | `GET /api/alunos/me`, `PUT /api/alunos/me/{dados-basicos,sobre,contato,competencias,idiomas,disponibilidade}`, CRUD on `/formacoes`, `/experiencias`, `/projetos`, `GET /trajetoria` |
+| Recruiter | `GET /api/talentos`, `GET /api/talentos/{slug}`, `GET /api/recrutador/comparar`, `/favoritos`, `/dashboard` |
+| Admin | `GET /api/admin/dashboard`, `GET /api/admin/validacoes-rpv` + approve/reject/revoke |
+| Catalogs | `GET /api/competencias`, `GET /api/idiomas` |
 
+Every state-changing request needs the `X-XSRF-TOKEN` header (fetch it from `/api/auth/csrf` with `credentials: 'include'`, and again after login/logout).
+
+### Roadmap
+
+- [x] Authentication, roles and account activation
+- [x] Student profile (data, education, experience, projects, files)
+- [x] Recruiter search, favorites and comparison
+- [x] Admin dashboard and RPV validation
+- [ ] Production hosting and hardening (security review)
+- [ ] MVP launch
+
+### Contributing
+
+The project is currently developed by a closed team. Suggestions and bug reports are welcome through [Issues](https://github.com/gustavobarcelos18/TalentValley/issues).
+
+### Authors
+
+Built by the Talent Valley team. Maintainer: [@gustavobarcelos18](https://github.com/gustavobarcelos18).
+
+### License
+
+All rights reserved. Not licensed for reuse until stated otherwise.
+
+---
+
+<a id="portugues"></a>
+
+## 🇧🇷 Português
+
+> **A plataforma de carreiras do Rio Pomba Valley.** Perfis de estudantes confiáveis e busca estruturada de talentos para recrutadores autorizados. · [Go to English](#english)
+
+### Visão geral
+
+O Talent Valley conecta os estudantes do ecossistema Rio Pomba Valley com recrutadores. O aluno mantém um perfil profissional completo; recrutadores **autorizados** buscam, comparam e favoritam talentos com filtros estruturados, sem precisar garimpar currículos soltos.
+
+O projeto nasceu como vitrine para uma feira de tecnologia (equipe de 5 pessoas) e, após a ótima receptividade, está sendo desenvolvido como produto real.
+
+### Principais funcionalidades
+
+#### Para estudantes
+- Perfil profissional completo: dados básicos, sobre, contato, competências, idiomas, disponibilidade e modalidades de trabalho
+- Formações, experiências e até **2 projetos em destaque** (com tecnologias)
+- Uploads privados: foto (JPEG/PNG/WebP, até 5 MB), currículo e certificados (PDF, até 10 MB)
+- **Verificação RPV**: formações do Rio Pomba Valley são validadas por admins via análise de certificado
+- Trajetória unindo formações e experiências
+
+#### Para recrutadores
+- Busca de talentos com filtros combináveis: nome, cidade/UF, competências, tipo/nome/status da formação, RPV verificado, disponibilidade e modalidade
+- Ordenação por relevância (pontuação transparente), mais recentes ou nome
+- Perfil completo do talento com acesso protegido a foto, currículo e certificados
+- Favoritos e **comparação lado a lado** de dois talentos (apenas fatos: sem notas nem recomendações)
+- Dashboard pessoal: perfis atualizados e novos alunos desde o último acesso
+
+#### Para admins
+- Dashboard com indicadores agregados (alunos/recrutadores ativos, validações pendentes, competências mais usadas)
+- Fila de validação RPV: aprovar, rejeitar ou revogar, com trilha de auditoria
+- Criação de contas com ativação por e-mail
+
+### Stack
+
+| Camada | Tecnologias |
+|---|---|
+| Frontend | Next.js, React, TypeScript, MUI (Material UI), Tailwind CSS, Framer Motion, GSAP |
+| Backend | ASP.NET Core Web API (.NET 10), ASP.NET Core Identity, JWT, Entity Framework Core |
+| Banco de dados | SQLite (modo WAL, foreign keys ativas) |
+| E-mail | Brevo (produção) |
+| Hospedagem | Vercel (frontend) |
+| CI | GitHub Actions |
+
+### Destaques de segurança
+
+- JWT (HS256) entregue **somente** via cookie `HttpOnly` (`SameSite=Lax`, `Secure` fora do Development) e nunca exposto em JSON
+- Proteção CSRF (token antiforgery em `X-XSRF-TOKEN`) em toda requisição que altera estado
+- Verificação de papel + **status atual da conta** a cada requisição protegida: bloquear um usuário vale na hora, mesmo com token válido
+- Bloqueio após 5 logins falhos (15 min), confirmação de e-mail obrigatória, respostas genéricas contra enumeração de contas
+- Filtro de Host header (`AllowedHosts`)
+- Uploads validados por tamanho, extensão, MIME type e assinatura do arquivo; arquivos nunca são servidos estaticamente, e chaves/caminhos de storage não saem da API
+- Testes de integração rodando o pipeline real de Identity/JWT/antiforgery
+
+### Arquitetura
+
+```
+talent-valley/
+├── .agents/                    Skills do repositório
+├── .github/workflows/          CI
+├── frontend/                   Aplicação Next.js
+└── backend/
+    ├── TalentValley.Api/       ASP.NET Core Web API
+    ├── TalentValley.Api.Tests/ Testes de integração de Identity/segurança
+    └── TalentValley.slnx       Solution do backend
+```
+
+O acesso a arquivos passa por `IFileStorage` (hoje `LocalFileStorage`), então dá para trocar o provedor de storage sem mexer nos fluxos da aplicação.
+
+### Como rodar
+
+#### Pré-requisitos
+- Node.js 20.9+ e npm
+- .NET 10 SDK
+
+#### 1. Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Acesse `http://localhost:3000`.
+
+#### 2. Backend
+
+**Defina a chave de assinatura do JWT** (Base64, no mínimo 32 bytes aleatórios; nunca commite):
 ```powershell
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+dotnet user-secrets set 'Jwt:SigningKey' ([Convert]::ToBase64String($bytes)) --project backend/TalentValley.Api
+```
+
+**Aplique as migrations** (a API nunca migra no startup):
+```bash
 dotnet tool restore
-$env:ASPNETCORE_ENVIRONMENT = 'Development'
 dotnet ef database update --project backend/TalentValley.Api
+```
+
+**Rode a API:**
+```bash
+cd backend/TalentValley.Api
+dotnet run --launch-profile http
+```
+
+> Use o profile `http` (`http://localhost:5087`) ao trabalhar com o frontend em `http://localhost:3000`, para que ambos usem o mesmo esquema com cookies `SameSite=Lax`. O profile `https` (`https://localhost:7102`) serve para ferramentas de API. Em Development, o documento OpenAPI fica em `/openapi/v1.json`.
+
+**Opcional: criar um admin inicial (Development)**
+```bash
+dotnet user-secrets set 'BootstrapAdmin:Email' 'admin@example.test' --project backend/TalentValley.Api
+dotnet user-secrets set 'BootstrapAdmin:Name' 'Administrador Local' --project backend/TalentValley.Api
+dotnet user-secrets set 'BootstrapAdmin:Password' '<senha-forte>' --project backend/TalentValley.Api
+```
+O bootstrap é idempotente e nunca sobrescreve uma conta existente. Em Development, os links de ativação/redefinição aparecem no console da API, então não precisa de provedor de e-mail.
+
+### Configuração (produção)
+
+| Variável | Finalidade |
+|---|---|
+| `AllowedHosts` | Domínio de produção (validação do Host header) |
+| `Jwt__SigningKey` | Chave em Base64, ≥ 32 bytes aleatórios |
+| `Jwt__Issuer` / `Jwt__Audience` | Issuer e audience do JWT |
+| `Frontend__BaseUrl` | Origem HTTPS de produção (usada nos links de ativação/redefinição) |
+| `ConnectionStrings__DefaultConnection` | String de conexão do banco |
+| `Storage__RootPath` | Caminho de um **volume persistente**. Storage efêmero de container perde os uploads |
+| `DataProtection__KeysPath` | Caminho persistente para os tokens de ativação/redefinição sobreviverem a restarts |
+| `Brevo__ApiKey`, `Brevo__SenderAddress`, `Brevo__SenderName` | E-mail transacional (os três são obrigatórios) |
+
+`Jwt:SigningKey` ausente ou fraca impede a API de iniciar em qualquer ambiente.
+
+### Testes e verificações
+
+```bash
+dotnet restore backend/TalentValley.slnx
+dotnet build backend/TalentValley.slnx --no-restore
+dotnet test backend/TalentValley.slnx --no-build
 dotnet ef migrations has-pending-model-changes --project backend/TalentValley.Api
 ```
 
-For a future schema change, create a new migration before applying it:
+Cada teste roda em um banco SQLite temporário próprio; o banco de desenvolvimento nunca é tocado.
 
-```powershell
-dotnet ef migrations add <MigrationName> --project backend/TalentValley.Api --output-dir Data/Migrations
-```
+### API resumida
 
-The local EF tool is pinned to 10.0.12. Development uses `backend/TalentValley.Api/Database/talent-valley.dev.db`; relative database paths resolve against the API content root, and the parent directory is created automatically. Database files are ignored by Git. Other environments must supply `ConnectionStrings:DefaultConnection`.
+| Área | Endpoints |
+|---|---|
+| Auth | `GET /api/auth/csrf`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `POST /api/auth/activate-account`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password` |
+| Aluno | `GET /api/alunos/me`, `PUT /api/alunos/me/{dados-basicos,sobre,contato,competencias,idiomas,disponibilidade}`, CRUD em `/formacoes`, `/experiencias`, `/projetos`, `GET /trajetoria` |
+| Recrutador | `GET /api/talentos`, `GET /api/talentos/{slug}`, `GET /api/recrutador/comparar`, `/favoritos`, `/dashboard` |
+| Admin | `GET /api/admin/dashboard`, `GET /api/admin/validacoes-rpv` + aprovar/rejeitar/revogar |
+| Catálogos | `GET /api/competencias`, `GET /api/idiomas` |
 
-`Foreign Keys=True` makes Microsoft.Data.Sqlite enable foreign keys on each connection open. An EF connection interceptor sets `synchronous=NORMAL` for both synchronous and asynchronous opens, including pooled connections. Startup checks the persistent journal mode and enables WAL only if needed. Pooling stays enabled; startup never applies migrations.
+Toda requisição que altera estado exige o header `X-XSRF-TOKEN` (busque em `/api/auth/csrf` com `credentials: 'include'`, e de novo após login/logout).
 
-Profile/account deletion requires explicit profile removal before deleting its Identity user. Owned profile and favorite rows cascade; catalog references restrict deletion. Audits retain target identifiers as snapshots and set `AdminUserId` to null if the admin is deleted.
+### Roadmap
+
+- [x] Autenticação, papéis e ativação de conta
+- [x] Perfil do aluno (dados, formações, experiências, projetos, arquivos)
+- [x] Busca, favoritos e comparação para recrutadores
+- [x] Dashboard admin e validação RPV
+- [ ] Hospedagem de produção e hardening (revisão de segurança)
+- [ ] Lançamento do MVP
+
+### Contribuindo
+
+O projeto é desenvolvido por uma equipe fechada por enquanto. Sugestões e bugs são bem-vindos em [Issues](https://github.com/gustavobarcelos18/TalentValley/issues).
+
+### Autores
+
+Feito pela equipe Talent Valley. Mantenedor: [@gustavobarcelos18](https://github.com/gustavobarcelos18).
+
+### Licença
+
+Todos os direitos reservados. Sem licença de reuso até segunda ordem.
