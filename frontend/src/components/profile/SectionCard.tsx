@@ -14,6 +14,14 @@ interface SectionCardProps {
   emptyActionLabel?: string;
 }
 
+const sectionAnchorIds: Record<string, string> = {
+  Sobre: "sobre",
+  Contato: "contato",
+  Competências: "competencias",
+  Idiomas: "idiomas",
+  "Disponibilidade e modalidade": "disponibilidade",
+};
+
 // Profile section card: title, accessible edit action, content or a friendly
 // empty state. Sections edit through focused MUI dialogs, never inline.
 export function SectionCard({
@@ -27,8 +35,14 @@ export function SectionCard({
 }: SectionCardProps) {
   return (
     <Paper
+      id={sectionAnchorIds[title]}
       elevation={0}
-      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider" }}
+      sx={{
+        p: { xs: 2.5, sm: 3 },
+        border: 1,
+        borderColor: "divider",
+        ...(sectionAnchorIds[title] && { scrollMarginTop: "80px" }),
+      }}
     >
       <Stack
         direction="row"

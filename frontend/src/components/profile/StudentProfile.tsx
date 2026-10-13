@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import {
   Alert,
+  Box,
   Button,
   Container,
   CircularProgress,
@@ -17,6 +18,7 @@ import { DisponibilidadeSection } from "./DisponibilidadeSection";
 import { CurriculoSection } from "./CurriculoSection";
 import { IdiomasSection } from "./IdiomasSection";
 import { ProfileHeader } from "./ProfileHeader";
+import { ProfileProgressCard } from "./ProfileProgressCard";
 import { SobreSection } from "./SobreSection";
 import { TrajetoriaSection } from "./TrajetoriaSection";
 import { ProjetosSection } from "./ProjetosSection";
@@ -71,15 +73,22 @@ export function StudentProfile() {
               {error}
             </Alert>
           )}
-          <ProfileHeader profile={profile} onChanged={refresh} notify={notify} />
+          <Box id="foto" sx={{ scrollMarginTop: "80px" }}>
+            <ProfileHeader profile={profile} onChanged={refresh} notify={notify} />
+          </Box>
+          <ProfileProgressCard profile={profile} />
           <DadosBasicosSection profile={profile} onChanged={refresh} notify={notify} />
           <SobreSection profile={profile} onChanged={refresh} notify={notify} />
           <ContatoSection profile={profile} onChanged={refresh} notify={notify} />
-          <TrajetoriaSection profile={profile} onChanged={refresh} notify={notify} />
+          <Box id="trajetoria" sx={{ scrollMarginTop: "80px" }}>
+            <TrajetoriaSection profile={profile} onChanged={refresh} notify={notify} />
+          </Box>
           <CompetenciasSection profile={profile} onChanged={refresh} notify={notify} />
           <IdiomasSection profile={profile} onChanged={refresh} notify={notify} />
           <DisponibilidadeSection profile={profile} onChanged={refresh} notify={notify} />
-          <ProjetosSection profile={profile} onChanged={refresh} notify={notify} />
+          <Box id="projetos" sx={{ scrollMarginTop: "80px" }}>
+            <ProjetosSection profile={profile} onChanged={refresh} notify={notify} />
+          </Box>
           <CurriculoSection profile={profile} onChanged={refresh} notify={notify} />
           <ExclusaoSection />
         </Stack>

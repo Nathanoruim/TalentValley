@@ -151,8 +151,9 @@ export function CurriculoSection({ profile, onChanged, notify }: SectionProps) {
   return (
     <Paper
       component="section"
+      id="curriculo"
       elevation={0}
-      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider" }}
+      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider", scrollMarginTop: "80px" }}
     >
       <Stack
         direction="row"
