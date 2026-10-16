@@ -12,6 +12,7 @@ using TalentValley.Api.Domain.Entities;
 using TalentValley.Api.DTOs;
 using TalentValley.Api.Email;
 using TalentValley.Api.Services;
+using TalentValley.Api.Storage;
 
 namespace TalentValley.Api.Tests;
 
@@ -145,6 +146,72 @@ public sealed class FoundationTests
         factory.Overrides["AllowedHosts"] = hosts;
         var exception = Assert.ThrowsAny<Exception>(() => factory.Client());
         Assert.Contains("AllowedHosts", exception.ToString());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("Local")]
+    public void Production_without_r2_storage_fails_startup_clearly(string? provider)
+    {
+        using var factory = new ApiFactory { EnvironmentName = "Production", UseConfiguredFileStorage = true };
+        factory.Overrides["Storage:Provider"] = provider;
+        var exception = Assert.ThrowsAny<Exception>(() => factory.Client());
+        Assert.Contains("Storage:Provider", exception.ToString());
+    }
+
+    [Theory]
+    [InlineData("S3")]
+    [InlineData("r3")]
+    public void Unknown_storage_provider_fails_startup_clearly(string provider)
+    {
+        using var factory = new ApiFactory { EnvironmentName = "Development", UseConfiguredFileStorage = true };
+        factory.Overrides["Storage:Provider"] = provider;
+        var exception = Assert.ThrowsAny<Exception>(() => factory.Client());
+        Assert.Contains("Storage:Provider", exception.ToString());
+    }
+
+    [Theory]
+    [InlineData("AccountId")]
+    [InlineData("BucketName")]
+    [InlineData("AccessKeyId")]
+    [InlineData("SecretAccessKey")]
+    public void Production_with_incomplete_r2_settings_fails_startup_without_leaking_values(string missing)
+    {
+        using var factory = new ApiFactory { EnvironmentName = "Production", UseConfiguredFileStorage = true };
+        ConfigureR2(factory);
+        factory.Overrides[$"Storage:R2:{missing}"] = "";
+        var exception = Assert.ThrowsAny<Exception>(() => factory.Client());
+        Assert.Contains($"Storage:R2:{missing}", exception.ToString());
+        Assert.DoesNotContain("r2-secret-value", exception.ToString());
+    }
+
+    [Fact]
+    public void Production_with_r2_settings_starts_and_uses_the_r2_storage()
+    {
+        using var factory = new ApiFactory { EnvironmentName = "Production", UseConfiguredFileStorage = true };
+        ConfigureR2(factory);
+        using var client = factory.Client();
+        using var scope = factory.Services.CreateScope();
+        Assert.IsType<R2FileStorage>(scope.ServiceProvider.GetRequiredService<IFileStorage>());
+    }
+
+    [Fact]
+    public void Development_without_a_storage_provider_uses_the_local_disk()
+    {
+        using var factory = new ApiFactory { EnvironmentName = "Development", UseConfiguredFileStorage = true };
+        using var client = factory.Client();
+        using var scope = factory.Services.CreateScope();
+        Assert.IsType<LocalFileStorage>(scope.ServiceProvider.GetRequiredService<IFileStorage>());
+    }
+
+    private static void ConfigureR2(ApiFactory factory)
+    {
+        factory.Overrides["Storage:Provider"] = StorageOptions.R2Provider;
+        factory.Overrides["Storage:R2:AccountId"] = "testaccount";
+        factory.Overrides["Storage:R2:BucketName"] = "test-bucket";
+        factory.Overrides["Storage:R2:AccessKeyId"] = "r2-key-id";
+        factory.Overrides["Storage:R2:SecretAccessKey"] = "r2-secret-value";
     }
 
     [Theory]

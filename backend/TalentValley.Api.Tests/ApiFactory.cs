@@ -32,6 +32,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public Dictionary<string, string?> Overrides { get; } = new();
     public string EnvironmentName { get; init; } = "Development";
     public bool UseRealEmailSender { get; init; }
+    // Tests of the storage provider selection need the real registration instead of the local disk stand-in.
+    public bool UseConfiguredFileStorage { get; init; }
+    // Outside Development the app requires R2 settings; those tests get fake ones and the local disk instead of the bucket.
+    private bool SubstitutesLocalStorage => !UseConfiguredFileStorage && EnvironmentName != Environments.Development;
 
     private readonly string connectionString;
     private readonly bool ownsDatabase;
@@ -63,6 +67,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 ["ConnectionStrings:DefaultConnection"] = ConnectionString,
                 ["DataProtection:KeysPath"] = KeysPath
             };
+            if (SubstitutesLocalStorage)
+            {
+                settings["Storage:Provider"] = StorageOptions.R2Provider;
+                settings["Storage:R2:AccountId"] = "testaccount";
+                settings["Storage:R2:BucketName"] = "test-bucket";
+                settings["Storage:R2:AccessKeyId"] = "test-key-id";
+                settings["Storage:R2:SecretAccessKey"] = "test-key-value";
+            }
             foreach (var setting in Overrides) settings[setting.Key] = setting.Value;
             configuration.AddInMemoryCollection(settings);
         });
@@ -94,6 +106,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddScoped(_ => DatabaseOptions());
             services.AddControllers().AddApplicationPart(typeof(PolicyProbeController).Assembly);
+            if (SubstitutesLocalStorage)
+            {
+                services.RemoveAll<IFileStorage>();
+                services.AddSingleton<IFileStorage, LocalFileStorage>();
+            }
             if (!UseRealEmailSender)
             {
                 services.RemoveAll<IEmailSender>();
