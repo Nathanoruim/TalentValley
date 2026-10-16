@@ -25,10 +25,11 @@ public static class SecurityRegistration
             Directory.CreateDirectory(fullKeysPath);
             dataProtection.PersistKeysToFileSystem(new DirectoryInfo(fullKeysPath));
         }
-        else if (environment.IsProduction())
+        else
         {
-            // Without persisted keys every restart invalidates activation and password-reset links already sent.
-            throw new InvalidOperationException("DataProtection:KeysPath is required in Production so activation and reset links survive restarts.");
+            // Hosts without a persistent disk keep the keys in the database, so restarts and new instances
+            // still validate the activation and password-reset links already sent.
+            dataProtection.PersistKeysToDbContext<AppDbContext>();
         }
         services.AddIdentityCore<ApplicationUser>(options =>
         {
