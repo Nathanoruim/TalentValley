@@ -33,9 +33,22 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public string EnvironmentName { get; init; } = "Development";
     public bool UseRealEmailSender { get; init; }
 
-    private readonly string connectionString = PostgresTestDatabase.CreateDatabase();
+    private readonly string connectionString;
+    private readonly bool ownsDatabase;
 
-    public ApiFactory() => Directory.CreateDirectory(directory);
+    public ApiFactory()
+    {
+        connectionString = PostgresTestDatabase.CreateDatabase();
+        ownsDatabase = true;
+        Directory.CreateDirectory(directory);
+    }
+
+    // Second application instance on the same database (simulates a restart or another replica); the original factory owns and drops it.
+    public ApiFactory(ApiFactory sharedDatabaseWith)
+    {
+        connectionString = sharedDatabaseWith.connectionString;
+        Directory.CreateDirectory(directory);
+    }
 
     private string ConnectionString => connectionString;
     private DbContextOptions<AppDbContext> DatabaseOptions() => PostgresTestDatabase.Options(ConnectionString);
@@ -144,7 +157,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         if (!disposing) return;
-        PostgresTestDatabase.DropDatabase(connectionString);
+        if (ownsDatabase) PostgresTestDatabase.DropDatabase(connectionString);
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
 }

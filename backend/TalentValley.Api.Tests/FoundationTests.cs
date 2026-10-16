@@ -150,12 +150,46 @@ public sealed class FoundationTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Missing_data_protection_keys_path_fails_startup_in_production(string keysPath)
+    public async Task Production_without_data_protection_keys_path_starts_and_stores_the_keys_in_the_database(string keysPath)
     {
         using var factory = new ApiFactory { EnvironmentName = "Production" };
         factory.Overrides[KeysPathSetting] = keysPath;
-        var exception = Assert.ThrowsAny<Exception>(() => factory.Client());
-        Assert.Contains(KeysPathSetting, exception.ToString());
+        using var client = factory.Client();
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(HealthPath)).StatusCode);
+        var id = await factory.CreateUserAsync("maria@example.test", activated: false);
+        await factory.InScopeAsync(async provider =>
+        {
+            var user = (await provider.GetRequiredService<UserManager<ApplicationUser>>().FindByIdAsync(id.ToString()))!;
+            Assert.NotEmpty(await provider.GetRequiredService<AccountTokenService>().GenerateActivationTokenAsync(user));
+            Assert.Single(await provider.GetRequiredService<AppDbContext>().DataProtectionKeys.ToListAsync());
+        });
+        Assert.False(Directory.Exists(factory.KeysPath));
+    }
+
+    [Fact]
+    public async Task Activation_token_stays_valid_on_a_new_instance_sharing_the_database()
+    {
+        using var first = new ApiFactory { EnvironmentName = "Production" };
+        first.Overrides[KeysPathSetting] = "";
+        var id = await first.CreateUserAsync("maria@example.test", activated: false);
+        var token = "";
+        await first.InScopeAsync(async provider =>
+        {
+            var user = (await provider.GetRequiredService<UserManager<ApplicationUser>>().FindByIdAsync(id.ToString()))!;
+            token = await provider.GetRequiredService<AccountTokenService>().GenerateActivationTokenAsync(user);
+        });
+
+        // Declared after "first", so it is disposed first and "first" can drop the shared database.
+        using var second = new ApiFactory(first) { EnvironmentName = "Production" };
+        second.Overrides[KeysPathSetting] = "";
+        var activated = false;
+        await second.InScopeAsync(async provider =>
+        {
+            activated = await provider.GetRequiredService<AccountTokenService>()
+                .ActivateAsync("maria@example.test", token, ApiFactory.Password);
+            Assert.Single(await provider.GetRequiredService<AppDbContext>().DataProtectionKeys.ToListAsync());
+        });
+        Assert.True(activated);
     }
 
     [Fact]
@@ -247,7 +281,9 @@ public sealed class FoundationTests
             var db = provider.GetRequiredService<AppDbContext>();
             Assert.False(db.Database.HasPendingModelChanges());
             var migrations = (await db.Database.GetAppliedMigrationsAsync()).ToList();
-            Assert.EndsWith("_InitialCreate", Assert.Single(migrations));
+            Assert.Equal(2, migrations.Count);
+            Assert.EndsWith("_InitialCreate", migrations[0]);
+            Assert.EndsWith("_AddDataProtectionKeys", migrations[1]);
             Assert.True(db.Database.IsNpgsql());
         });
     }
