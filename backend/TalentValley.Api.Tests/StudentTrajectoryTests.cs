@@ -599,13 +599,18 @@ public sealed class StudentTrajectoryTests : IDisposable
         await factory.InScopeAsync(async p =>
         {
             var db = p.GetRequiredService<AppDbContext>();
-            var sql = operation switch
+            switch (operation)
             {
-                "swap" => "CREATE TRIGGER FailMutation BEFORE INSERT ON Projetos BEGIN SELECT RAISE(ABORT, 'test failure'); END;",
-                "compaction" => "CREATE TRIGGER FailMutation BEFORE UPDATE OF Ordem ON Projetos BEGIN SELECT RAISE(ABORT, 'test failure'); END;",
-                _ => "CREATE TRIGGER FailMutation BEFORE UPDATE OF Principal ON Formacoes WHEN NEW.Principal = 1 BEGIN SELECT RAISE(ABORT, 'test failure'); END;"
-            };
-            await db.Database.ExecuteSqlRawAsync(sql);
+                case "swap":
+                    await FailureTrigger.CreateAsync(db, "FailMutation", "\"Projetos\"", "INSERT");
+                    break;
+                case "compaction":
+                    await FailureTrigger.CreateAsync(db, "FailMutation", "\"Projetos\"", "UPDATE OF \"Ordem\"");
+                    break;
+                default:
+                    await FailureTrigger.CreateAsync(db, "FailMutation", "\"Formacoes\"", "UPDATE OF \"Principal\"", "NEW.\"Principal\"");
+                    break;
+            }
         });
         HttpResponseMessage response;
         if (operation == "compaction") response = await client.DeleteAsync($"{Root}{section}/{Id(a)}");
@@ -670,6 +675,41 @@ public sealed class StudentTrajectoryTests : IDisposable
             db.Formacoes.Add(new() { Id = Guid.NewGuid(), AlunoId = studentId, Nome = "Other", NomeBusca = "other", Instituicao = "Institute", Principal = true });
             await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         });
+    }
+
+    [Fact]
+    public async Task Concurrent_principal_formations_leave_exactly_one_principal()
+    {
+        var (client, _) = await StudentAsync();
+        using var ownerClient = client;
+        var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(i =>
+        {
+            var request = Formation(principal: true);
+            request["nome"] = $"Formacao {i}";
+            return client.PostAsJsonAsync(Root + "formacoes", request);
+        }));
+        Assert.All(responses, x => Assert.Equal(HttpStatusCode.Created, x.StatusCode));
+        var rows = await ListAsync(client, "formacoes");
+        Assert.Equal(4, rows.Count);
+        Assert.Single(rows, x => x!["principal"]!.GetValue<bool>());
+    }
+
+    [Fact]
+    public async Task Concurrent_project_creation_respects_the_limit_of_two_and_orders_one_and_two()
+    {
+        var (client, _) = await StudentAsync();
+        using var ownerClient = client;
+        await CreateAsync(client, "projetos", Project(1));
+        var responses = await Task.WhenAll(Enumerable.Range(0, 3).Select(i =>
+        {
+            var request = Project(2);
+            request["nome"] = $"Projeto {i}";
+            return client.PostAsJsonAsync(Root + "projetos", request);
+        }));
+        Assert.Single(responses, x => x.StatusCode == HttpStatusCode.Created);
+        Assert.Equal(2, responses.Count(x => x.StatusCode == HttpStatusCode.Conflict));
+        var rows = await ListAsync(client, "projetos");
+        Assert.Equal(new[] { 1, 2 }, rows.Select(x => x!["ordem"]!.GetValue<int>()).Order());
     }
 
     public void Dispose() => factory.Dispose();

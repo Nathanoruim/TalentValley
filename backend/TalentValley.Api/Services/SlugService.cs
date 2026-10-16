@@ -7,6 +7,9 @@ namespace TalentValley.Api.Services;
 
 public sealed partial class SlugService(AppDbContext database)
 {
+    // Transactions that allocate a slug take this advisory lock first (see AdvisoryLock).
+    public const string LockKey = "aluno-slug";
+
     public static string BaseSlug(string name)
     {
         var slug = Separators().Replace(NameNormalizer.Normalize(name), "-").Trim('-');

@@ -31,21 +31,10 @@ public sealed class AdminRpvValidationService(
         var query = database.Formacoes.AsNoTracking()
             .Where(x => x.EhRioPombaValley && x.StatusValidacaoRpv == StatusValidacaoRpv.PENDENTE);
         var total = await query.CountAsync(cancellationToken);
-        // SQLite stores UTC DateTimeOffset values as sortable ISO text but its EF provider does not
-        // translate DateTimeOffset ordering. Select just the page IDs in SQL, then load that page.
         // AtualizadoEm is the existing timestamp for entry/re-entry into review.
-        var offset = (page - 1) * PageSize;
-        var orderedIds = await database.Database.SqlQuery<Guid>($"""
-            SELECT f."Id" AS "Value"
-            FROM "Formacoes" AS f
-            INNER JOIN "Alunos" AS a ON a."UserId" = f."AlunoId"
-            INNER JOIN "AspNetUsers" AS u ON u."Id" = a."UserId"
-            WHERE f."EhRioPombaValley" = 1 AND f."StatusValidacaoRpv" = 'PENDENTE'
-            ORDER BY f."AtualizadoEm", u."NomeBusca", f."Id"
-            LIMIT {PageSize} OFFSET {offset}
-            """).ToListAsync(cancellationToken);
-        var unorderedItems = await query
-            .Where(x => orderedIds.Contains(x.Id))
+        var items = await query
+            .OrderBy(x => x.AtualizadoEm).ThenBy(x => x.Aluno.User.NomeBusca).ThenBy(x => x.Id)
+            .Skip((page - 1) * PageSize).Take(PageSize)
             .Select(x => new RpvValidationListItem(
                 x.Id,
                 x.AlunoId,
@@ -62,8 +51,7 @@ public sealed class AdminRpvValidationService(
                 x.Principal,
                 x.CertificadoStorageKey != null,
                 x.AtualizadoEm))
-            .ToDictionaryAsync(x => x.FormacaoId, cancellationToken);
-        var items = orderedIds.Select(id => unorderedItems[id]).ToList();
+            .ToListAsync(cancellationToken);
 
         return new(items, page, PageSize, total, (int)Math.Ceiling(total / (double)PageSize));
     }

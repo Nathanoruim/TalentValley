@@ -17,14 +17,15 @@ public sealed class FavoriteService(AppDbContext database, TalentDiscoveryServic
             .SingleOrDefaultAsync(cancellationToken);
         if (studentId is null) return false;
 
-        // The composite key is the idempotency boundary. INSERT OR IGNORE also makes
+        // The composite key is the idempotency boundary. ON CONFLICT DO NOTHING also makes
         // competing requests converge without surfacing a unique-key exception.
         var inserted = await database.Database.ExecuteSqlInterpolatedAsync($"""
-            INSERT OR IGNORE INTO "Favoritos" ("RecrutadorId", "AlunoId", "CriadoEm")
+            INSERT INTO "Favoritos" ("RecrutadorId", "AlunoId", "CriadoEm")
             SELECT {recruiterId}, a."UserId", {DateTimeOffset.UtcNow}
             FROM "Alunos" AS a
             INNER JOIN "AspNetUsers" AS u ON u."Id" = a."UserId"
-            WHERE a."UserId" = {studentId.Value} AND a."Ativo" = 1 AND u."EmailConfirmed" = 1 -- TalentVisibility
+            WHERE a."UserId" = {studentId.Value} AND a."Ativo" AND u."EmailConfirmed" -- TalentVisibility
+            ON CONFLICT ("RecrutadorId", "AlunoId") DO NOTHING
             """, cancellationToken);
         if (inserted > 0) return true;
         return await database.Alunos.AsNoTracking().VisibleToRecruiters()
@@ -63,7 +64,7 @@ public sealed class FavoriteService(AppDbContext database, TalentDiscoveryServic
             FROM "Favoritos" AS f
             INNER JOIN "Alunos" AS a ON a."UserId" = f."AlunoId"
             INNER JOIN "AspNetUsers" AS u ON u."Id" = a."UserId"
-            WHERE f."RecrutadorId" = {recruiterId} AND a."Ativo" = 1 AND u."EmailConfirmed" = 1 -- TalentVisibility
+            WHERE f."RecrutadorId" = {recruiterId} AND a."Ativo" AND u."EmailConfirmed" -- TalentVisibility
             ORDER BY f."CriadoEm" DESC, u."NomeBusca" ASC, a."UserId" ASC
             LIMIT {limit} OFFSET {offset}
             """).ToListAsync(cancellationToken);

@@ -9,6 +9,8 @@ namespace TalentValley.Api.Services;
 
 public sealed class FormacaoService(AppDbContext database, IFileStorage storage, ILogger<FormacaoService> logger)
 {
+    private static string LockKey(Guid alunoId) => $"formacao:{alunoId}";
+
     public async Task<IReadOnlyCollection<FormacaoResponse>> ListAsync(Guid alunoId) =>
         (await database.Formacoes.AsNoTracking().Where(x => x.AlunoId == alunoId)
             .OrderByDescending(x => x.DataInicio).ThenBy(x => x.Id).ToListAsync())
@@ -16,8 +18,8 @@ public sealed class FormacaoService(AppDbContext database, IFileStorage storage,
 
     public async Task<FormacaoResponse> CreateAsync(Guid alunoId, FormacaoRequest request)
     {
-        // SQLite's non-deferred transaction serializes principal selection and writes.
         await using var transaction = await database.Database.BeginTransactionAsync();
+        await database.Database.AcquireTransactionLockAsync(LockKey(alunoId)); // One principal formation per student.
         var now = DateTimeOffset.UtcNow;
         if (request.Principal) await UnsetPrincipalAsync(alunoId, Guid.Empty, now);
         var item = new Formacao { Id = Guid.NewGuid(), AlunoId = alunoId, CriadoEm = now, AtualizadoEm = now };
@@ -33,6 +35,7 @@ public sealed class FormacaoService(AppDbContext database, IFileStorage storage,
     public async Task<FormacaoResponse?> UpdateAsync(Guid alunoId, Guid id, FormacaoRequest request)
     {
         await using var transaction = await database.Database.BeginTransactionAsync();
+        await database.Database.AcquireTransactionLockAsync(LockKey(alunoId));
         var item = await database.Formacoes.SingleOrDefaultAsync(x => x.AlunoId == alunoId && x.Id == id);
         if (item is null) return null;
         var relevantChange = item.Tipo != request.Tipo || item.Nome != request.Nome ||
@@ -59,6 +62,7 @@ public sealed class FormacaoService(AppDbContext database, IFileStorage storage,
     public async Task<bool> DeleteAsync(Guid alunoId, Guid id)
     {
         await using var transaction = await database.Database.BeginTransactionAsync();
+        await database.Database.AcquireTransactionLockAsync(LockKey(alunoId));
         var item = await database.Formacoes.SingleOrDefaultAsync(x => x.AlunoId == alunoId && x.Id == id);
         if (item is null) return false;
         var certificateKey = item.CertificadoStorageKey;

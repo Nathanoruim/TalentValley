@@ -222,10 +222,10 @@ public sealed class AdminProvisioningTests : IDisposable
     public async Task Required_persistence_failure_rolls_back_everything(string resource, string failure)
     {
         using var client = await AdminAsync();
-        var table = failure switch { "role" => "AspNetUserRoles", "audit" => "Auditorias", _ => resource == "alunos" ? "Alunos" : "Recrutadores" };
+        var table = failure switch { "role" => "\"AspNetUserRoles\"", "audit" => "\"Auditorias\"", _ => resource == "alunos" ? "\"Alunos\"" : "\"Recrutadores\"" };
         // The identifier is selected exclusively from the fixed test table names above.
-        var failSql = "CREATE TRIGGER fail_write BEFORE INSERT ON " + table + " BEGIN SELECT RAISE(ABORT, 'test failure'); END;";
-        await factory.InScopeAsync(async provider => await provider.GetRequiredService<AppDbContext>().Database.ExecuteSqlRawAsync(failSql));
+        await factory.InScopeAsync(async provider =>
+            await FailureTrigger.CreateAsync(provider.GetRequiredService<AppDbContext>(), "fail_write", table, "INSERT"));
         object request = resource == "alunos"
             ? new { nomeCompleto = "João Silva", email = "person@example.test" } : Recruiter("person@example.test");
         Assert.Equal(HttpStatusCode.InternalServerError, (await client.PostAsJsonAsync($"/api/admin/{resource}", request)).StatusCode);

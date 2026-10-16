@@ -233,7 +233,7 @@ public sealed class StudentFileTests
         {
             var db = p.GetRequiredService<AppDbContext>();
             oldKey = (await db.Alunos.SingleAsync(x => x.UserId == id)).FotoStorageKey!;
-            await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER fail_photo_update BEFORE UPDATE OF FotoStorageKey ON Alunos BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
+            await FailureTrigger.CreateAsync(db, "fail_photo_update", "\"Alunos\"", "UPDATE OF \"FotoStorageKey\"");
         });
         Assert.Equal(HttpStatusCode.InternalServerError,
             (await UploadAsync(client, "/api/alunos/me/foto", "new.jpg", "image/jpeg", [0xff, 0xd8, 0xff, 2])).StatusCode);

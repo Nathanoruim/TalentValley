@@ -30,9 +30,10 @@ public sealed class AdminAlunoService(AppDbContext database, AdminAccountService
     {
         await accounts.EnsureEmailAvailableAsync(request.Email);
         ApplicationUser user;
-        // SQLite's non-deferred write transaction serializes slug allocation and account writes.
         await using (var transaction = await database.Database.BeginTransactionAsync())
         {
+            // Serializes slug allocation: two students with the same name must not read the same free slug.
+            await database.Database.AcquireTransactionLockAsync(SlugService.LockKey);
             user = await accounts.CreateAsync(request.NomeCompleto, request.Email, AppRoles.Student);
             database.Alunos.Add(new Aluno
             {

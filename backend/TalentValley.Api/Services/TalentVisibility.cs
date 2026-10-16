@@ -14,5 +14,5 @@ public static class TalentVisibility
         query.Where(IsVisibleToRecruiter);
 
     // Raw-SQL form of the same predicate; requires "Alunos" aliased as a and "AspNetUsers" joined as u.
-    public const string Sql = "a.\"Ativo\" = 1 AND u.\"EmailConfirmed\" = 1";
+    public const string Sql = "a.\"Ativo\" AND u.\"EmailConfirmed\"";
 }

@@ -61,15 +61,15 @@ public sealed class SolicitacaoCadastroService(AppDbContext database, UserManage
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = $"%{request.Search.Trim()}%";
-            query = query.Where(x => EF.Functions.Like(x.NomeCompleto, search) || EF.Functions.Like(x.Email, search) ||
-                (x.Empresa != null && EF.Functions.Like(x.Empresa, search)) ||
-                (x.InstituicaoEnsino != null && EF.Functions.Like(x.InstituicaoEnsino, search)) ||
-                (x.Curso != null && EF.Functions.Like(x.Curso, search)));
+            query = query.Where(x => EF.Functions.ILike(x.NomeCompleto, search) || EF.Functions.ILike(x.Email, search) ||
+                (x.Empresa != null && EF.Functions.ILike(x.Empresa, search)) ||
+                (x.InstituicaoEnsino != null && EF.Functions.ILike(x.InstituicaoEnsino, search)) ||
+                (x.Curso != null && EF.Functions.ILike(x.Curso, search)));
         }
         if (!string.IsNullOrEmpty(request.Tipo)) query = query.Where(x => x.Tipo == Enum.Parse<TipoSolicitacaoCadastro>(request.Tipo));
         if (!string.IsNullOrEmpty(request.Status)) query = query.Where(x => x.Status == Enum.Parse<StatusSolicitacaoCadastro>(request.Status));
         var total = await query.CountAsync(cancellationToken);
-        var items = await query.OrderBy(x => x.Status == StatusSolicitacaoCadastro.PENDENTE ? 0 : 1).ThenByDescending(x => x.CriadoEm.ToString()).ThenBy(x => x.Id)
+        var items = await query.OrderBy(x => x.Status == StatusSolicitacaoCadastro.PENDENTE ? 0 : 1).ThenByDescending(x => x.CriadoEm).ThenBy(x => x.Id)
             .Skip((request.Page - 1) * 10).Take(10).Select(x => new SolicitacaoCadastroListItem(x.Id, x.Tipo, x.Status,
                 x.NomeCompleto, x.Email, x.Telefone, x.Cidade, x.Uf, x.InstituicaoEnsino, x.Curso, x.TipoFormacao,
                 x.AnoConclusaoPrevisto, x.Empresa, x.Cargo, x.CriadoEm)).ToListAsync(cancellationToken);
@@ -77,13 +77,12 @@ public sealed class SolicitacaoCadastroService(AppDbContext database, UserManage
     }
 
     // Opportunistic retention: rejected requests are deleted on the next admin list view, no scheduler.
-    // The cutoff is compared in memory because SQLite stores DateTimeOffset as text.
     private async Task CleanUpExpiredRejectedAsync(CancellationToken cancellationToken)
     {
         var cutoff = DateTimeOffset.UtcNow.AddDays(-REJECTED_REQUEST_RETENTION_DAYS);
-        var candidates = await database.SolicitacoesCadastro
-            .Where(x => x.Status == StatusSolicitacaoCadastro.REJEITADA && x.AnalisadoEm != null).ToListAsync(cancellationToken);
-        var expired = candidates.Where(x => x.AnalisadoEm < cutoff).ToList();
+        var expired = await database.SolicitacoesCadastro
+            .Where(x => x.Status == StatusSolicitacaoCadastro.REJEITADA && x.AnalisadoEm != null && x.AnalisadoEm < cutoff)
+            .ToListAsync(cancellationToken);
         if (expired.Count == 0) return;
         database.SolicitacoesCadastro.RemoveRange(expired);
         await database.SaveChangesAsync(cancellationToken);
@@ -100,6 +99,9 @@ public sealed class SolicitacaoCadastroService(AppDbContext database, UserManage
     public async Task<SolicitacaoApprovalOutcome> ApproveAsync(Guid id, CancellationToken cancellationToken)
     {
         await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        // Taken before any read so concurrent approvals queue up: they cannot approve the same request twice,
+        // create the same account twice or allocate the same student slug.
+        await database.Database.AcquireTransactionLockAsync(SlugService.LockKey, cancellationToken);
         var request = await database.SolicitacoesCadastro.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return new(SolicitacaoApprovalResult.NotFound);
         if (request.Status != StatusSolicitacaoCadastro.PENDENTE) return new(SolicitacaoApprovalResult.InvalidState);

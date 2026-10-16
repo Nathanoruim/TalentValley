@@ -116,6 +116,10 @@ public sealed class RegistrationRequestTests : IDisposable
         var searched = await admin.GetFromJsonAsync<PaginatedResponse<SolicitacaoCadastroListItem>>(
             "/api/admin/solicitacoes-cadastro?status=PENDENTE&search=Pedido%2005", ApiFactory.JsonOptions);
         Assert.Equal(pendingIds[4], Assert.Single(searched!.Items).Id);
+
+        var searchedLowercase = await admin.GetFromJsonAsync<PaginatedResponse<SolicitacaoCadastroListItem>>(
+            "/api/admin/solicitacoes-cadastro?status=PENDENTE&search=PEDIDO%2005", ApiFactory.JsonOptions);
+        Assert.Equal(pendingIds[4], Assert.Single(searchedLowercase!.Items).Id);
     }
 
     [Fact]
