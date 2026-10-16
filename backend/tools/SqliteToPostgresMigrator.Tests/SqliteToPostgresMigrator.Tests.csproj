@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <ProjectReference Include="../SqliteToPostgresMigrator/SqliteToPostgresMigrator.csproj" />
+    <ProjectReference Include="../../TalentValley.Api/TalentValley.Api.csproj" />
+    <!-- Same throwaway-database helper the API tests use (TALENT_VALLEY_TEST_POSTGRES). -->
+    <Compile Include="../../TalentValley.Api.Tests/PostgresTestDatabase.cs" Link="PostgresTestDatabase.cs" />
+  </ItemGroup>
+
+</Project>
