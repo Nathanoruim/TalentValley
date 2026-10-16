@@ -16,7 +16,7 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PASSWORD: postgres # pragma: allowlist secret (banco descartável do CI)
+          POSTGRES_HOST_AUTH_METHOD: trust # banco descartável do CI, sem senha
         ports:
           - 5432:5432
         options: >-
@@ -25,7 +25,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      TALENT_VALLEY_TEST_POSTGRES: Host=localhost;Username=postgres;Password=postgres # pragma: allowlist secret
+      TALENT_VALLEY_TEST_POSTGRES: Host=localhost;Username=postgres
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
