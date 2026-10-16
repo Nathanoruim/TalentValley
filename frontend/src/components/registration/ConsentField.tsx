@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Checkbox, FormControl, FormControlLabel, FormHelperText } from "@mui/material";
+import { Button, Checkbox, FormControl, FormControlLabel, FormHelperText } from "@mui/material";
+import { LegalTextDialog } from "@/components/legal/LegalTextDialog";
 import type { FocusableControl } from "./registrationForm";
 
 export function ConsentField({
@@ -17,6 +19,8 @@ export function ConsentField({
   onChange: (checked: boolean) => void;
   inputRef: (node: FocusableControl) => void;
 }) {
+  const [legalTextOpen, setLegalTextOpen] = useState(false);
+
   return (
     <FormControl error={Boolean(error)}>
       <FormControlLabel
@@ -38,7 +42,18 @@ export function ConsentField({
           </>
         }
       />
+      {/* Fora do FormControlLabel de propósito: clicar aqui não pode marcar a caixa. */}
+      <Button
+        type="button"
+        variant="text"
+        size="small"
+        onClick={() => setLegalTextOpen(true)}
+        sx={{ alignSelf: "flex-start", minWidth: 0, p: 0.25 }}
+      >
+        Ler o texto completo
+      </Button>
       {error && <FormHelperText>{error}</FormHelperText>}
+      <LegalTextDialog open={legalTextOpen} onClose={() => setLegalTextOpen(false)} />
     </FormControl>
   );
 }
