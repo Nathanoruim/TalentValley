@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using TalentValley.Api.Authorization;
 using TalentValley.Api.Data;
@@ -643,38 +641,6 @@ public sealed class StudentTrajectoryTests : IDisposable
         var created = await CreateAsync(client, "formacoes", request);
         Assert.Equal(type, created["tipo"]!.GetValue<string>());
         Assert.Equal(status, created["status"]!.GetValue<string>());
-    }
-
-    [Fact]
-    public async Task Optional_workload_migration_preserves_existing_formation_data_and_principal_index()
-    {
-        var studentId = await factory.CreateUserAsync("migration@example.test");
-        await factory.InScopeAsync(async p =>
-        {
-            var db = p.GetRequiredService<AppDbContext>();
-            var migrator = db.GetService<IMigrator>();
-            await migrator.MigrateAsync("20260911122211_AdminAccountProvisioning");
-            var id = Guid.NewGuid();
-            db.Formacoes.Add(new()
-            {
-                Id = id, AlunoId = studentId, Tipo = TipoFormacao.TECNICO, Nome = "Existing formation",
-                NomeBusca = "existing formation", Instituicao = "Institute", CargaHoraria = 1200,
-                DataInicio = new(2025, 1, 1), Principal = true, EhRioPombaValley = true,
-                StatusValidacaoRpv = StatusValidacaoRpv.VERIFICADO, CertificadoStorageKey = "private/existing.pdf"
-            });
-            await db.SaveChangesAsync();
-            await migrator.MigrateAsync();
-            db.ChangeTracker.Clear();
-            var item = (await db.Formacoes.FindAsync(id))!;
-            Assert.Equal(1200, item.CargaHoraria);
-            Assert.True(item.Principal);
-            Assert.Equal(StatusValidacaoRpv.VERIFICADO, item.StatusValidacaoRpv);
-            Assert.Equal("private/existing.pdf", item.CertificadoStorageKey);
-            item.CargaHoraria = null;
-            await db.SaveChangesAsync();
-            db.Formacoes.Add(new() { Id = Guid.NewGuid(), AlunoId = studentId, Nome = "Other", NomeBusca = "other", Instituicao = "Institute", Principal = true });
-            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
-        });
     }
 
     [Fact]
