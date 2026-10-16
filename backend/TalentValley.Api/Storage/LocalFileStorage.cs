@@ -1,9 +1,8 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 
 namespace TalentValley.Api.Storage;
 
-public sealed partial class LocalFileStorage : IFileStorage
+public sealed class LocalFileStorage : IFileStorage
 {
     private readonly string rootPath;
 
@@ -21,11 +20,8 @@ public sealed partial class LocalFileStorage : IFileStorage
     public async Task<string> StoreAsync(FileCategory category, Stream content, string extension,
         CancellationToken cancellationToken = default)
     {
-        extension = NormalizeExtension(category, extension);
-        var directory = CategoryDirectory(category);
-        Directory.CreateDirectory(directory);
-
-        var key = $"{Guid.NewGuid():N}{extension}";
+        var key = StorageKeys.NewKey(category, extension);
+        Directory.CreateDirectory(CategoryDirectory(category));
         var path = ResolvePath(category, key);
         try
         {
@@ -66,8 +62,7 @@ public sealed partial class LocalFileStorage : IFileStorage
 
     private string ResolvePath(FileCategory category, string storageKey)
     {
-        if (!StorageKeyPattern().IsMatch(storageKey))
-            throw new ArgumentException("Invalid storage key.", nameof(storageKey));
+        StorageKeys.ValidateKey(storageKey);
 
         var directory = CategoryDirectory(category);
         var path = Path.GetFullPath(Path.Combine(directory, storageKey));
@@ -76,23 +71,6 @@ public sealed partial class LocalFileStorage : IFileStorage
         return path;
     }
 
-    private string CategoryDirectory(FileCategory category) => Path.Combine(rootPath, category switch
-    {
-        FileCategory.Photo => "fotos",
-        FileCategory.Curriculum => "curriculos",
-        FileCategory.Certificate => "certificados",
-        _ => throw new ArgumentOutOfRangeException(nameof(category))
-    });
-
-    private static string NormalizeExtension(FileCategory category, string extension)
-    {
-        var normalized = extension.StartsWith('.') ? extension.ToLowerInvariant() : $".{extension.ToLowerInvariant()}";
-        var allowed = category == FileCategory.Photo
-            ? normalized is ".jpg" or ".png" or ".webp"
-            : normalized == ".pdf";
-        return allowed ? normalized : throw new ArgumentException("Invalid extension.", nameof(extension));
-    }
-
-    [GeneratedRegex("^[a-f0-9]{32}\\.(jpg|png|webp|pdf)$", RegexOptions.CultureInvariant)]
-    private static partial Regex StorageKeyPattern();
+    private string CategoryDirectory(FileCategory category) =>
+        Path.Combine(rootPath, StorageKeys.CategoryFolder(category));
 }
