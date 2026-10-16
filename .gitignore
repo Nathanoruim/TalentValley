@@ -30,5 +30,10 @@ backend/TalentValley.Api/Database/*.db
 backend/TalentValley.Api/Database/*.db-shm
 backend/TalentValley.Api/Database/*.db-wal
 
+# SQLite copies of real data (migration tool rehearsals) must never be committed
+*.db
+*.db-shm
+*.db-wal
+
 # Local project brain (plans, reports, solved problems)
 .agents/brain/
