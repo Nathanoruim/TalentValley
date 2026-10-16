@@ -235,7 +235,7 @@ public sealed class FoundationTests
     }
 
     [Fact]
-    public async Task Openapi_and_sqlite_startup_preserve_phase_one()
+    public async Task Openapi_and_database_startup_preserve_phase_one()
     {
         using var factory = new ApiFactory();
         using var client = factory.Client();
@@ -246,19 +246,9 @@ public sealed class FoundationTests
         {
             var db = provider.GetRequiredService<AppDbContext>();
             Assert.False(db.Database.HasPendingModelChanges());
-            var migrations = await db.Database.GetAppliedMigrationsAsync();
-            Assert.Equal(["20260911102241_InitialCreate", "20260911122211_AdminAccountProvisioning",
-                "20260911160808_FormationOptionalWorkload", "20260915130451_ScheduledAccountDeletion",
-                "20260915134219_RegistrationApprovalWorkflow", "20260916123012_RemoveScheduledAccountDeletion",
-                "20261001174220_AddConsentTracking"], migrations);
-            await db.Database.OpenConnectionAsync();
-            await using var command = db.Database.GetDbConnection().CreateCommand();
-            command.CommandText = "PRAGMA journal_mode;";
-            Assert.Equal("wal", await command.ExecuteScalarAsync());
-            command.CommandText = "PRAGMA foreign_keys;";
-            Assert.Equal(1L, await command.ExecuteScalarAsync());
-            command.CommandText = "PRAGMA synchronous;";
-            Assert.Equal(1L, await command.ExecuteScalarAsync());
+            var migrations = (await db.Database.GetAppliedMigrationsAsync()).ToList();
+            Assert.EndsWith("_InitialCreate", Assert.Single(migrations));
+            Assert.True(db.Database.IsNpgsql());
         });
     }
 

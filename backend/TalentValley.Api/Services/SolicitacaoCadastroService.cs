@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TalentValley.Api.Authorization;
 using TalentValley.Api.Data;
 using TalentValley.Api.Domain.Entities;
@@ -49,8 +49,8 @@ public sealed class SolicitacaoCadastroService(AppDbContext database, UserManage
             return;
         database.SolicitacoesCadastro.Add(entity);
         try { await database.SaveChangesAsync(cancellationToken); }
-        catch (DbUpdateException exception) when (exception.InnerException is SqliteException { SqliteExtendedErrorCode: 2067 } sqlite &&
-            sqlite.Message.Contains("SolicitacoesCadastro.EmailNormalizado", StringComparison.Ordinal))
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException
+            { SqlState: PostgresErrorCodes.UniqueViolation, TableName: "SolicitacoesCadastro" })
         { /* Concurrent duplicate: same silent outcome. */ }
     }
 

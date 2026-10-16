@@ -8,6 +8,20 @@ jobs:
   backend:
     name: Backend (.NET)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres # pragma: allowlist secret (banco descartável do CI)
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TALENT_VALLEY_TEST_POSTGRES: Host=localhost;Username=postgres;Password=postgres # pragma: allowlist secret
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
@@ -33,6 +47,7 @@ jobs:
         run: dotnet ef migrations has-pending-model-changes --project backend/TalentValley.Api
         env:
           ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__DefaultConnection: Host=localhost;Database=ci_design_time;Username=postgres;Password=unused # pragma: allowlist secret (o comando não conecta ao banco)
 
       - name: Verificar pacotes vulneráveis
         run: dotnet list backend/TalentValley.slnx package --vulnerable --include-transitive | grep -q "has the following vulnerable packages" && exit 1 || exit 0

@@ -31,7 +31,7 @@ public sealed class SolicitacaoCadastroConfiguration : IEntityTypeConfiguration<
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(x => new { x.Status, x.Tipo, x.CriadoEm });
-        // SQLite partial unique index serializes concurrent public submissions for one pending email.
+        // Partial unique index serializes concurrent public submissions for one pending email.
         builder.HasIndex(x => x.EmailNormalizado).HasFilter("\"Status\" = 'PENDENTE'").IsUnique();
     }
 }
