@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TalentValley.Api.Domain.Entities;
 
 namespace TalentValley.Api.Services;
@@ -32,10 +32,9 @@ public sealed class AdminAccountService(UserManager<ApplicationUser> users, Acco
             RequireSuccess(result);
             RequireSuccess(await users.AddToRoleAsync(user, role));
         }
-        catch (DbUpdateException exception) when (exception.InnerException is SqliteException
-            { SqliteExtendedErrorCode: 2067 } sqlite &&
-            (sqlite.Message.Contains("AspNetUsers.NormalizedEmail", StringComparison.Ordinal) ||
-             sqlite.Message.Contains("AspNetUsers.NormalizedUserName", StringComparison.Ordinal)))
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException
+            { SqlState: PostgresErrorCodes.UniqueViolation } postgres &&
+            postgres.ConstraintName is "EmailIndex" or "UserNameIndex")
         {
             throw new DuplicateAccountEmailException();
         }

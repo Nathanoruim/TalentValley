@@ -21,14 +21,14 @@ public sealed class RecruiterDashboardService(AppDbContext database, FavoriteSer
                 SELECT COUNT(*) AS "Value"
                 FROM "Alunos" AS a
                 INNER JOIN "AspNetUsers" AS u ON u."Id" = a."UserId"
-                WHERE a."Ativo" = 1 AND u."EmailConfirmed" = 1 -- TalentVisibility
+                WHERE a."Ativo" AND u."EmailConfirmed" -- TalentVisibility
                     AND a."AtualizadoEm" > {boundary.Value}
                 """).SingleAsync(cancellationToken);
             newStudents = await database.Database.SqlQuery<int>($"""
                 SELECT COUNT(*) AS "Value"
                 FROM "Alunos" AS a
                 INNER JOIN "AspNetUsers" AS u ON u."Id" = a."UserId"
-                WHERE a."Ativo" = 1 AND u."EmailConfirmed" = 1 -- TalentVisibility
+                WHERE a."Ativo" AND u."EmailConfirmed" -- TalentVisibility
                     AND u."CriadoEm" > {boundary.Value}
                 """).SingleAsync(cancellationToken);
         }

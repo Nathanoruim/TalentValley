@@ -318,6 +318,24 @@ public sealed class TalentDiscoveryTests
             EhRioPombaValley = rpv, StatusValidacaoRpv = validation
         };
 
+    [Fact]
+    public async Task City_filter_ignores_case_and_surrounding_spaces_with_accents()
+    {
+        using var factory = new ApiFactory();
+        var recruiter = await RecruiterAsync(factory);
+        using var client = recruiter.Client;
+        var match = await StudentAsync(factory, "Pessoa Um", "pessoa-um", "  São Paulo ");
+        await StudentAsync(factory, "Pessoa Dois", "pessoa-dois", "Rio Pomba");
+
+        foreach (var city in new[] { "São Paulo", "SÃO PAULO", "são paulo" })
+        {
+            var result = await client.GetFromJsonAsync<PaginatedResponse<TalentListItem>>(
+                $"/api/talentos?cidade={Uri.EscapeDataString(city)}", ApiFactory.JsonOptions);
+            Assert.Equal(match, Assert.Single(result!.Items).Id);
+            Assert.Equal(1, result.TotalItems);
+        }
+    }
+
     private static async Task<(HttpClient Client, Guid Id)> RecruiterAsync(ApiFactory factory)
     {
         var email = Email("recruiter");

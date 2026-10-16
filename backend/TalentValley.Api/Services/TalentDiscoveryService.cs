@@ -25,9 +25,8 @@ public sealed class TalentDiscoveryService(AppDbContext database)
         var sort = normalized.Sort ?? (normalized.HasFilters ? TalentSort.RELEVANCIA : TalentSort.RECENTES);
         var offset = checked((normalized.Page - 1) * PageSize);
 
-        // SQLite persists UTC DateTimeOffset values as sortable ISO text, while its EF provider
-        // cannot translate DateTimeOffset ordering. Keep the complete ordered page selection in
-        // parameterized SQL, then enrich only those ten IDs through EF.
+        // The complete ordered page selection (including the relevance score) stays in parameterized
+        // SQL; only those ten IDs are then enriched through EF.
         var pageIds = await LoadOrderedPageIdsAsync(normalized, sort, offset, cancellationToken);
         if (pageIds.Count == 0)
             return new([], normalized.Page, PageSize, totalItems, TotalPages(totalItems));
@@ -71,8 +70,7 @@ public sealed class TalentDiscoveryService(AppDbContext database)
         if (request.Name is not null)
             query = query.Where(x => x.User.NomeBusca.Contains(request.Name));
         if (request.City is not null)
-            query = query.Where(x => x.Cidade != null &&
-                EF.Functions.Collate(x.Cidade.Trim(), "NOCASE") == request.City);
+            query = query.Where(x => x.Cidade != null && x.Cidade.Trim().ToLower() == request.City.ToLower());
         if (request.Uf is not null)
             query = query.Where(x => x.Uf == request.Uf);
         if (request.CompetencyIds.Length > 0)
@@ -131,9 +129,9 @@ public sealed class TalentDiscoveryService(AppDbContext database)
                 string.Join(", ", values.Select(value => AddParameter(value!)));
 
             if (request.Name is not null)
-                conditions.Add($"instr(u.\"NomeBusca\", {AddParameter(request.Name)}) > 0");
+                conditions.Add($"strpos(u.\"NomeBusca\", {AddParameter(request.Name)}) > 0");
             if (request.City is not null)
-                conditions.Add($"trim(a.\"Cidade\") COLLATE NOCASE = {AddParameter(request.City)}");
+                conditions.Add($"lower(btrim(a.\"Cidade\")) = lower({AddParameter(request.City)})");
             if (request.Uf is not null)
                 conditions.Add($"a.\"Uf\" = {AddParameter(request.Uf)}");
             if (request.CompetencyIds.Length > 0)
@@ -157,11 +155,11 @@ public sealed class TalentDiscoveryService(AppDbContext database)
                 if (request.FormationTypes.Length > 0)
                     formation.Add($"f.\"Tipo\" IN ({InParameters(request.FormationTypes.Select(x => x.ToString()))})");
                 if (request.FormationName is not null)
-                    formation.Add($"instr(f.\"NomeBusca\", {AddParameter(request.FormationName)}) > 0");
+                    formation.Add($"strpos(f.\"NomeBusca\", {AddParameter(request.FormationName)}) > 0");
                 if (request.FormationStatuses.Length > 0)
                     formation.Add($"f.\"Status\" IN ({InParameters(request.FormationStatuses.Select(x => x.ToString()))})");
                 if (request.RpvVerified)
-                    formation.Add("f.\"EhRioPombaValley\" = 1 AND f.\"StatusValidacaoRpv\" = 'VERIFICADO'");
+                    formation.Add("f.\"EhRioPombaValley\" AND f.\"StatusValidacaoRpv\" = 'VERIFICADO'");
                 conditions.Add($"EXISTS (SELECT 1 FROM \"Formacoes\" f WHERE {string.Join(" AND ", formation)})");
             }
 
@@ -216,7 +214,7 @@ public sealed class TalentDiscoveryService(AppDbContext database)
             var ids = new List<Guid>();
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
-                ids.Add(Guid.Parse(reader.GetString(0)));
+                ids.Add(reader.GetGuid(0));
             return ids;
         }
         finally

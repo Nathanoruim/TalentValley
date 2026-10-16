@@ -41,7 +41,7 @@ builder.Services.AddScoped<CatalogSeedService>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
 builder.Services.AddOpenApi();
-builder.Services.AddApplicationDatabase(builder.Configuration, builder.Environment);
+builder.Services.AddApplicationDatabase(builder.Configuration);
 builder.Services.AddApplicationSecurity(builder.Configuration, builder.Environment);
 builder.Services.AddRateLimiter(options =>
 {
@@ -76,7 +76,6 @@ await using (var scope = app.Services.CreateAsyncScope())
     if (app.Configuration.GetValue<bool>("Deployment:ApplyMigrationsOnStartup"))
         await database.Database.MigrateAsync();
 
-    await DatabaseRegistration.InitializeSqliteAsync(database);
     await scope.ServiceProvider.GetRequiredService<IdentityBootstrap>().InitializeAsync();
     await scope.ServiceProvider.GetRequiredService<CatalogSeedService>().InitializeAsync();
 }

@@ -29,4 +29,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
+
+    // PostgreSQL timestamptz keeps microseconds while .NET keeps 100 ns ticks. Rounding the tracked values before
+    // saving makes what a request returns right after a write identical to what a later read returns.
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        TruncateTimestampsToMicroseconds();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        TruncateTimestampsToMicroseconds();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void TruncateTimestampsToMicroseconds()
+    {
+        foreach (var entry in ChangeTracker.Entries().Where(x => x.State is EntityState.Added or EntityState.Modified))
+            foreach (var property in entry.Properties)
+                if (property.CurrentValue is DateTimeOffset value && value.Ticks % 10 != 0)
+                    property.CurrentValue = value.AddTicks(-(value.Ticks % 10));
+    }
 }

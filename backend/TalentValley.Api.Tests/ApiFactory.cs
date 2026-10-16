@@ -33,16 +33,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public string EnvironmentName { get; init; } = "Development";
     public bool UseRealEmailSender { get; init; }
 
-    public ApiFactory()
-    {
-        Directory.CreateDirectory(directory);
-        using var db = new AppDbContext(DatabaseOptions());
-        db.Database.Migrate(); // Explicit test setup, never application startup.
-    }
+    private readonly string connectionString = PostgresTestDatabase.CreateDatabase();
 
-    private string ConnectionString => $"Data Source={Path.Combine(directory, "auth.db")};Foreign Keys=True;Pooling=False";
-    private DbContextOptions<AppDbContext> DatabaseOptions() => new DbContextOptionsBuilder<AppDbContext>()
-        .UseSqlite(ConnectionString).AddInterceptors(new SqliteConnectionInterceptor()).Options;
+    public ApiFactory() => Directory.CreateDirectory(directory);
+
+    private string ConnectionString => connectionString;
+    private DbContextOptions<AppDbContext> DatabaseOptions() => PostgresTestDatabase.Options(ConnectionString);
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
@@ -147,7 +143,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing && Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        if (!disposing) return;
+        PostgresTestDatabase.DropDatabase(connectionString);
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
 }
 

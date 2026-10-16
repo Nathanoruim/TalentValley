@@ -9,14 +9,17 @@ public sealed class ProjectLimitException : Exception;
 
 public sealed class ProjetoService(AppDbContext database)
 {
+    private static string LockKey(Guid alunoId) => $"projeto:{alunoId}";
+
     public async Task<IReadOnlyCollection<ProjetoResponse>> ListAsync(Guid alunoId) =>
         (await Query().AsNoTracking().Where(x => x.AlunoId == alunoId).OrderBy(x => x.Ordem).ToListAsync())
         .Select(TrajetoriaMapping.Map).ToList();
 
     public async Task<ProjetoResponse> CreateAsync(Guid alunoId, ProjetoRequest request)
     {
-        // Acquire SQLite's write reservation before counting or reading occupied orders.
         await using var transaction = await database.Database.BeginTransactionAsync();
+        // Taken before counting or reading occupied orders, so concurrent requests cannot both pass the limit of 2.
+        await database.Database.AcquireTransactionLockAsync(LockKey(alunoId));
         var items = await Query().Where(x => x.AlunoId == alunoId).ToListAsync();
         if (items.Count >= 2) throw new ProjectLimitException();
         var competencies = await LoadCompetenciesAsync(request.CompetenciaIds);
@@ -41,6 +44,7 @@ public sealed class ProjetoService(AppDbContext database)
     public async Task<ProjetoResponse?> UpdateAsync(Guid alunoId, Guid id, ProjetoRequest request)
     {
         await using var transaction = await database.Database.BeginTransactionAsync();
+        await database.Database.AcquireTransactionLockAsync(LockKey(alunoId));
         var items = await Query().Where(x => x.AlunoId == alunoId).ToListAsync();
         var item = items.SingleOrDefault(x => x.Id == id);
         if (item is null) return null;
@@ -77,6 +81,7 @@ public sealed class ProjetoService(AppDbContext database)
     public async Task<bool> DeleteAsync(Guid alunoId, Guid id)
     {
         await using var transaction = await database.Database.BeginTransactionAsync();
+        await database.Database.AcquireTransactionLockAsync(LockKey(alunoId));
         var item = await database.Projetos.SingleOrDefaultAsync(x => x.AlunoId == alunoId && x.Id == id);
         if (item is null) return false;
         database.Projetos.Remove(item);

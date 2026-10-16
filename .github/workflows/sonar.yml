@@ -12,6 +12,20 @@ jobs:
     # Secrets não ficam disponíveis em PRs vindos de forks.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust # banco descartável do CI, sem senha
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TALENT_VALLEY_TEST_POSTGRES: Host=localhost;Username=postgres
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4

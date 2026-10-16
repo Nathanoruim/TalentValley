@@ -21,13 +21,9 @@ public sealed class AdminDashboardService(AppDbContext database)
         var pendingRpv = await database.Formacoes.AsNoTracking()
             .CountAsync(x => x.EhRioPombaValley && x.StatusValidacaoRpv == StatusValidacaoRpv.PENDENTE, cancellationToken);
 
-        // SQLite's EF provider does not translate DateTimeOffset ordering; compare directly in SQL.
         var cutoff = DateTimeOffset.UtcNow.AddDays(-7);
-        var updatedInLast7Days = await database.Database.SqlQuery<int>($"""
-            SELECT COUNT(*) AS "Value"
-            FROM "Alunos" AS a
-            WHERE a."Ativo" = 1 AND a."AtualizadoEm" >= {cutoff}
-            """).SingleAsync(cancellationToken);
+        var updatedInLast7Days = await database.Alunos.AsNoTracking()
+            .CountAsync(x => x.Ativo && x.AtualizadoEm >= cutoff, cancellationToken);
 
         var verifiedRpv = await database.Formacoes.AsNoTracking()
             .CountAsync(x => x.EhRioPombaValley && x.StatusValidacaoRpv == StatusValidacaoRpv.VERIFICADO, cancellationToken);

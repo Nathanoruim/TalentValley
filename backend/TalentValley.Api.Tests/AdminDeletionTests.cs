@@ -71,7 +71,7 @@ public sealed class AdminDeletionTests : IDisposable
             });
             await db.SaveChangesAsync();
             if (failIdentity)
-                await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER fail_delete BEFORE DELETE ON AspNetUsers BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
+                await FailureTrigger.CreateAsync(db, "fail_delete", "\"AspNetUsers\"", "DELETE");
         });
 
         Assert.Equal(HttpStatusCode.NoContent,
@@ -178,7 +178,7 @@ public sealed class AdminDeletionTests : IDisposable
             });
             await db.SaveChangesAsync();
             if (failIdentity)
-                await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER fail_delete BEFORE DELETE ON AspNetUsers BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
+                await FailureTrigger.CreateAsync(db, "fail_delete", "\"AspNetUsers\"", "DELETE");
         });
 
         Assert.Equal(HttpStatusCode.NoContent,
@@ -273,8 +273,8 @@ public sealed class AdminDeletionTests : IDisposable
         using var client = factory.Client();
         await ApiFactory.LoginAsync(client, "admin@example.test");
         await ApiFactory.SetCsrfAsync(client);
-        await factory.InScopeAsync(async provider => await provider.GetRequiredService<AppDbContext>().Database
-            .ExecuteSqlRawAsync("CREATE TRIGGER fail_audit BEFORE INSERT ON Auditorias BEGIN SELECT RAISE(ABORT, 'test failure'); END;"));
+        await factory.InScopeAsync(async provider => await FailureTrigger.CreateAsync(
+            provider.GetRequiredService<AppDbContext>(), "fail_audit", "\"Auditorias\"", "INSERT"));
         Assert.Equal(HttpStatusCode.InternalServerError, (await client.PostAsync($"/api/admin/{resource}/{id}/bloquear", null)).StatusCode);
         await factory.InScopeAsync(async provider =>
         {

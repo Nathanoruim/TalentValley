@@ -283,8 +283,8 @@ public sealed class AdminRpvValidationTests : IDisposable
         var studentId = await factory.CreateUserAsync("student@example.test");
         var id = await SeedFormationAsync(studentId, StatusValidacaoRpv.PENDENTE, physicalCertificate: true);
         var before = await TimestampsAsync(id);
-        await factory.InScopeAsync(async provider => await provider.GetRequiredService<AppDbContext>().Database.ExecuteSqlRawAsync(
-            "CREATE TRIGGER fail_rpv_audit BEFORE INSERT ON Auditorias BEGIN SELECT RAISE(ABORT, 'test failure'); END;"));
+        await factory.InScopeAsync(async provider => await FailureTrigger.CreateAsync(
+            provider.GetRequiredService<AppDbContext>(), "fail_rpv_audit", "\"Auditorias\"", "INSERT"));
 
         Assert.Equal(HttpStatusCode.InternalServerError,
             (await admin.PostAsync($"/api/admin/validacoes-rpv/{id}/aprovar", null)).StatusCode);

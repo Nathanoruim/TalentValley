@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -15,10 +16,10 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,26 +30,26 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    NomeCompleto = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    NomeBusca = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UltimoLoginEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LoginAnteriorEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    NomeCompleto = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    NomeBusca = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UltimoLoginEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LoginAnteriorEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -59,10 +60,10 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Competencias",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Nome = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    NomeBusca = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    NomeBusca = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -73,10 +74,10 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Idiomas",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Nome = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    NomeBusca = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    NomeBusca = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -87,11 +88,11 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RoleId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -108,20 +109,22 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Alunos",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Slug = table.Column<string>(type: "TEXT", maxLength: 180, nullable: false),
-                    FotoStorageKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Cidade = table.Column<string>(type: "TEXT", maxLength: 120, nullable: true),
-                    Uf = table.Column<string>(type: "TEXT", maxLength: 2, nullable: true),
-                    Telefone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
-                    EmailProfissional = table.Column<string>(type: "TEXT", maxLength: 254, nullable: true),
-                    LinkedInUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
-                    GitHubUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
-                    PortfolioUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
-                    Bio = table.Column<string>(type: "TEXT", maxLength: 1500, nullable: true),
-                    CurriculoStorageKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Ativo = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Slug = table.Column<string>(type: "character varying(180)", maxLength: 180, nullable: false),
+                    FotoStorageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Cidade = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: true),
+                    Uf = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: true),
+                    Telefone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    EmailProfissional = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: true),
+                    LinkedInUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    GitHubUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    PortfolioUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    Bio = table.Column<string>(type: "character varying(1500)", maxLength: 1500, nullable: true),
+                    CurriculoStorageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Ativo = table.Column<bool>(type: "boolean", nullable: false),
+                    AtualizadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ConsentimentoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    VersaoTermos = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -138,11 +141,11 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -159,10 +162,10 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderKey = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -179,8 +182,8 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RoleId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -203,10 +206,10 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: true)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -223,14 +226,14 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Auditorias",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    AdminUserId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    AdminEmailSnapshot = table.Column<string>(type: "TEXT", maxLength: 254, nullable: false),
-                    Acao = table.Column<string>(type: "TEXT", nullable: false),
-                    EntidadeTipo = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    EntidadeId = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Descricao = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AdminUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    AdminEmailSnapshot = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
+                    Acao = table.Column<string>(type: "text", nullable: false),
+                    EntidadeTipo = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    EntidadeId = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Descricao = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -247,13 +250,14 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Recrutadores",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Empresa = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Cargo = table.Column<string>(type: "TEXT", maxLength: 120, nullable: false),
-                    Telefone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    Cidade = table.Column<string>(type: "TEXT", maxLength: 120, nullable: false),
-                    Uf = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Empresa = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    EmpresaBusca = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Cargo = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
+                    Telefone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Cidade = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
+                    Uf = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -267,11 +271,50 @@ namespace TalentValley.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SolicitacoesCadastro",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Tipo = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    NomeCompleto = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
+                    EmailNormalizado = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
+                    Telefone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Cidade = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
+                    Uf = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
+                    InstituicaoEnsino = table.Column<string>(type: "character varying(180)", maxLength: 180, nullable: true),
+                    Curso = table.Column<string>(type: "character varying(180)", maxLength: 180, nullable: true),
+                    TipoFormacao = table.Column<string>(type: "text", nullable: true),
+                    AnoConclusaoPrevisto = table.Column<int>(type: "integer", nullable: true),
+                    RelacaoRioPombaValley = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Empresa = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    Cargo = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: true),
+                    SiteEmpresa = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    AnalisadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    AdminUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    MotivoRejeicao = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    ConsentimentoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    VersaoTermos = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SolicitacoesCadastro", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SolicitacoesCadastro_AspNetUsers_AdminUserId",
+                        column: x => x.AdminUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AlunoCompetencias",
                 columns: table => new
                 {
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CompetenciaId = table.Column<int>(type: "INTEGER", nullable: false)
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CompetenciaId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -294,8 +337,8 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AlunoDisponibilidades",
                 columns: table => new
                 {
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Tipo = table.Column<string>(type: "TEXT", nullable: false)
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Tipo = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -312,9 +355,9 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AlunoIdiomas",
                 columns: table => new
                 {
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    IdiomaId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Nivel = table.Column<string>(type: "TEXT", nullable: false)
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    IdiomaId = table.Column<int>(type: "integer", nullable: false),
+                    Nivel = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -337,8 +380,8 @@ namespace TalentValley.Api.Data.Migrations
                 name: "AlunoModalidades",
                 columns: table => new
                 {
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Modalidade = table.Column<string>(type: "TEXT", nullable: false)
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Modalidade = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -355,17 +398,17 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Experiencias",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Empresa = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Cargo = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Tipo = table.Column<string>(type: "TEXT", nullable: false),
-                    DataInicio = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    DataFim = table.Column<DateOnly>(type: "TEXT", nullable: true),
-                    Atual = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Descricao = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Empresa = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Cargo = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Tipo = table.Column<string>(type: "text", nullable: false),
+                    DataInicio = table.Column<DateOnly>(type: "date", nullable: false),
+                    DataFim = table.Column<DateOnly>(type: "date", nullable: true),
+                    Atual = table.Column<bool>(type: "boolean", nullable: false),
+                    Descricao = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    AtualizadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -382,23 +425,23 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Formacoes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Tipo = table.Column<string>(type: "TEXT", nullable: false),
-                    Nome = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    NomeBusca = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Instituicao = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    DataInicio = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    DataFim = table.Column<DateOnly>(type: "TEXT", nullable: true),
-                    CargaHoraria = table.Column<int>(type: "INTEGER", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false),
-                    Principal = table.Column<bool>(type: "INTEGER", nullable: false),
-                    EhRioPombaValley = table.Column<bool>(type: "INTEGER", nullable: false),
-                    StatusValidacaoRpv = table.Column<string>(type: "TEXT", nullable: true),
-                    CertificadoStorageKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    ValidadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Tipo = table.Column<string>(type: "text", nullable: false),
+                    Nome = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    NomeBusca = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Instituicao = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    DataInicio = table.Column<DateOnly>(type: "date", nullable: false),
+                    DataFim = table.Column<DateOnly>(type: "date", nullable: true),
+                    CargaHoraria = table.Column<int>(type: "integer", nullable: true),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    Principal = table.Column<bool>(type: "boolean", nullable: false),
+                    EhRioPombaValley = table.Column<bool>(type: "boolean", nullable: false),
+                    StatusValidacaoRpv = table.Column<string>(type: "text", nullable: true),
+                    CertificadoStorageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    AtualizadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ValidadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -415,18 +458,18 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Projetos",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Ordem = table.Column<int>(type: "INTEGER", nullable: false),
-                    Nome = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    DataInicio = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    DataFim = table.Column<DateOnly>(type: "TEXT", nullable: true),
-                    EmAndamento = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Descricao = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
-                    DemoUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
-                    RepositorioUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Ordem = table.Column<int>(type: "integer", nullable: false),
+                    Nome = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    DataInicio = table.Column<DateOnly>(type: "date", nullable: false),
+                    DataFim = table.Column<DateOnly>(type: "date", nullable: true),
+                    EmAndamento = table.Column<bool>(type: "boolean", nullable: false),
+                    Descricao = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    DemoUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    RepositorioUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    AtualizadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -444,9 +487,9 @@ namespace TalentValley.Api.Data.Migrations
                 name: "Favoritos",
                 columns: table => new
                 {
-                    RecrutadorId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    AlunoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    RecrutadorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AlunoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -469,8 +512,8 @@ namespace TalentValley.Api.Data.Migrations
                 name: "ProjetoCompetencias",
                 columns: table => new
                 {
-                    ProjetoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CompetenciaId = table.Column<int>(type: "INTEGER", nullable: false)
+                    ProjetoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CompetenciaId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -554,7 +597,8 @@ namespace TalentValley.Api.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 table: "AspNetUsers",
-                column: "NormalizedEmail");
+                column: "NormalizedEmail",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_NomeBusca",
@@ -608,7 +652,7 @@ namespace TalentValley.Api.Data.Migrations
                 table: "Formacoes",
                 column: "AlunoId",
                 unique: true,
-                filter: "\"Principal\" = 1");
+                filter: "\"Principal\" = TRUE");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Formacoes_AtualizadoEm",
@@ -661,6 +705,23 @@ namespace TalentValley.Api.Data.Migrations
                 name: "IX_Recrutadores_Status",
                 table: "Recrutadores",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SolicitacoesCadastro_AdminUserId",
+                table: "SolicitacoesCadastro",
+                column: "AdminUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SolicitacoesCadastro_EmailNormalizado",
+                table: "SolicitacoesCadastro",
+                column: "EmailNormalizado",
+                unique: true,
+                filter: "\"Status\" = 'PENDENTE'");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SolicitacoesCadastro_Status_Tipo_CriadoEm",
+                table: "SolicitacoesCadastro",
+                columns: new[] { "Status", "Tipo", "CriadoEm" });
         }
 
         /// <inheritdoc />
@@ -707,6 +768,9 @@ namespace TalentValley.Api.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProjetoCompetencias");
+
+            migrationBuilder.DropTable(
+                name: "SolicitacoesCadastro");
 
             migrationBuilder.DropTable(
                 name: "Idiomas");

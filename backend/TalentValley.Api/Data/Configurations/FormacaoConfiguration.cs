@@ -38,6 +38,6 @@ public sealed class FormacaoConfiguration : IEntityTypeConfiguration<Formacao>
         builder.HasIndex(x => x.AtualizadoEm);
 
         builder.HasIndex(x => x.AlunoId, "IX_Formacoes_AlunoId_Principal")
-            .IsUnique().HasFilter("\"Principal\" = 1");
+            .IsUnique().HasFilter("\"Principal\" = TRUE");
     }
 }
