@@ -128,6 +128,20 @@ if (forwardedConfig.GetValue<bool>("Enabled"))
     // Empty known lists would make the middleware trust every peer; fail closed instead.
     if (forwardedHeaders.KnownIPNetworks.Count == 0)
         throw new InvalidOperationException("Deployment:ForwardedHeaders:IpRanges must list at least one trusted proxy CIDR range when Enabled is true.");
+    // Diagnostic only, trust is unchanged: when a peer outside IpRanges sends X-Forwarded-Proto the header is ignored,
+    // so log that peer to show which proxy range to configure. Only the peer address is logged, never X-Forwarded-For.
+    app.Use(async (context, next) =>
+    {
+        var peer = context.Connection.RemoteIpAddress;
+        if (peer is not null && context.Request.Headers.ContainsKey("X-Forwarded-Proto"))
+        {
+            var address = peer.IsIPv4MappedToIPv6 ? peer.MapToIPv4() : peer;
+            if (!forwardedHeaders.KnownIPNetworks.Any(network => network.Contains(address)))
+                app.Logger.LogWarning(
+                    "X-Forwarded-Proto ignored: peer {Peer} is outside Deployment:ForwardedHeaders:IpRanges.", address);
+        }
+        await next();
+    });
     app.UseForwardedHeaders(forwardedHeaders);
 }
 else

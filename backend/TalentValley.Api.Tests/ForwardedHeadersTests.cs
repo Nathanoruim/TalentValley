@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace TalentValley.Api.Tests;
 
@@ -74,6 +75,29 @@ public sealed class ForwardedHeadersTests
     }
 
     [Theory]
+    [InlineData("192.0.2.99", true)]  // peer outside the trusted ranges: the ignored header is reported
+    [InlineData(RailwayEdge, false)]  // trusted peer: nothing to report
+    public async Task Untrusted_peer_sending_forwarded_proto_is_logged(string peer, bool expectWarning)
+    {
+        var warnings = new List<string>();
+        using var factory = Factory(enabled: true);
+        factory.Overrides["Logging:LogLevel:Default"] = "Warning"; // ApiFactory silences everything below Error by default.
+        using var client = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, FakePeerStartupFilter>());
+            builder.ConfigureLogging(logging => logging.AddProvider(new WarningCaptureProvider(warnings)));
+        }).CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/health");
+        request.Headers.Add(PeerHeader, peer);
+        request.Headers.Add("X-Forwarded-Proto", "https");
+        await client.SendAsync(request);
+
+        var logged = warnings.Any(message => message.Contains("X-Forwarded-Proto ignored") && message.Contains(peer));
+        Assert.Equal(expectWarning, logged);
+    }
+
+    [Theory]
     [InlineData("", "IpRanges")]
     [InlineData("not-a-cidr", "invalid CIDR")]
     public void Enabled_without_valid_ranges_fails_startup(string ipRanges, string expected)
@@ -89,6 +113,24 @@ public sealed class ForwardedHeadersTests
         using var factory = new ApiFactory { Overrides = { ["Deployment:TrustForwardedHeaders"] = "true" } };
         var exception = Assert.ThrowsAny<Exception>(() => factory.Client());
         Assert.Contains("Deployment:TrustForwardedHeaders", exception.ToString());
+    }
+
+    private sealed class WarningCaptureProvider(List<string> warnings) : ILoggerProvider
+    {
+        public ILogger CreateLogger(string categoryName) => new WarningCapture(warnings);
+        public void Dispose() { }
+
+        private sealed class WarningCapture(List<string> warnings) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+            public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Warning;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                if (logLevel == LogLevel.Warning)
+                    lock (warnings) warnings.Add(formatter(state, exception));
+            }
+        }
     }
 
     private sealed class FakePeerStartupFilter : IStartupFilter
