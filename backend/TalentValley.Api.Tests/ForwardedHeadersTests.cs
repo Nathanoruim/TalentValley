@@ -81,6 +81,7 @@ public sealed class ForwardedHeadersTests
     {
         var warnings = new List<string>();
         using var factory = Factory(enabled: true);
+        factory.Overrides["Logging:LogLevel:Default"] = "Warning"; // ApiFactory silences everything below Error by default.
         using var client = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, FakePeerStartupFilter>());
