@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Checkbox, Chip, FormControlLabel, Paper, Stack, Typography } from "@mui/material";
+import { Button, Card, Checkbox, Chip, Divider, FormControlLabel, Stack, Typography } from "@mui/material";
 import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import PlaceOutlined from "@mui/icons-material/PlaceOutlined";
+import SchoolOutlined from "@mui/icons-material/SchoolOutlined";
 import VerifiedOutlined from "@mui/icons-material/VerifiedOutlined";
 import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
 import type { TalentListItem } from "@/types/recruiter";
@@ -11,20 +12,21 @@ import { FavoriteButton } from "./FavoriteButton";
 
 export function TalentCard({ talent, onFavoriteChange, onUnavailable, comparisonSelected, onComparisonChange, onPreview }: { talent: TalentListItem; onFavoriteChange?: (favorite: boolean) => void; onUnavailable?: () => void; comparisonSelected?: boolean; onComparisonChange?: (selected: boolean) => void; onPreview?: () => void }) {
   return (
-    <Paper component="article" elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, border: 1, borderColor: "divider" }}>
+    <Card component="article" sx={{ p: { xs: 2, sm: 2.5 } }}>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5}>
         <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start", flex: 1, minWidth: 0 }}>
           <ProtectedTalentPhoto path={talent.fotoUrl} name={talent.nomeCompleto} />
-          <Stack spacing={1} sx={{ minWidth: 0, flex: 1 }}>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }} useFlexGap>
+          <Stack spacing={1.25} sx={{ minWidth: 0, flex: 1 }}>
+            <div>
               <Typography component="h2" variant="h6">{talent.nomeCompleto}</Typography>
-            </Stack>
-            <Stack direction="row" spacing={.5} sx={{ alignItems: "center" }}>
-              <PlaceOutlined fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">{[talent.cidade, talent.uf].filter(Boolean).join(" / ") || "Localização não informada"}</Typography>
-            </Stack>
+              <Stack direction="row" spacing={.5} sx={{ alignItems: "center", mt: .25 }}>
+                <PlaceOutlined fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">{[talent.cidade, talent.uf].filter(Boolean).join(" / ") || "Localização não informada"}</Typography>
+              </Stack>
+            </div>
             {talent.bio && <Typography variant="body2" color="text.secondary" sx={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{talent.bio}</Typography>}
             {talent.formacaoPrincipal && <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }} useFlexGap>
+              <SchoolOutlined fontSize="small" color="action" />
               <Typography variant="body2"><strong>{TIPO_FORMACAO_LABELS[talent.formacaoPrincipal.tipo]}:</strong> {talent.formacaoPrincipal.nome} · {talent.formacaoPrincipal.instituicao}</Typography>
               {talent.formacaoPrincipal.rpvVerificado && <Chip icon={<VerifiedOutlined />} size="small" color="success" label="Verificado pelo Rio Pomba Valley" />}
             </Stack>}
@@ -38,12 +40,13 @@ export function TalentCard({ talent, onFavoriteChange, onUnavailable, comparison
             </Stack>
           </Stack>
         </Stack>
-        <Stack spacing={.5} sx={{ alignSelf: { xs: "stretch", sm: "center" }, flexShrink: 0 }}>
+        <Divider flexItem orientation="vertical" sx={{ display: { xs: "none", sm: "block" } }} />
+        <Stack spacing={.75} sx={{ alignSelf: { xs: "stretch", sm: "center" }, flexShrink: 0 }}>
           {onFavoriteChange && <FavoriteButton slug={talent.slug} name={talent.nomeCompleto} favorite={talent.favorito} onChange={onFavoriteChange} onUnavailable={onUnavailable} />}
           {onComparisonChange !== undefined && <FormControlLabel control={<Checkbox checked={Boolean(comparisonSelected)} onChange={(event) => onComparisonChange(event.target.checked)} />} label="Comparar" />}
-          <Button onClick={onPreview} endIcon={<ArrowForwardOutlined />} aria-label={`Abrir prévia de ${talent.nomeCompleto}`}>Ver prévia</Button>
+          <Button variant="contained" size="small" onClick={onPreview} endIcon={<ArrowForwardOutlined />} aria-label={`Abrir prévia de ${talent.nomeCompleto}`}>Ver prévia</Button>
         </Stack>
       </Stack>
-    </Paper>
+    </Card>
   );
 }

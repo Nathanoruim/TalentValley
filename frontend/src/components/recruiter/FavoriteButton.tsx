@@ -34,7 +34,7 @@ export function FavoriteButton({ slug, name, favorite, onChange, onUnavailable }
 
   const action = favorite ? "Remover dos favoritos" : "Adicionar aos favoritos";
   return <>
-    <Button variant={favorite ? "outlined" : "text"} color={favorite ? "error" : "primary"} size="small"
+    <Button variant="outlined" color={favorite ? "error" : "primary"} size="small"
       onClick={(event) => { event.preventDefault(); event.stopPropagation(); void toggle(); }} disabled={loading}
       aria-label={`${action}: ${name}`} aria-busy={loading}
       startIcon={loading ? <CircularProgress size={16} /> : favorite ? <FavoriteOutlined /> : <FavoriteBorderOutlined />}>
