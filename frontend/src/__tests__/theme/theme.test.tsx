@@ -39,6 +39,10 @@ describe("brand button variant", () => {
     expect(talentValleyTheme.typography.fontFamily).toContain("--font-inter");
   });
 
+  it("lets MUI transitions follow the system reduce-motion setting", () => {
+    expect(talentValleyTheme.motion.reducedMotion).toBe("system");
+  });
+
   it("exposes the gradients as theme variables", () => {
     const gradient = talentValleyTheme.vars?.palette.gradient;
     expect(gradient).toBeDefined();

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import ArrowBackOutlined from "@mui/icons-material/ArrowBackOutlined";
 import { Box, Button, Container, Divider, Stack, Typography } from "@mui/material";
+import { BrandLink } from "@/components/brand/BrandLink";
 
 export interface LegalSection {
   title: string;
@@ -26,6 +27,9 @@ export function LegalDocument({
     <Box component="main" sx={{ bgcolor: "background.default", minHeight: "100dvh" }}>
       <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
         <Stack spacing={3}>
+          <Box sx={{ alignSelf: "flex-start" }}>
+            <BrandLink />
+          </Box>
           <Button
             component={Link}
             href="/"

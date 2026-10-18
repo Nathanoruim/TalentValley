@@ -6,78 +6,67 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   AppBar,
   Box,
-  Button,
-  Chip,
-  Divider,
   Drawer,
   IconButton,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
-  Stack,
   Toolbar,
-  Typography,
   useColorScheme,
+  useMediaQuery,
+  type Theme,
 } from "@mui/material";
 import Close from "@mui/icons-material/Close";
-import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
-import ExpandMore from "@mui/icons-material/ExpandMore";
-import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useMyPhoto } from "@/hooks/useMyPhoto";
-import { UserAvatar } from "@/components/common/UserAvatar";
-import { TalentValleyMark } from "@/components/brand/TalentValleyMark";
+import { BrandLink } from "@/components/brand/BrandLink";
+import { AuthMotionConfig } from "@/components/auth/motion/AuthMotionConfig";
 import { ROLE_LABELS } from "@/lib/labels";
-import { getRoleDestination } from "@/lib/paths";
-import type { UserRole } from "@/types/auth";
+import { CHANGE_PASSWORD_HREF, NAV_BY_ROLE } from "./navigation";
+import { SidebarPanel } from "./SidebarPanel";
+import { useSidebarCollapsed } from "./useSidebarCollapsed";
 
-interface NavItem {
-  label: string;
-  href: string;
-}
-
-const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
-  ALUNO: [{ label: "Meu perfil", href: "/meu-perfil" }],
-  RECRUTADOR: [
-    { label: "Visão geral", href: "/recrutador" },
-    { label: "Explorar talentos", href: "/recrutador/talentos" },
-    { label: "Favoritos", href: "/recrutador/favoritos" },
-  ],
-  ADMIN: [
-    { label: "Visão geral", href: "/admin" },
-    { label: "Solicitações", href: "/admin/solicitacoes" },
-    { label: "Alunos", href: "/admin/alunos" },
-    { label: "Recrutadores", href: "/admin/recrutadores" },
-    { label: "Validações RPV", href: "/admin/validacoes-rpv" },
-    { label: "Auditoria", href: "/admin/auditoria" },
-  ],
-};
-
-const CHANGE_PASSWORD_HREF = "/conta/senha";
+const EXPANDED_WIDTH = 272;
+const COLLAPSED_WIDTH = 80;
+const DRAWER_WIDTH = 300;
 
 interface AppShellProps {
   children: ReactNode;
 }
 
 // Reusable authenticated shell for the internal application (student, recruiter
-// and admin). Theme-compatible surfaces, responsive navigation and logout.
+// and admin): collapsible side menu on desktop, sliding menu on phones.
 export function AppShell({ children }: AppShellProps) {
   const { user, logout } = useAuth();
   const { photoPath, reloadKey } = useMyPhoto();
   const pathname = usePathname();
   const router = useRouter();
   const { mode, systemMode, setMode } = useColorScheme();
+  const desktop = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const [collapsed, setCollapsed] = useSidebarCollapsed();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
+  const [shownPathname, setShownPathname] = useState(pathname);
 
   const navItems = user ? NAV_BY_ROLE[user.role] : [];
   const roleLabel = user ? ROLE_LABELS[user.role] : "";
   const dark = (mode === "system" ? systemMode : mode) !== "light";
+
+  // The shell stays mounted between pages, so both menus must close by themselves when the
+  // address changes (for instance with the phone's back gesture) or the screen becomes wide.
+  if (shownPathname !== pathname) {
+    setShownPathname(pathname);
+    setMenuOpen(false);
+    setAccountAnchor(null);
+  }
+  if (desktop && menuOpen) {
+    setMenuOpen(false);
+    setAccountAnchor(null);
+  }
 
   async function handleLogout() {
     setMenuOpen(false);
@@ -86,280 +75,128 @@ export function AppShell({ children }: AppShellProps) {
     router.replace("/login");
   }
 
-  function renderBrand(onNavigate?: () => void) {
-    // The brand always leads to the authenticated user's own home, independent
-    // from the NAV_BY_ROLE order, array indexes or the current pathname.
-    const homeHref = user ? getRoleDestination(user.role) : null;
-
-    const brandContent = (
-      <>
-        <TalentValleyMark width={46} />
-        <Typography
-          sx={{
-            fontFamily: "var(--font-display), sans-serif",
-            fontWeight: 600,
-            fontSize: 17,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.1,
-            color: "text.primary",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Talent{" "}
-          <Box component="span" sx={{ color: "secondary.main" }}>
-            Valley
-          </Box>
-        </Typography>
-      </>
-    );
-
-    // While the authenticated user is unavailable there is no role home to
-    // link to, so the brand stays as plain, non-interactive identity.
-    if (!homeHref) {
-      return (
-        <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-          {brandContent}
-        </Stack>
-      );
-    }
-
-    return (
-      <Stack
-        component={Link}
-        href={homeHref}
-        onClick={onNavigate}
-        direction="row"
-        spacing={1.25}
-        sx={{
-          alignItems: "center",
-          color: "inherit",
-          textDecoration: "none",
-          borderRadius: 1,
-          "&:focus-visible": {
-            outline: "2px solid",
-            outlineColor: (theme) => theme.palette.primary.main,
-            outlineOffset: 2,
-          },
-        }}
-      >
-        {brandContent}
-      </Stack>
-    );
+  function closeAccountMenu() {
+    setAccountAnchor(null);
+    setMenuOpen(false);
   }
 
-  function isActive(item: NavItem): boolean {
-    if (item.href === "/recrutador" || item.href === "/admin") return pathname === item.href;
-    return pathname === item.href || pathname.startsWith(`${item.href}/`);
-  }
+  const panelProps = {
+    user,
+    navItems,
+    pathname,
+    roleLabel,
+    photoPath,
+    reloadKey,
+    dark,
+    onToggleMode: () => setMode(dark ? "light" : "dark"),
+    accountMenuOpen: Boolean(accountAnchor),
+    onOpenAccountMenu: setAccountAnchor,
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: "background.default",
-      }}
-    >
-      <AppBar
-        position="sticky"
-        elevation={0}
-        sx={{
-          bgcolor: "background.paper",
-          color: "text.primary",
-          borderBottom: 1,
-          borderColor: "divider",
-        }}
-      >
-        <Toolbar disableGutters sx={{ px: { xs: 2, sm: 3 }, minHeight: 64 }}>
-          <Stack
-            direction="row"
-            sx={{ width: "100%", alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Stack
-              direction="row"
-              spacing={{ xs: 1, lg: 4 }}
-              sx={{ alignItems: "center", minWidth: 0 }}
-            >
-              {renderBrand()}
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{alignItems: "center",  display: { xs: "none", lg: "flex" } }}
-              >
-                {navItems.map((item) => (
-                  <ListItemButton
-                    key={item.href}
-                    component={Link}
-                    href={item.href}
-                    selected={isActive(item)}
-                    sx={{ borderRadius: 2, px: 2 }}
-                  >
-                    <ListItemText
-                      primary={item.label}
-                      slotProps={{
-                        primary: { sx: { fontWeight: 600, fontSize: 14 } },
-                      }}
-                    />
-                  </ListItemButton>
-                ))}
-              </Stack>
-            </Stack>
+    <AuthMotionConfig>
+      <Box sx={{ minHeight: "100dvh", display: "flex", bgcolor: "background.default" }}>
+        <Box
+          sx={(theme) => ({
+            display: { xs: "none", lg: "block" },
+            flexShrink: 0,
+            position: "sticky",
+            top: 0,
+            alignSelf: "flex-start",
+            height: "100dvh",
+            width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
+            overflow: "hidden",
+            bgcolor: "background.paper",
+            borderRight: 1,
+            borderColor: "divider",
+            transition: theme.transitions.create("width", { duration: theme.transitions.duration.shorter }),
+            "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+          })}
+        >
+          <SidebarPanel
+            {...panelProps}
+            idPrefix="desktop"
+            collapsed={collapsed}
+            onToggleCollapsed={() => setCollapsed(!collapsed)}
+          />
+        </Box>
 
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <IconButton
-                aria-label={dark ? "Ativar modo claro" : "Ativar modo escuro"}
-                onClick={() => setMode(dark ? "light" : "dark")}
-              >
-                {dark ? <LightModeOutlined /> : <DarkModeOutlined />}
-              </IconButton>
+        <Box sx={{ flexGrow: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <AppBar
+            position="sticky"
+            elevation={0}
+            sx={{
+              display: { xs: "block", lg: "none" },
+              bgcolor: "background.paper",
+              color: "text.primary",
+              borderBottom: 1,
+              borderColor: "divider",
+            }}
+          >
+            <Toolbar disableGutters sx={{ px: { xs: 2, sm: 3 }, minHeight: 64, gap: 1.5 }}>
               {user && (
-                <>
-                  <Stack
-                    direction="row"
-                    spacing={1.5}
-                    sx={{ alignItems: "center", display: { xs: "none", lg: "flex" } }}
-                  >
-                    <Chip
-                      label={roleLabel}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                      sx={{alignItems: "center",  fontWeight: 600 }}
-                    />
-                    <Button
-                      id="account-menu-button"
-                      color="inherit"
-                      aria-label={`Menu da conta de ${user.nome}`}
-                      aria-haspopup="menu"
-                      aria-controls={accountAnchor ? "account-menu" : undefined}
-                      aria-expanded={accountAnchor ? "true" : undefined}
-                      onClick={(event) => setAccountAnchor(event.currentTarget)}
-                      startIcon={
-                        <UserAvatar key={`${user.id}-${reloadKey}`} name={user.nome} photoPath={photoPath} reloadKey={reloadKey} size={32} />
-                      }
-                      endIcon={<ExpandMore />}
-                      sx={{ textTransform: "none", borderRadius: 2, minWidth: 0 }}
-                    >
-                      <Typography variant="body2" sx={{ fontWeight: 600, maxWidth: 200 }} noWrap>
-                        {user.nome}
-                      </Typography>
-                    </Button>
-                    <Menu
-                      id="account-menu"
-                      anchorEl={accountAnchor}
-                      open={Boolean(accountAnchor)}
-                      onClose={() => setAccountAnchor(null)}
-                      slotProps={{ list: { "aria-labelledby": "account-menu-button" } }}
-                    >
-                      <MenuItem
-                        component={Link}
-                        href={CHANGE_PASSWORD_HREF}
-                        selected={pathname === CHANGE_PASSWORD_HREF}
-                        onClick={() => setAccountAnchor(null)}
-                      >
-                        <ListItemIcon>
-                          <LockOutlined fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>Alterar senha</ListItemText>
-                      </MenuItem>
-                      <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
-                        <ListItemIcon sx={{ color: "inherit" }}>
-                          <LogoutOutlined fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>Sair</ListItemText>
-                      </MenuItem>
-                    </Menu>
-                  </Stack>
-                  <IconButton
-                    aria-label="Abrir menu"
-                    onClick={() => setMenuOpen(true)}
-                    sx={{ display: { xs: "inline-flex", lg: "none" } }}
-                  >
-                    <MenuIcon />
-                  </IconButton>
-                </>
+                <IconButton aria-label="Abrir menu" edge="start" onClick={() => setMenuOpen(true)}>
+                  <MenuIcon />
+                </IconButton>
               )}
-            </Stack>
-          </Stack>
-        </Toolbar>
-      </AppBar>
+              <BrandLink />
+            </Toolbar>
+          </AppBar>
+
+          <Box component="main" sx={{ flexGrow: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            {children}
+          </Box>
+        </Box>
+      </Box>
 
       <Drawer
-        anchor="right"
+        anchor="left"
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        slotProps={{ paper: { sx: { width: 300, p: 2.5 } } }}
+        slotProps={{ paper: { sx: { width: DRAWER_WIDTH, maxWidth: "85vw" } } }}
       >
-        <Stack spacing={2}>
-          <Stack
-            direction="row"
-            sx={{ alignItems: "center", justifyContent: "space-between" }}
-          >
-            {renderBrand(() => setMenuOpen(false))}
+        <SidebarPanel
+          {...panelProps}
+          idPrefix="drawer"
+          collapsed={false}
+          onNavigate={() => setMenuOpen(false)}
+          headerAction={
             <IconButton aria-label="Fechar menu" onClick={() => setMenuOpen(false)}>
               <Close />
             </IconButton>
-          </Stack>
-          <Divider />
-          {user && (
-            <Stack direction="row" spacing={1.5}>
-              <UserAvatar key={`${user.id}-${reloadKey}`} name={user.nome} photoPath={photoPath} reloadKey={reloadKey} size={40} />
-              <Stack sx={{ minWidth: 0 }}>
-                <Typography variant="body2" sx={{alignItems: "center",  fontWeight: 600 }} noWrap>
-                  {user.nome}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {roleLabel}
-                </Typography>
-              </Stack>
-            </Stack>
-          )}
-          <Divider />
-          <Stack component="nav" spacing={0.5}>
-            {navItems.map((item) => (
-              <ListItemButton
-                key={item.href}
-                component={Link}
-                href={item.href}
-                selected={isActive(item)}
-                onClick={() => setMenuOpen(false)}
-                sx={{ borderRadius: 2 }}
-              >
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            ))}
-          </Stack>
-          <Divider />
-          <ListItemButton
+          }
+        />
+      </Drawer>
+
+      {user && (
+        <Menu
+          id="account-menu"
+          anchorEl={accountAnchor}
+          open={Boolean(accountAnchor)}
+          onClose={() => setAccountAnchor(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "left" }}
+          transformOrigin={{ vertical: "bottom", horizontal: "left" }}
+          slotProps={{ list: { "aria-labelledby": accountAnchor?.id } }}
+        >
+          <MenuItem
             component={Link}
             href={CHANGE_PASSWORD_HREF}
             selected={pathname === CHANGE_PASSWORD_HREF}
-            onClick={() => setMenuOpen(false)}
-            sx={{ borderRadius: 2 }}
+            onClick={closeAccountMenu}
           >
-            <ListItemText primary="Alterar senha" />
-            <LockOutlined fontSize="small" />
-          </ListItemButton>
-          <ListItemButton
-            onClick={handleLogout}
-            sx={{ borderRadius: 2, color: "error.main" }}
-          >
-            <ListItemText
-              primary="Sair"
-              slotProps={{ primary: { sx: { fontWeight: 600 } } }}
-            />
-            <LogoutOutlined fontSize="small" />
-          </ListItemButton>
-        </Stack>
-      </Drawer>
-
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
-      >
-        {children}
-      </Box>
-    </Box>
+            <ListItemIcon>
+              <LockOutlined fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Alterar senha</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
+            <ListItemIcon sx={{ color: "inherit" }}>
+              <LogoutOutlined fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Sair</ListItemText>
+          </MenuItem>
+        </Menu>
+      )}
+    </AuthMotionConfig>
   );
 }

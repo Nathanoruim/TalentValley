@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import Link from "next/link";
 import { Box } from "@mui/material";
 import { motion, useAnimate, useInView } from "framer-motion";
+import { BRAND_LINK_LABEL, brandFocusSx } from "@/components/brand/BrandLink";
 import { TalentValleyMark } from "@/components/brand/TalentValleyMark";
 import { LoginVisualScene } from "./LoginVisualScene";
 import { AmbientMotion } from "./motion/AmbientMotion";
@@ -125,8 +127,22 @@ export function AuthBackdrop({
         <LoginVisualScene pointer={pointer} />
         <TalentNetwork />
 
-        <Box sx={{ position: "absolute", zIndex: 1, top: 24, left: 24, [MD]: { top: 40, left: 48 }, ...brandSx }}>
-          <BrandLockup entrance={entrance} />
+        {/* Above the content box below, which covers the whole screen and would swallow clicks on the logo. */}
+        <Box sx={{ position: "absolute", zIndex: 2, top: 24, left: 24, [MD]: { top: 40, left: 48 }, ...brandSx }}>
+          <Box
+            component={Link}
+            href="/"
+            aria-label={BRAND_LINK_LABEL}
+            sx={{
+              display: "inline-block",
+              color: "inherit",
+              textDecoration: "none",
+              borderRadius: 1,
+              ...brandFocusSx(4),
+            }}
+          >
+            <BrandLockup entrance={entrance} />
+          </Box>
         </Box>
 
         <Box
