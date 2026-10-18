@@ -1,5 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { SectionCard } from "@/components/profile/SectionCard";
 
@@ -13,6 +15,7 @@ interface RenderOptions {
   isEmpty?: boolean;
   emptyMessage?: string;
   emptyActionLabel?: string;
+  emptyIcon?: ReactNode;
 }
 
 function renderCard(options: RenderOptions = {}) {
@@ -80,6 +83,14 @@ describe("SectionCard", () => {
 
     expect(screen.queryByText(EMPTY_MESSAGE)).toBeNull();
     expect(screen.getByRole("button", { name: EMPTY_ACTION })).toBeTruthy();
+  });
+
+  it("shows the empty icon decoratively above the empty message", () => {
+    renderCard({ isEmpty: true, emptyMessage: EMPTY_MESSAGE, emptyIcon: <svg data-testid="empty-icon" /> });
+
+    const icon = screen.getByTestId("empty-icon");
+    expect(icon.closest("[aria-hidden='true']")).toBeTruthy();
+    expect(screen.getByText(EMPTY_MESSAGE)).toBeTruthy();
   });
 
   it("renders neither message nor action when empty without empty props", () => {

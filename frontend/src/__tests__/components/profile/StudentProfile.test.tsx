@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -91,12 +92,12 @@ describe("StudentProfile", () => {
   });
 
   describe("loading state", () => {
-    it("shows an accessible spinner and no sections while loading", () => {
+    it("shows an accessible loading placeholder and no sections while loading", () => {
       mockHook({ profile: null, loading: true, error: null });
 
       render(<StudentProfile />);
 
-      expect(screen.getByRole("status", { name: "Carregando perfil" })).toBeTruthy();
+      expect(screen.getByRole("status").textContent).toBe("Carregando…");
       expect(renderedSections()).toEqual([]);
       expect(screen.queryByRole("alert")).toBeNull();
     });
@@ -106,7 +107,7 @@ describe("StudentProfile", () => {
 
       render(<StudentProfile />);
 
-      expect(screen.getByRole("status", { name: "Carregando perfil" })).toBeTruthy();
+      expect(screen.getByRole("status").textContent).toBe("Carregando…");
       expect(renderedSections()).toHaveLength(SECTION_ORDER.length);
       expect(screen.queryByRole("alert")).toBeNull();
     });

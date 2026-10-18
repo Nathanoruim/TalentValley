@@ -1,8 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Box, Button, IconButton, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, IconButton } from "@mui/material";
 import EditOutlined from "@mui/icons-material/EditOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { SurfaceCard } from "@/components/common/SurfaceCard";
 
 interface SectionCardProps {
   title: string;
@@ -12,6 +14,8 @@ interface SectionCardProps {
   isEmpty?: boolean;
   emptyMessage?: string;
   emptyActionLabel?: string;
+  /** Material icon shown above the empty message. */
+  emptyIcon?: ReactNode;
 }
 
 // Profile section card: title, accessible edit action, content or a friendly
@@ -24,20 +28,18 @@ export function SectionCard({
   isEmpty = false,
   emptyMessage,
   emptyActionLabel,
+  emptyIcon,
 }: SectionCardProps) {
+  const emptyAction = emptyActionLabel ? (
+    <Button variant="outlined" size="small" onClick={onEdit}>
+      {emptyActionLabel}
+    </Button>
+  ) : undefined;
+
   return (
-    <Paper
-      elevation={0}
-      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider" }}
-    >
-      <Stack
-        direction="row"
-        spacing={2}
-        sx={{ alignItems: "center", justifyContent: "space-between" }}
-      >
-        <Typography component="h2" variant="h6">
-          {title}
-        </Typography>
+    <SurfaceCard
+      title={title}
+      action={
         <IconButton
           size="small"
           aria-label={editLabel}
@@ -46,29 +48,13 @@ export function SectionCard({
         >
           <EditOutlined fontSize="small" />
         </IconButton>
-      </Stack>
-      <Box sx={{ mt: 2 }}>
-        {isEmpty && (
-          <Stack spacing={1.5}>
-            {emptyMessage && (
-              <Typography variant="body2" color="text.secondary">
-                {emptyMessage}
-              </Typography>
-            )}
-            {emptyActionLabel && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={onEdit}
-                className="self-start"
-              >
-                {emptyActionLabel}
-              </Button>
-            )}
-          </Stack>
-        )}
-        <Box sx={isEmpty ? { display: "none" } : undefined}>{children}</Box>
-      </Box>
-    </Paper>
+      }
+    >
+      {isEmpty && emptyMessage && (
+        <EmptyState icon={emptyIcon} title={emptyMessage} action={emptyAction} />
+      )}
+      {isEmpty && !emptyMessage && emptyAction}
+      <Box sx={isEmpty ? { display: "none" } : undefined}>{children}</Box>
+    </SurfaceCard>
   );
 }

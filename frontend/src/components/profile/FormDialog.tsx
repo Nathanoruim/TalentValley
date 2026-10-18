@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
+import { brandWash } from "@/components/common/surfaceGradient";
 
 interface FormDialogProps {
   title: string;
@@ -52,8 +53,10 @@ export function FormDialog({
       aria-labelledby={titleId}
     >
       <Box component="form" onSubmit={handleSubmit} noValidate>
-        <DialogTitle id={titleId}>{title}</DialogTitle>
-        <DialogContent>
+        <DialogTitle id={titleId} sx={(theme) => ({ backgroundImage: brandWash(theme) })}>
+          {title}
+        </DialogTitle>
+        <DialogContent dividers sx={{ borderColor: "divider" }}>
           {error && (
             <Alert severity="error" role="alert" sx={{ mb: 2 }}>
               {error}
@@ -61,7 +64,7 @@ export function FormDialog({
           )}
           {children}
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button type="button" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>

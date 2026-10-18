@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, IconButton, MenuItem, Paper, Stack, Switch, TextField, Typography } from "@mui/material";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, MenuItem, Stack, Switch, TextField, Typography } from "@mui/material";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
@@ -9,6 +9,9 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import SchoolOutlined from "@mui/icons-material/SchoolOutlined";
 import BusinessCenterOutlined from "@mui/icons-material/BusinessCenterOutlined";
 import UploadFileOutlined from "@mui/icons-material/UploadFileOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { ApiError, apiDownload, getApiErrorMessage } from "@/lib/api";
 import { formatDate, formatDateInput, parseDateInput } from "@/lib/format";
 import { sanitizeIntegerInput, stripEmoji, validateAlphanumericWithPunctuation, validateBrazilianDateInput } from "@/lib/validation";
@@ -67,23 +70,21 @@ export function TrajetoriaSection({ onChanged, notify }: SectionProps) {
   const experiences = (items ?? []).filter((item) => item.experiencia);
   const openEditor = (item: TrajetoriaItemResponse) =>
     setEditor(item.formacao ? { kind: "formation", item: item.formacao } : { kind: "experience", item: item.experiencia! });
-  return <Paper component="section" elevation={0} sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider" }}>
-    <Box>
-      <Typography component="h2" variant="h6">Trajetória</Typography>
-      <Typography variant="body2" color="text.secondary">Formações e experiências em ordem profissional.</Typography>
-    </Box>
+  return <SurfaceCard title="Trajetória">
+    <Typography variant="body2" color="text.secondary">Formações e experiências em ordem profissional.</Typography>
     {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-    {items === null ? <Stack sx={{ alignItems: "center", py: 4 }}><CircularProgress size={28} /></Stack> : <Stack spacing={4} sx={{ mt: 2 }}>
-      <TrajectoryGroup title="Formação e certificados" emptyMessage="Adicione formações acadêmicas, cursos e certificados para destacar seu preparo." actionLabel="Adicionar formação" items={formations} onAdd={() => setEditor({ kind: "formation" })} onEdit={openEditor} onDelete={setRemoving} onChanged={changed} />
-      <TrajectoryGroup title="Experiência" emptyMessage="Adicione experiências profissionais ou estágios para mostrar sua trajetória." actionLabel="Adicionar experiência" items={experiences} onAdd={() => setEditor({ kind: "experience" })} onEdit={openEditor} onDelete={setRemoving} onChanged={changed} />
+    {items === null && !error && <Box sx={{ mt: 2 }}><LoadingSkeleton count={2} height={110} /></Box>}{items !== null && <Stack spacing={4} sx={{ mt: 2 }}>
+      <TrajectoryGroup title="Formação e certificados" icon={<SchoolOutlined />} emptyMessage="Adicione formações acadêmicas, cursos e certificados para destacar seu preparo." actionLabel="Adicionar formação" items={formations} onAdd={() => setEditor({ kind: "formation" })} onEdit={openEditor} onDelete={setRemoving} onChanged={changed} />
+      <TrajectoryGroup title="Experiência" icon={<BusinessCenterOutlined />} emptyMessage="Adicione experiências profissionais ou estágios para mostrar sua trajetória." actionLabel="Adicionar experiência" items={experiences} onAdd={() => setEditor({ kind: "experience" })} onEdit={openEditor} onDelete={setRemoving} onChanged={changed} />
     </Stack>}
     {editor?.kind === "formation" ? <FormationForm item={editor.item} onClose={() => setEditor(null)} onSaved={() => { setEditor(null); void changed(editor.item ? "Formação atualizada." : "Formação adicionada."); }} /> : editor?.kind === "experience" ? <ExperienceForm item={editor.item} onClose={() => setEditor(null)} onSaved={() => { setEditor(null); void changed(editor.item ? "Experiência atualizada." : "Experiência adicionada."); }} /> : null}
     <DeleteDialog item={removing} onClose={() => setRemoving(null)} onDeleted={() => { setRemoving(null); void changed("Item removido da trajetória."); }} />
-  </Paper>;
+  </SurfaceCard>;
 }
 
-function TrajectoryGroup({ title, emptyMessage, actionLabel, items, onAdd, onEdit, onDelete, onChanged }: {
+function TrajectoryGroup({ title, icon, emptyMessage, actionLabel, items, onAdd, onEdit, onDelete, onChanged }: {
   title: string;
+  icon: ReactNode;
   emptyMessage: string;
   actionLabel: string;
   items: TrajetoriaItemResponse[];
@@ -97,13 +98,20 @@ function TrajectoryGroup({ title, emptyMessage, actionLabel, items, onAdd, onEdi
       <Typography component="h3" variant="subtitle1" sx={{ fontWeight: 700 }}>{title}</Typography>
       {items.length > 0 && <Button size="small" startIcon={<AddOutlined />} onClick={onAdd}>{actionLabel}</Button>}
     </Stack>
-    {items.length === 0 ? <Stack spacing={1.5} sx={{ mt: 2, p: 3, border: 1, borderStyle: "dashed", borderColor: "divider", borderRadius: 2, alignItems: "center" }}><Typography color="text.secondary" align="center">{emptyMessage}</Typography><Button startIcon={<AddOutlined />} onClick={onAdd}>{actionLabel}</Button></Stack> : <Stack divider={<Divider flexItem />} sx={{ mt: 1 }}>{items.map((item) => <TimelineItem key={`${item.tipoItem}-${item.id}`} item={item} onEdit={() => onEdit(item)} onDelete={() => onDelete(item)} onChanged={onChanged} />)}</Stack>}
+    {items.length === 0 ? <Box sx={{ mt: 2 }}><EmptyState icon={icon} title={emptyMessage} action={<Button startIcon={<AddOutlined />} onClick={onAdd}>{actionLabel}</Button>} /></Box> : <Stack component="ol" role="list" spacing={3} sx={(theme) => ({
+      listStyle: "none", m: 0, mt: 2, p: 0, position: "relative",
+      "&::before": { content: "\"\"", position: "absolute", left: 17, top: 18, bottom: 18, width: 2, backgroundColor: (theme.vars ?? theme).palette.divider },
+    })}>{items.map((item) => <TimelineItem key={`${item.tipoItem}-${item.id}`} item={item} onEdit={() => onEdit(item)} onDelete={() => onDelete(item)} onChanged={onChanged} />)}</Stack>}
   </Box>;
 }
 
 function TimelineItem({ item, onEdit, onDelete, onChanged }: { item: TrajetoriaItemResponse; onEdit: () => void; onDelete: () => void; onChanged: (message: string) => Promise<void> }) {
   const formation = item.formacao;
-  return <Stack direction="row" spacing={1.5} sx={{ py: 2 }}><Box sx={{ pt: .5, color: formation ? "primary.main" : "secondary.main" }}>{formation ? <SchoolOutlined /> : <BusinessCenterOutlined />}</Box><Stack spacing={.75} sx={{ flex: 1, minWidth: 0 }}><Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}><Typography sx={{ fontWeight: 700 }}>{item.titulo}</Typography>{formation?.principal && <Chip label="Principal" size="small" color="primary" />}{formation && <RpvChip formation={formation} />}</Stack><Typography variant="body2" color="text.secondary">{item.subtitulo} · {formatTrajectoryDate(item.dataInicio)} — {item.atual ? "Atual" : formatTrajectoryDate(item.dataFim)}</Typography>{formation ? <FormationCertificate formation={formation} onChanged={onChanged} /> : item.experiencia?.descricao && <Typography variant="body2">{item.experiencia.descricao}</Typography>}<Stack direction="row" spacing={.5}><IconButton size="small" aria-label={`Editar ${item.titulo}`} onClick={onEdit}><EditOutlined fontSize="small" /></IconButton><IconButton size="small" color="error" aria-label={`Excluir ${item.titulo}`} onClick={onDelete}><DeleteOutlined fontSize="small" /></IconButton></Stack></Stack></Stack>;
+  return <Box component="li" sx={{ position: "relative", pl: 6.5 }}><Box aria-hidden="true" className="flex size-9 items-center justify-center" sx={(theme) => {
+    const { primary, secondary, surface } = (theme.vars ?? theme).palette;
+    const color = formation ? primary.main : secondary.main;
+    return { position: "absolute", left: 0, top: 0, borderRadius: "50%", color, backgroundColor: surface.raised, border: 2, borderColor: color };
+  }}>{formation ? <SchoolOutlined fontSize="small" /> : <BusinessCenterOutlined fontSize="small" />}</Box><Stack spacing={.75} sx={{ minWidth: 0 }}><Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}><Typography sx={{ fontWeight: 700 }}>{item.titulo}</Typography>{formation?.principal && <Chip label="Principal" size="small" color="primary" />}{formation && <RpvChip formation={formation} />}</Stack><Typography variant="body2" color="text.secondary">{item.subtitulo} · {formatTrajectoryDate(item.dataInicio)} — {item.atual ? "Atual" : formatTrajectoryDate(item.dataFim)}</Typography>{formation ? <FormationCertificate formation={formation} onChanged={onChanged} /> : item.experiencia?.descricao && <Typography variant="body2">{item.experiencia.descricao}</Typography>}<Stack direction="row" spacing={.5}><IconButton size="small" aria-label={`Editar ${item.titulo}`} onClick={onEdit}><EditOutlined fontSize="small" /></IconButton><IconButton size="small" color="error" aria-label={`Excluir ${item.titulo}`} onClick={onDelete}><DeleteOutlined fontSize="small" /></IconButton></Stack></Stack></Box>;
 }
 
 function RpvChip({ formation }: { formation: FormacaoResponse }) { if (!formation.ehRioPombaValley) return null; const labels = { PENDENTE: "Aguardando validação", VERIFICADO: "Verificado pelo Rio Pomba Valley", REJEITADO: "Validação não aprovada" }; return <Chip size="small" variant="outlined" color={formation.statusValidacaoRpv === "VERIFICADO" ? "success" : formation.statusValidacaoRpv === "REJEITADO" ? "error" : "warning"} label={formation.statusValidacaoRpv ? labels[formation.statusValidacaoRpv] : "Aguardando validação"} />; }
