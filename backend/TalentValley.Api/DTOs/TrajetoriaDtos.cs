@@ -45,7 +45,7 @@ public sealed class ExperienciaRequest : IValidatableObject
     [Required] public DateOnly? DataInicio { get; init; }
     public DateOnly? DataFim { get; init; }
     public bool Atual { get; init; }
-    [StringLength(2000), NoEmoji, NoControlCharacters]
+    [StringLength(2000, ErrorMessage = "O texto deve ter no máximo 2000 caracteres."), NoEmoji, NoControlCharacters(AllowLineBreaks = true)]
     public string? Descricao { get => descricao; init => descricao = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -68,7 +68,7 @@ public sealed class ProjetoRequest : IValidatableObject
     [Required] public DateOnly? DataInicio { get; init; }
     public DateOnly? DataFim { get; init; }
     public bool EmAndamento { get; init; }
-    [Required, StringLength(1000), NoEmoji, NoControlCharacters]
+    [Required, StringLength(1000, ErrorMessage = "O texto deve ter no máximo 1000 caracteres."), NoEmoji, NoControlCharacters(AllowLineBreaks = true)]
     public string Descricao { get => descricao; init => descricao = value?.Trim() ?? string.Empty; }
     [StringLength(2048), SafeHttpUrl, NoEmoji]
     public string? DemoUrl { get => demoUrl; init => demoUrl = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }

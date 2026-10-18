@@ -100,6 +100,24 @@ public sealed class AlunoProfileUpdateTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateSobre_accepts_line_breaks()
+    {
+        using var client = await StudentClientAsync();
+        var response = await client.PutAsJsonAsync("/api/alunos/me/sobre", new { bio = "Primeiro parágrafo.\n\nSegundo parágrafo.\r\nTerceiro." });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateSobre_other_control_characters_are_rejected()
+    {
+        using var client = await StudentClientAsync();
+        var response = await client.PutAsJsonAsync("/api/alunos/me/sobre", new { bio = "Texto com\u0000caractere inválido" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task UpdateDadosBasicos_name_does_not_change_slug()
     {
         var (client, id) = await StudentWithIdAsync();

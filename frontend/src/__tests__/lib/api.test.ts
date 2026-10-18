@@ -326,6 +326,30 @@ describe("getApiErrorMessage", () => {
     expect(getApiErrorMessage(new ApiError(400, "msg"), FALLBACK)).toBe("msg");
   });
 
+  it("shows the Portuguese validation reason of a 400 response", async () => {
+    const { ApiError, getApiErrorMessage } = await loadApi();
+    const problem = {
+      title: "One or more validation errors occurred.",
+      errors: { Bio: ["O texto deve ter no máximo 1500 caracteres."] },
+    };
+
+    expect(getApiErrorMessage(new ApiError(400, "msg", problem), FALLBACK)).toBe(
+      "O texto deve ter no máximo 1500 caracteres."
+    );
+  });
+
+  it("replaces an English validation reason with a generic Portuguese message", async () => {
+    const { ApiError, getApiErrorMessage } = await loadApi();
+    const problem = {
+      title: "One or more validation errors occurred.",
+      errors: { Nome: ["The Nome field is required."] },
+    };
+
+    expect(getApiErrorMessage(new ApiError(400, "msg", problem), FALLBACK)).toBe(
+      "Alguns dados não são válidos. Revise os campos e tente novamente."
+    );
+  });
+
   it("uses the message of a plain Error and the fallback otherwise", async () => {
     const { getApiErrorMessage } = await loadApi();
 
