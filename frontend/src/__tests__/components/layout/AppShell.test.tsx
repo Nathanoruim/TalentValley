@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeProvider } from "@mui/material/styles";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -56,7 +56,10 @@ const NAV_LABELS: Record<UserRole, string[]> = {
   ADMIN: ["Visão geral", "Solicitações", "Alunos", "Recrutadores", "Validações RPV", "Auditoria"],
 };
 const ROLE_LABEL: Record<UserRole, string> = { ALUNO: "Aluno", RECRUTADOR: "Recrutador", ADMIN: "Admin" };
-const ROLE_HOME: Record<UserRole, string> = { ALUNO: "/meu-perfil", RECRUTADOR: "/recrutador", ADMIN: "/admin" };
+const BRAND_NAME = "Talent Valley — ir para a página inicial";
+const LANDING = "/";
+const COLLAPSE = "Recolher menu lateral";
+const EXPAND = "Expandir menu lateral";
 const ROLES = Object.keys(NAV_LABELS) as UserRole[];
 
 function stubSystemColorScheme(prefersDark: boolean) {
@@ -75,14 +78,41 @@ function signIn(role: UserRole | null, pathname = "/") {
   mocks.pathname = pathname;
 }
 
-function renderShell() {
-  return render(
+function shellTree() {
+  return (
     <ThemeProvider theme={talentValleyTheme}>
       <AppShell>
         <p>{PAGE_CONTENT}</p>
       </AppShell>
-    </ThemeProvider>,
+    </ThemeProvider>
   );
+}
+
+function renderShell() {
+  return render(shellTree());
+}
+
+// Like stubSystemColorScheme, but the width of the screen can change while the test runs:
+// `setDesktop(true)` makes it as wide as a desktop (lg breakpoint and up) and tells the listeners.
+function stubResizableScreen(startsDesktop: boolean) {
+  let desktop = startsDesktop;
+  const listeners = new Set<() => void>();
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    get matches() {
+      return query.includes("min-width") ? desktop : query.includes("dark");
+    },
+    media: query,
+    addEventListener: (_event: string, listener: () => void) => listeners.add(listener),
+    removeEventListener: (_event: string, listener: () => void) => listeners.delete(listener),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  }));
+  return {
+    setDesktop(next: boolean) {
+      desktop = next;
+      act(() => listeners.forEach((listener) => listener()));
+    },
+  };
 }
 
 function navLink(name: string) {
@@ -126,6 +156,7 @@ describe("AppShell", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     window.localStorage.clear();
   });
@@ -176,19 +207,135 @@ describe("AppShell", () => {
   });
 
   describe("brand link", () => {
-    it.each(ROLES)("leads %s users to their own home", (role) => {
+    it.each(ROLES)("leads %s users to the landing page, not to their role home", (role) => {
       signIn(role, "/qualquer/rota");
       renderShell();
 
-      expect(navLink("Talent Valley").getAttribute("href")).toBe(ROLE_HOME[role]);
+      expect(screen.getAllByRole("link", { name: BRAND_NAME })[0].getAttribute("href")).toBe(LANDING);
     });
 
-    it("is plain, non-interactive identity while there is no signed-in user", () => {
+    it("is offered in the side menu and in the mobile top bar", () => {
+      renderShell();
+
+      expect(screen.getAllByRole("link", { name: BRAND_NAME })).toHaveLength(2);
+    });
+
+    it("still leads to the landing page while there is no signed-in user", () => {
       signIn(null);
       renderShell();
 
-      expect(screen.getByText("Valley")).not.toBeNull();
-      expect(screen.queryByRole("link")).toBeNull();
+      expect(screen.getAllByRole("link", { name: BRAND_NAME })[0].getAttribute("href")).toBe(LANDING);
+    });
+  });
+
+  describe("collapsible side menu", () => {
+    it("starts expanded with the labels visible", () => {
+      renderShell();
+
+      expect(screen.getByRole("button", { name: COLLAPSE }).getAttribute("aria-expanded")).toBe("true");
+      expect(screen.getByText("Meu perfil")).not.toBeNull();
+    });
+
+    it("collapses to icons, keeps every link reachable by name and remembers the choice", async () => {
+      signIn("RECRUTADOR");
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.click(screen.getByRole("button", { name: COLLAPSE }));
+
+      expect(screen.getByRole("button", { name: EXPAND }).getAttribute("aria-expanded")).toBe("false");
+      for (const label of NAV_LABELS.RECRUTADOR) {
+        expect(navLink(label)).not.toBeNull();
+      }
+      expect(window.localStorage.getItem("tv-sidebar-collapsed")).toBe("1");
+    });
+
+    it("hides the user name and role when collapsed, keeping the account button named", async () => {
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.click(screen.getByRole("button", { name: COLLAPSE }));
+
+      expect(screen.queryByText(ROLE_LABEL.ALUNO)).toBeNull();
+      expect(screen.getByRole("button", { name: ACCOUNT_TRIGGER })).not.toBeNull();
+    });
+
+    it("expands again and stores the new choice", async () => {
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.click(screen.getByRole("button", { name: COLLAPSE }));
+      await user.click(screen.getByRole("button", { name: EXPAND }));
+
+      expect(screen.getByRole("button", { name: COLLAPSE })).not.toBeNull();
+      expect(window.localStorage.getItem("tv-sidebar-collapsed")).toBe("0");
+    });
+
+    it("opens collapsed when the browser remembered the choice", () => {
+      window.localStorage.setItem("tv-sidebar-collapsed", "1");
+      renderShell();
+
+      expect(screen.getByRole("button", { name: EXPAND })).not.toBeNull();
+    });
+
+    it("still collapses and expands when the browser blocks storage", async () => {
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("blocked");
+      });
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new Error("blocked");
+      });
+      const user = userEvent.setup();
+      renderShell();
+      const toggle = () => screen.getByRole("button", { name: /menu lateral$/ });
+      const before = toggle().getAttribute("aria-label");
+
+      await user.click(toggle());
+      expect(toggle().getAttribute("aria-label")).not.toBe(before);
+
+      await user.click(toggle());
+      expect(toggle().getAttribute("aria-label")).toBe(before);
+    });
+
+    it("shows a tooltip with the page name over each icon when collapsed", async () => {
+      signIn("RECRUTADOR");
+      window.localStorage.setItem("tv-sidebar-collapsed", "1");
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.hover(navLink("Favoritos"));
+
+      expect((await screen.findByRole("tooltip")).textContent).toBe("Favoritos");
+    });
+
+    it("shows a tooltip with the user name over the avatar when collapsed", async () => {
+      window.localStorage.setItem("tv-sidebar-collapsed", "1");
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.hover(screen.getByRole("button", { name: ACCOUNT_TRIGGER }));
+
+      expect((await screen.findByRole("tooltip")).textContent).toBe(USER_NAME);
+    });
+
+    it("keeps the same avatar on screen when collapsing and expanding, so the photo is not downloaded again", async () => {
+      mocks.photo = { photoPath: PHOTO_PATH, reloadKey: 1 };
+      const user = userEvent.setup();
+      renderShell();
+      const avatar = screen.getByRole("img", { name: `Foto de ${USER_NAME}` });
+
+      await user.click(screen.getByRole("button", { name: COLLAPSE }));
+      expect(screen.getByRole("img", { name: `Foto de ${USER_NAME}` })).toBe(avatar);
+
+      await user.click(screen.getByRole("button", { name: EXPAND }));
+      expect(screen.getByRole("img", { name: `Foto de ${USER_NAME}` })).toBe(avatar);
+    });
+
+    it("is not offered in the mobile drawer", async () => {
+      renderShell();
+      await openDrawer();
+
+      expect(screen.queryByRole("button", { name: COLLAPSE })).toBeNull();
     });
   });
 
@@ -434,21 +581,78 @@ describe("AppShell", () => {
       expect(isSelected(navLink("Visão geral"))).toBe(false);
     });
 
-    it("links change-password and highlights it on the account password page", async () => {
-      signIn("ALUNO", CHANGE_PASSWORD);
+    it("marks the current page link for assistive technology", async () => {
+      signIn("ADMIN", "/admin/auditoria");
       renderShell();
       await openDrawer();
 
-      const link = navLink("Alterar senha");
-      expect(link.getAttribute("href")).toBe(CHANGE_PASSWORD);
-      expect(isSelected(link)).toBe(true);
+      expect(navLink("Auditoria").getAttribute("aria-current")).toBe("page");
+      expect(navLink("Visão geral").getAttribute("aria-current")).toBeNull();
     });
 
-    it("does not highlight change-password on other pages", async () => {
+    it("offers the account menu with change-password and highlights it on the account password page", async () => {
+      signIn("ALUNO", CHANGE_PASSWORD);
+      renderShell();
+      const user = await openDrawer();
+
+      await user.click(screen.getByRole("button", { name: ACCOUNT_TRIGGER }));
+      const item = within(await screen.findByRole("menu")).getByRole("menuitem", { name: "Alterar senha" });
+
+      expect(item.getAttribute("href")).toBe(CHANGE_PASSWORD);
+      expect(isSelected(item)).toBe(true);
+    });
+
+    it("closes by itself when the address changes, for instance with the phone's back gesture", async () => {
+      signIn("RECRUTADOR", "/recrutador");
+      const { rerender } = renderShell();
+      await openDrawer();
+
+      mocks.pathname = "/recrutador/favoritos";
+      rerender(shellTree());
+
+      await waitForDrawerToClose();
+    });
+
+    it("also closes the account menu when the address changes", async () => {
+      const { rerender } = renderShell();
+      await openAccountMenu();
+
+      mocks.pathname = "/meu-perfil/outra";
+      rerender(shellTree());
+
+      await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    });
+
+    it("does not open on a screen as wide as a desktop", async () => {
+      stubResizableScreen(true);
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.click(screen.getByRole("button", { name: "Abrir menu", hidden: true }));
+
+      expect(screen.queryByRole("button", { name: "Fechar menu" })).toBeNull();
+    });
+
+    it("closes, instead of staying open and locking the page, when the screen becomes as wide as a desktop", async () => {
+      const screenSize = stubResizableScreen(false);
       renderShell();
       await openDrawer();
 
-      expect(isSelected(navLink("Alterar senha"))).toBe(false);
+      screenSize.setDesktop(true);
+
+      await waitForDrawerToClose();
+    });
+
+    it("also closes an account menu opened from the drawer when the screen becomes as wide as a desktop", async () => {
+      const screenSize = stubResizableScreen(false);
+      renderShell();
+      const user = await openDrawer();
+      await user.click(screen.getByRole("button", { name: ACCOUNT_TRIGGER }));
+      await screen.findByRole("menu");
+
+      screenSize.setDesktop(true);
+
+      await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
     });
 
     it("closes with the close button", async () => {
@@ -479,32 +683,34 @@ describe("AppShell", () => {
       await waitForDrawerToClose();
     });
 
-    it("closes after choosing change-password", async () => {
+    it("closes after choosing change-password in the account menu", async () => {
       renderShell();
       const user = await openDrawer();
 
-      await user.click(navLink("Alterar senha"));
+      await user.click(screen.getByRole("button", { name: ACCOUNT_TRIGGER }));
+      await user.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: "Alterar senha" }));
 
       await waitForDrawerToClose();
     });
 
-    it("closes after clicking the brand, which leads to the role home", async () => {
+    it("closes after clicking the brand, which leads to the landing page", async () => {
       signIn("ADMIN", "/admin/alunos");
       renderShell();
       const user = await openDrawer();
-      const brand = navLink("Talent Valley");
+      const brand = screen.getByRole("link", { name: BRAND_NAME });
 
-      expect(brand.getAttribute("href")).toBe(ROLE_HOME.ADMIN);
+      expect(brand.getAttribute("href")).toBe(LANDING);
       await user.click(brand);
 
       await waitForDrawerToClose();
     });
 
-    it("logs out, closes the drawer and redirects to the login page", async () => {
+    it("logs out from the account menu, closes the drawer and redirects to the login page", async () => {
       renderShell();
       const user = await openDrawer();
 
-      await user.click(screen.getByRole("button", { name: "Sair" }));
+      await user.click(screen.getByRole("button", { name: ACCOUNT_TRIGGER }));
+      await user.click(await screen.findByRole("menuitem", { name: "Sair" }));
 
       await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith(LOGIN));
       expect(mocks.auth.logout).toHaveBeenCalledTimes(1);

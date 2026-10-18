@@ -61,6 +61,8 @@ export const talentValleyTheme = createTheme({
   cssVariables: {
     colorSchemeSelector: "class",
   },
+  // MUI transitions (drawer, menu, dialog, ripple) follow the system "reduce motion" setting.
+  motion: { reducedMotion: "system" },
   colorSchemes: {
     light: {
       palette: {
