@@ -53,7 +53,7 @@ public sealed class UpdateDadosBasicosRequest
 public sealed class UpdateSobreRequest
 {
     private string? bio = null;
-    [StringLength(1500), NoEmoji, NoControlCharacters]
+    [StringLength(1500, ErrorMessage = "O texto deve ter no máximo 1500 caracteres."), NoEmoji, NoControlCharacters(AllowLineBreaks = true)]
     public string? Bio { get => bio; init => bio = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
 }
 

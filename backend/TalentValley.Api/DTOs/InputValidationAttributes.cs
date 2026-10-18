@@ -110,8 +110,12 @@ public sealed class MeaningfulTextAttribute : ValidationAttribute
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public sealed class NoControlCharactersAttribute : ValidationAttribute
 {
+    /// <summary>Long-text fields (bio, descriptions) accept paragraph breaks (\n and \r).</summary>
+    public bool AllowLineBreaks { get; init; }
+
     public NoControlCharactersAttribute() => ErrorMessage = "O texto informado contém caracteres inválidos.";
-    public override bool IsValid(object? value) => value is null || value is string text && !InputValidation.HasControlCharacters(text);
+    public override bool IsValid(object? value) =>
+        value is null || value is string text && !InputValidation.HasControlCharacters(AllowLineBreaks ? text.Replace("\r", "").Replace("\n", "") : text);
 }
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]

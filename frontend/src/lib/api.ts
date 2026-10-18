@@ -174,11 +174,27 @@ async function sendMutation<T>(
   return JSON.parse(text) as T;
 }
 
-// Friendly error text: prefer the backend ProblemDetails title, otherwise the
-// caller-provided fallback message.
+const VALIDATION_FALLBACK = "Alguns dados não são válidos. Revise os campos e tente novamente.";
+
+// A 400 validation response carries the reason per field. Our own validation
+// messages are in Portuguese (they have accents); the framework's default ones
+// are English, so those are replaced by a generic Portuguese message.
+function getValidationMessage(problem: ProblemDetails | undefined): string | undefined {
+  if (!problem?.errors) return undefined;
+  const first = Object.values(problem.errors).flat()[0];
+  return first && /[À-ÿ]/.test(first) ? first : VALIDATION_FALLBACK;
+}
+
+// Friendly error text: prefer the validation reason, then the backend
+// ProblemDetails title, otherwise the caller-provided fallback message.
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiError) {
-    return error.problem?.title ?? error.message ?? fallback;
+    return (
+      (error.status === 400 ? getValidationMessage(error.problem) : undefined) ??
+      error.problem?.title ??
+      error.message ??
+      fallback
+    );
   }
   if (error instanceof Error && error.message) {
     return error.message;
