@@ -1,10 +1,11 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TalentCard } from "@/components/recruiter/TalentCard";
 import { ApiError } from "@/lib/api";
 import { addFavorite, removeFavorite } from "@/lib/recruiter";
 import { makeTalentListItem } from "./recruiterFixtures";
+import { renderThemed as render } from "./renderThemed";
 
 vi.mock("@/hooks/useProtectedFile", () => ({
   useProtectedFile: () => ({ url: null, loading: false, error: null, reload: vi.fn() }),

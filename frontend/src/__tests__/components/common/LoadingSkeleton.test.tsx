@@ -18,6 +18,11 @@ describe("LoadingSkeleton", () => {
     expect(container.querySelectorAll(".MuiSkeleton-root")).toHaveLength(5);
   });
 
+  it("uses the requested height for the placeholders", () => {
+    const { container } = render(<LoadingSkeleton count={1} height={190} />);
+    expect(container.querySelector<HTMLElement>(".MuiSkeleton-root")?.style.height).toBe("190px");
+  });
+
   it("hides the placeholder shapes from screen readers", () => {
     const { container } = render(<LoadingSkeleton count={2} />);
     expect(container.querySelector("[aria-hidden='true'] .MuiSkeleton-root")).not.toBeNull();

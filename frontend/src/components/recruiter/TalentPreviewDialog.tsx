@@ -9,6 +9,7 @@ import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import PlaceOutlined from "@mui/icons-material/PlaceOutlined";
 import VerifiedOutlined from "@mui/icons-material/VerifiedOutlined";
+import { brandWash } from "@/components/common/surfaceGradient";
 import { ApiError, getApiErrorMessage } from "@/lib/api";
 import { fetchTalent } from "@/lib/recruiter";
 import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
@@ -26,7 +27,7 @@ interface TalentPreviewDialogProps {
 
 export function TalentPreviewDialog({ open, slug, onClose, onFavoriteChange, onUnavailable }: TalentPreviewDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="talent-preview-title"
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" aria-labelledby="talent-preview-title"
       slotProps={{ paper: { sx: { m: { xs: 1, sm: 3 }, maxHeight: { xs: "calc(100% - 16px)", sm: "calc(100% - 64px)" } } } }}>
       <DialogTitle>
         <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
@@ -98,7 +99,7 @@ function TalentPreviewContent({ slug, onClose, onFavoriteChange, onUnavailable }
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} sx={{ alignItems: { xs: "center", sm: "flex-start" } }}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} sx={(theme) => ({ alignItems: { xs: "center", sm: "flex-start" }, p: 2.5, borderRadius: "16px", backgroundImage: brandWash(theme) })}>
         <ProtectedTalentPhoto path={profile.fotoUrl} name={profile.nomeCompleto} size={96} />
         <Stack spacing={1} sx={{ minWidth: 0, flex: 1, alignItems: { xs: "center", sm: "flex-start" }, textAlign: { xs: "center", sm: "left" } }}>
           <Typography component="h2" variant="h5">{profile.nomeCompleto}</Typography>
@@ -111,17 +112,17 @@ function TalentPreviewContent({ slug, onClose, onFavoriteChange, onUnavailable }
             onUnavailable={handleUnavailable} />
         </Stack>
       </Stack>
-      {profile.bio && <Box><Typography variant="subtitle2" gutterBottom>Sobre</Typography>
+      {profile.bio && <Box><Typography variant="subtitle2" color="text.secondary" gutterBottom>Sobre</Typography>
         <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{profile.bio}</Typography></Box>}
-      {mainFormation && <Box><Typography variant="subtitle2" gutterBottom>{mainFormation.principal ? "Formação principal" : "Formação"}</Typography>
+      {mainFormation && <Box><Typography variant="subtitle2" color="text.secondary" gutterBottom>{mainFormation.principal ? "Formação principal" : "Formação"}</Typography>
         <Stack spacing={.75}>
           <Typography variant="body2"><strong>{TIPO_FORMACAO_LABELS[mainFormation.tipo]}:</strong> {mainFormation.nome} · {mainFormation.instituicao}</Typography>
           {mainFormation.rpvVerificado && <Chip icon={<VerifiedOutlined />} size="small" color="success" label="Verificado pelo Rio Pomba Valley" sx={{ alignSelf: "flex-start" }} />}
         </Stack></Box>}
-      <Box><Typography variant="subtitle2" gutterBottom>Competências</Typography>
+      <Box><Typography variant="subtitle2" color="text.secondary" gutterBottom>Competências</Typography>
         {profile.competencias.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.competencias.slice(0, 8).map((item) => <Chip key={item.id} label={item.nome} size="small" variant="outlined" />)}</Stack>
           : <Typography variant="body2" color="text.secondary">Nenhuma competência informada.</Typography>}</Box>
-      <Box><Typography variant="subtitle2" gutterBottom>Disponibilidade e modalidades</Typography>
+      <Box><Typography variant="subtitle2" color="text.secondary" gutterBottom>Disponibilidade e modalidades</Typography>
         {profile.disponibilidades.length || profile.modalidades.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>
           {profile.disponibilidades.map((item) => <Chip key={item} label={DISPONIBILIDADE_LABELS[item]} size="small" color="primary" variant="outlined" />)}
           {profile.modalidades.map((item) => <Chip key={item} label={MODALIDADE_LABELS[item]} size="small" />)}

@@ -6,6 +6,8 @@ interface LoadingSkeletonProps {
   variant?: LoadingSkeletonVariant;
   /** How many placeholders to draw (at most 6). */
   count?: number;
+  /** Height of each placeholder in pixels, when the real items are taller than the default. */
+  height?: number;
 }
 
 const LAYOUT: Record<LoadingSkeletonVariant, { className: string; height: number }> = {
@@ -17,8 +19,9 @@ const LAYOUT: Record<LoadingSkeletonVariant, { className: string; height: number
 const SLOTS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 
 /** Placeholder shown while data loads. Screen readers hear "Carregando…"; the shapes are hidden from them. */
-export function LoadingSkeleton({ variant = "list", count = 3 }: LoadingSkeletonProps) {
-  const { className, height } = LAYOUT[variant];
+export function LoadingSkeleton({ variant = "list", count = 3, height: customHeight }: LoadingSkeletonProps) {
+  const { className, height: defaultHeight } = LAYOUT[variant];
+  const height = customHeight ?? defaultHeight;
 
   return (
     <div role="status">

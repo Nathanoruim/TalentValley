@@ -7,13 +7,15 @@ interface EmptyStateProps {
   /** Material icon, decorative. */
   icon?: ReactNode;
   title: string;
+  /** Element of the title. Use "h1" when the placeholder replaces a whole page. */
+  titleAs?: "p" | "h1" | "h2";
   description?: string;
   /** What the person can do next (a button or link). */
   action?: ReactNode;
 }
 
 /** Friendly placeholder for a list or section with nothing to show yet. */
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, titleAs = "p", description, action }: EmptyStateProps) {
   return (
     <Box
       className="flex flex-col items-center gap-3 px-6 py-10 text-center"
@@ -35,7 +37,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
         </Box>
       )}
       <div>
-        <Typography component="p" variant="subtitle1">
+        <Typography component={titleAs} variant="subtitle1">
           {title}
         </Typography>
         {description && (

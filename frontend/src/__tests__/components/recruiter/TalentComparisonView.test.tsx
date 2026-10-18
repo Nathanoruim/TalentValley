@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TalentComparisonView } from "@/components/recruiter/TalentComparisonView";
@@ -6,6 +6,7 @@ import { ApiError, apiDownload } from "@/lib/api";
 import { fetchTalentComparison } from "@/lib/recruiter";
 import type { TalentComparison } from "@/types/recruiter";
 import { makeTalentProfile } from "./recruiterFixtures";
+import { renderThemed as render } from "./renderThemed";
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -86,7 +87,7 @@ describe("TalentComparisonView", () => {
       setSlugs(...slugs);
       render(<TalentComparisonView />);
 
-      expect(screen.getByText(SELECT_TWO)).toBeTruthy();
+      expect(screen.getByRole("heading", { level: 1, name: SELECT_TWO })).toBeTruthy();
       expect(screen.getByRole("link", { name: "Explorar talentos" }).getAttribute("href")).toBe("/recrutador/talentos");
       expect(fetchMock).not.toHaveBeenCalled();
     });
@@ -165,6 +166,14 @@ describe("TalentComparisonView", () => {
       expect(within(articles[0]).getByRole("heading", { name: "Ana Lima" })).toBeTruthy();
       expect(within(articles[1]).getByRole("heading", { name: "Bruno Reis" })).toBeTruthy();
       expect(screen.getByRole("heading", { name: "Em comum" })).toBeTruthy();
+    });
+
+    it("labels the two sides as Aluno A and Aluno B", async () => {
+      await renderComparison();
+
+      const articles = screen.getAllByRole("article");
+      expect(within(articles[0]).getByText("Aluno A")).toBeTruthy();
+      expect(within(articles[1]).getByText("Aluno B")).toBeTruthy();
     });
 
     it("shows location, bio and placeholders when they are missing", async () => {

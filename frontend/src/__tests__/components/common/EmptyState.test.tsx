@@ -20,6 +20,14 @@ describe("EmptyState", () => {
     expect(screen.queryByRole("button")).toBeNull();
   });
 
+  it("renders the title as a paragraph by default and as a heading when asked", () => {
+    const { unmount } = renderState();
+    expect(screen.queryByRole("heading")).toBeNull();
+    unmount();
+    renderState({ titleAs: "h1" });
+    expect(screen.getByRole("heading", { level: 1, name: "Nenhum favorito ainda" })).toBeTruthy();
+  });
+
   it("shows the description, the icon and the action", () => {
     const { container } = renderState({
       icon: <SearchOffIcon />,
