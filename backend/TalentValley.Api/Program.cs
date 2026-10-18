@@ -37,6 +37,8 @@ builder.Services.AddScoped<FavoriteService>();
 builder.Services.AddScoped<TalentComparisonService>();
 builder.Services.AddScoped<RecruiterDashboardService>();
 builder.Services.AddScoped<CatalogSeedService>();
+builder.Services.AddOptions<DemoOptions>().Bind(builder.Configuration.GetSection("Demo"));
+builder.Services.AddScoped<DemoService>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
 builder.Services.AddOpenApi();

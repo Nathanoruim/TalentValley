@@ -348,9 +348,10 @@ public sealed class FoundationTests
             var db = provider.GetRequiredService<AppDbContext>();
             Assert.False(db.Database.HasPendingModelChanges());
             var migrations = (await db.Database.GetAppliedMigrationsAsync()).ToList();
-            Assert.Equal(2, migrations.Count);
+            Assert.Equal(3, migrations.Count);
             Assert.EndsWith("_InitialCreate", migrations[0]);
             Assert.EndsWith("_AddDataProtectionKeys", migrations[1]);
+            Assert.EndsWith("_AddUserDemoFlag", migrations[2]);
             Assert.True(db.Database.IsNpgsql());
         });
     }

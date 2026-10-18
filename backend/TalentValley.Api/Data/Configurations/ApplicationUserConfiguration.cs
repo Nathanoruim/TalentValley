@@ -12,6 +12,8 @@ public sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Appl
 
         builder.Property(x => x.NomeBusca).IsRequired().HasMaxLength(150);
 
+        builder.Property(x => x.EhDemo).HasDefaultValue(false);
+
         builder.HasIndex(x => x.NomeBusca);
         builder.HasIndex(x => x.NormalizedEmail).HasDatabaseName("EmailIndex").IsUnique();
     }

@@ -9,4 +9,6 @@ public class ApplicationUser : IdentityUser<Guid>
     public DateTimeOffset CriadoEm { get; set; }
     public DateTimeOffset? UltimoLoginEm { get; set; }
     public DateTimeOffset? LoginAnteriorEm { get; set; }
+    // Fictitious account used only by the admin demonstration mode; it never has a usable password.
+    public bool EhDemo { get; set; }
 }
