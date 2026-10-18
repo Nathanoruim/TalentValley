@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TalentDiscoveryView } from "@/components/recruiter/TalentDiscoveryView";
@@ -7,6 +7,7 @@ import type { PaginatedResponse, TalentListItem, TalentProfile } from "@/types/r
 import type { CatalogoCompetenciaResponse } from "@/types/student";
 import { makeFilters, makeTalentPage } from "./recruiterDiscoveryFixtures";
 import { makeTalentListItem, makeTalentProfile } from "./recruiterFixtures";
+import { renderThemed as render } from "./renderThemed";
 
 vi.setConfig({ testTimeout: 15_000 });
 

@@ -3,8 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Alert, Box, Button, Chip, Container, Divider, Paper, Skeleton, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, Chip, Container, Divider, Skeleton, Stack, Typography } from "@mui/material";
 import ArrowBackOutlined from "@mui/icons-material/ArrowBackOutlined";
+import CompareArrowsOutlined from "@mui/icons-material/CompareArrowsOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Reveal } from "@/components/common/Reveal";
 import { ApiError, getApiErrorMessage } from "@/lib/api";
 import { fetchTalentComparison } from "@/lib/recruiter";
 import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, NIVEL_IDIOMA_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
@@ -33,20 +37,22 @@ export function TalentComparisonView() {
     return () => { active = false; };
   }, [slugs, version]);
   if (!slugs) return <ComparisonState title="Selecione exatamente dois talentos para comparar." />;
-  if (loading) return <Container maxWidth="xl" sx={{ py: 4 }}><Stack spacing={2}>{[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={180} />)}</Stack></Container>;
+  if (loading) return <Container maxWidth="xl" sx={{ py: 4 }}><Stack spacing={2}>{[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={180} sx={{ borderRadius: "16px" }} />)}</Stack></Container>;
   function retry() { setLoading(true); setError(null); setVersion((value) => value + 1); }
   if (error || !comparison) return <Container maxWidth="md" sx={{ py: 5 }}><Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error ?? "Não foi possível carregar a comparação."}</Alert></Container>;
   return <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
-    <Box><Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />}>Voltar para talentos</Button><Typography component="h1" variant="h4" sx={{ mt: 1 }}>Comparar talentos</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>Informações apresentadas lado a lado, sem ranking ou recomendação.</Typography></Box>
+    <Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />} sx={{ alignSelf: "flex-start" }}>Voltar para talentos</Button>
+    <PageHeader title="Comparar talentos" description="Informações apresentadas lado a lado, sem ranking ou recomendação." />
     <Box className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-      <ComparisonSide profile={comparison.talentoA} exclusiveCompetencies={exclusiveCompetencies(comparison.talentoA, comparison.emComum)} />
-      <Common common={comparison.emComum} />
-      <ComparisonSide profile={comparison.talentoB} exclusiveCompetencies={exclusiveCompetencies(comparison.talentoB, comparison.emComum)} />
+      <Reveal index={1}><ComparisonSide label="Aluno A" profile={comparison.talentoA} exclusiveCompetencies={exclusiveCompetencies(comparison.talentoA, comparison.emComum)} /></Reveal>
+      <Reveal index={2}><Common common={comparison.emComum} /></Reveal>
+      <Reveal index={3}><ComparisonSide label="Aluno B" profile={comparison.talentoB} exclusiveCompetencies={exclusiveCompetencies(comparison.talentoB, comparison.emComum)} /></Reveal>
     </Box>
   </Stack></Container>;
 }
 
-function ComparisonSide({ profile, exclusiveCompetencies }: { profile: TalentProfile; exclusiveCompetencies: TalentCompetency[] }) { const [fileError, setFileError] = useState<string | null>(null); return <Paper component="article" elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, border: 1, borderColor: "divider", minWidth: 0 }}><Stack spacing={2.25}>
+function ComparisonSide({ label, profile, exclusiveCompetencies }: { label: string; profile: TalentProfile; exclusiveCompetencies: TalentCompetency[] }) { const [fileError, setFileError] = useState<string | null>(null); return <Card component="article" sx={{ p: { xs: 2, sm: 2.5 }, minWidth: 0, height: "100%" }}><Stack spacing={2.25}>
+  <Chip label={label} size="small" color="primary" variant="outlined" sx={{ alignSelf: "flex-start" }} />
   {fileError && <Alert severity="error" onClose={() => setFileError(null)}>{fileError}</Alert>}
   <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}><ProtectedTalentPhoto path={profile.fotoUrl} name={profile.nomeCompleto} size={72} /><Box sx={{ minWidth: 0 }}><Typography component="h2" variant="h6" sx={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>{profile.nomeCompleto}</Typography><Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{[profile.cidade, profile.uf].filter(Boolean).join(" / ") || "Localização não informada"}</Typography></Box></Stack>
   <CompareSection title="Sobre"><Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={profile.bio ? "text.primary" : "text.secondary"}>{profile.bio || "Apresentação profissional não informada."}</Typography></CompareSection>
@@ -57,8 +63,11 @@ function ComparisonSide({ profile, exclusiveCompetencies }: { profile: TalentPro
   <CompareSection title="Disponibilidade"><Chips values={profile.disponibilidades.map((item) => DISPONIBILIDADE_LABELS[item])} /></CompareSection>
   <CompareSection title="Modalidades"><Chips values={profile.modalidades.map((item) => MODALIDADE_LABELS[item])} /></CompareSection>
   <CompareSection title="Contato"><Stack spacing={.5}>{profile.contato.emailProfissional && <SafeEmail value={profile.contato.emailProfissional} />}{profile.contato.telefone && <SafePhone value={profile.contato.telefone} />}{profile.contato.linkedInUrl && <SafeExternal url={profile.contato.linkedInUrl} label="LinkedIn" />}{profile.contato.gitHubUrl && <SafeExternal url={profile.contato.gitHubUrl} label="GitHub" />}{profile.contato.portfolioUrl && <SafeExternal url={profile.contato.portfolioUrl} label="Portfólio" />}{profile.curriculo.possuiCurriculo && profile.curriculo.url && <ProtectedFileButton path={profile.curriculo.url} label="Abrir currículo" onError={setFileError} />}</Stack></CompareSection>
-</Stack></Paper>; }
-function Common({ common }: { common: TalentCommon }) { return <Paper component="section" elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, border: 1, borderColor: "primary.light", bgcolor: "action.hover", minWidth: 0 }}><Stack spacing={2.5}><Typography component="h2" variant="h6" align="center">Em comum</Typography><CompareSection title="Competências gerais"><CompetencyChips values={common.competencias} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Disponibilidade"><Chips values={common.disponibilidades.map((item) => DISPONIBILIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Modalidades"><Chips values={common.modalidades.map((item) => MODALIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection></Stack></Paper>; }
+</Stack></Card>; }
+function Common({ common }: { common: TalentCommon }) { return <Card component="section" sx={(theme) => {
+  const { primary, surface } = (theme.vars ?? theme).palette;
+  return { p: { xs: 2, sm: 2.5 }, minWidth: 0, height: "100%", borderColor: primary.main, backgroundColor: `color-mix(in srgb, ${primary.main} 8%, ${surface.raised})` };
+}}><Stack spacing={2.5}><Typography component="h2" variant="h6" align="center">Em comum</Typography><CompareSection title="Competências gerais"><CompetencyChips values={common.competencias} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Disponibilidade"><Chips values={common.disponibilidades.map((item) => DISPONIBILIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Modalidades"><Chips values={common.modalidades.map((item) => MODALIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection></Stack></Card>; }
 function CompareSection({ title, children }: { title: string; children: React.ReactNode }) { return <Box component="section"><Typography variant="subtitle1" sx={{ fontWeight: 700, mb: .75 }}>{title}</Typography>{children}</Box>; }
 function Chips({ values, emptyText = "Nenhuma informação cadastrada." }: { values: string[]; emptyText?: string }) { return values.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{values.map((item) => <Chip key={item} label={item} size="small" />)}</Stack> : <Empty text={emptyText} />; }
 function CompetencyChips({ values, emptyText = "Nenhuma informação cadastrada." }: { values: TalentCompetency[]; emptyText?: string }) { return values.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{values.map((item) => <Chip key={item.id} label={item.nome} size="small" />)}</Stack> : <Empty text={emptyText} />; }
@@ -69,4 +78,4 @@ function PlainValue({ children }: { children: React.ReactNode }) { return <Typog
 function SafeEmail({ value }: { value: string }) { return validateEmail(value) === null ? <Button component="a" href={`mailto:${value}`}>E-mail</Button> : <PlainValue>{value}</PlainValue>; }
 function SafePhone({ value }: { value: string }) { return validateBrazilianPhone(value) === null ? <Button component="a" href={`tel:${normalizePhone(value)}`}>Telefone</Button> : <PlainValue>{value}</PlainValue>; }
 function SafeExternal({ url, label, size }: { url: string; label: string; size?: "small" | "medium" }) { return validateHttpUrl(url) === null ? <Button component="a" href={url} target="_blank" rel="noreferrer" size={size}>{label}</Button> : <PlainValue>{url}</PlainValue>; }
-function ComparisonState({ title }: { title: string }) { return <Container maxWidth="sm" sx={{ py: 8 }}><Paper elevation={0} sx={{ p: 4, border: 1, borderColor: "divider", textAlign: "center" }}><Typography variant="h5">{title}</Typography><Button component={Link} href="/recrutador/talentos" sx={{ mt: 2 }}>Explorar talentos</Button></Paper></Container>; }
+function ComparisonState({ title }: { title: string }) { return <Container maxWidth="sm" sx={{ py: 8 }}><EmptyState icon={<CompareArrowsOutlined />} title={title} titleAs="h1" action={<Button component={Link} href="/recrutador/talentos">Explorar talentos</Button>} /></Container>; }

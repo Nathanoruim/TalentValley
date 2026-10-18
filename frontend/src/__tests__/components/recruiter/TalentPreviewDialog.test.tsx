@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 import { TalentPreviewDialog } from "@/components/recruiter/TalentPreviewDialog";
@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api";
 import { addFavorite, fetchTalent, removeFavorite } from "@/lib/recruiter";
 import type { TalentProfile } from "@/types/recruiter";
 import { makeFormation, makeTalentProfile } from "./recruiterFixtures";
+import { renderThemed as render } from "./renderThemed";
 
 vi.mock("@/hooks/useProtectedFile", () => ({
   useProtectedFile: () => ({ url: null, loading: false, error: null, reload: vi.fn() }),

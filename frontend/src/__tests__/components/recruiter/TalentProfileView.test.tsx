@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TalentProfileView } from "@/components/recruiter/TalentProfileView";
@@ -6,6 +6,7 @@ import { ApiError, apiDownload } from "@/lib/api";
 import { addFavorite, fetchTalent, removeFavorite } from "@/lib/recruiter";
 import type { TalentExperience, TalentProfile, TalentProject } from "@/types/recruiter";
 import { makeFormation, makeTalentProfile } from "./recruiterFixtures";
+import { renderThemed as render } from "./renderThemed";
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -167,6 +168,18 @@ describe("TalentProfileView", () => {
       const order = ["Formação Recente", "Cargo Intermediário", "Formação Antiga"].map((item) => text.indexOf(item));
       expect(order.every((position) => position >= 0)).toBe(true);
       expect(order).toEqual([...order].sort((a, b) => a - b));
+    });
+
+    it("lists the trajectory as an ordered list with one item per formation or experience", async () => {
+      await renderProfile({
+        formacoes: [makeFormation({ nome: "Formação Recente", dataInicio: "2024-08-01" })],
+        experiencias: [makeExperience({ cargo: "Cargo Antigo", dataInicio: "2020-06-01" })],
+      });
+
+      const items = within(section("Trajetória")).getAllByRole("listitem");
+      expect(items).toHaveLength(2);
+      expect(within(items[0]).getByText("Formação Recente")).toBeTruthy();
+      expect(within(items[1]).getByText("Cargo Antigo")).toBeTruthy();
     });
 
     it("describes a formation with labels, period and badges", async () => {
@@ -384,7 +397,7 @@ describe("TalentProfileView", () => {
       await user.click(screen.getByRole("button", { name: `Adicionar aos favoritos: ${NAME}` }));
 
       expect(await screen.findByText(UNAVAILABLE)).toBeTruthy();
-      expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+      expect(screen.queryByRole("heading", { level: 1, name: NAME })).toBeNull();
     });
   });
 
@@ -393,7 +406,7 @@ describe("TalentProfileView", () => {
       fetchMock.mockRejectedValue(new ApiError(NOT_FOUND, "Not found"));
       render(<TalentProfileView slug={SLUG} />);
 
-      expect(await screen.findByText(UNAVAILABLE)).toBeTruthy();
+      expect(await screen.findByRole("heading", { level: 1, name: UNAVAILABLE })).toBeTruthy();
       expect(screen.getByRole("link", { name: "Voltar para talentos" }).getAttribute("href")).toBe("/recrutador/talentos");
     });
 

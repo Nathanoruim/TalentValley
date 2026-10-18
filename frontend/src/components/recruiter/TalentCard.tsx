@@ -12,13 +12,22 @@ import { FavoriteButton } from "./FavoriteButton";
 
 export function TalentCard({ talent, onFavoriteChange, onUnavailable, comparisonSelected, onComparisonChange, onPreview }: { talent: TalentListItem; onFavoriteChange?: (favorite: boolean) => void; onUnavailable?: () => void; comparisonSelected?: boolean; onComparisonChange?: (selected: boolean) => void; onPreview?: () => void }) {
   return (
-    <Card component="article" sx={{ p: { xs: 2, sm: 2.5 } }}>
+    <Card
+      component="article"
+      sx={(theme) => {
+        const { primary } = (theme.vars ?? theme).palette;
+        return {
+          p: { xs: 2, sm: 2.5 },
+          ...(comparisonSelected && { borderColor: primary.main, boxShadow: `0 0 0 1px ${primary.main}` }),
+        };
+      }}
+    >
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5}>
         <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start", flex: 1, minWidth: 0 }}>
           <ProtectedTalentPhoto path={talent.fotoUrl} name={talent.nomeCompleto} />
           <Stack spacing={1.25} sx={{ minWidth: 0, flex: 1 }}>
             <div>
-              <Typography component="h2" variant="h6">{talent.nomeCompleto}</Typography>
+              <Typography component="h2" variant="h6" sx={{ overflowWrap: "anywhere" }}>{talent.nomeCompleto}</Typography>
               <Stack direction="row" spacing={.5} sx={{ alignItems: "center", mt: .25 }}>
                 <PlaceOutlined fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">{[talent.cidade, talent.uf].filter(Boolean).join(" / ") || "Localização não informada"}</Typography>

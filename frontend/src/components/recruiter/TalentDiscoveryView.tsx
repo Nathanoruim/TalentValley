@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  Alert, Box, Button, Chip, Container, Dialog, DialogContent, DialogTitle, Drawer, FormControl, IconButton,
-  InputLabel, MenuItem, Pagination, Paper, Select, Skeleton, Stack, Typography,
+  Alert, Box, Button, Card, Chip, Container, Dialog, DialogContent, DialogTitle, Drawer, FormControl, IconButton,
+  InputLabel, MenuItem, Pagination, Select, Stack, Typography,
 } from "@mui/material";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import FilterListOutlined from "@mui/icons-material/FilterListOutlined";
 import SearchOffOutlined from "@mui/icons-material/SearchOffOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Reveal } from "@/components/common/Reveal";
 import { fetchRecruiterCompetencies, fetchTalents, talentSearchParams } from "@/lib/recruiter";
 import { hasTalentFilters, parseTalentSearch } from "@/lib/recruiter-search";
 import { getApiErrorMessage } from "@/lib/api";
@@ -110,9 +114,11 @@ function TalentDiscoveryState({ initial }: { initial: TalentSearchFilters }) {
     } else setSelected((items) => items.filter((item) => item.id !== talent.id));
   }
 
+  const items = result?.items ?? [];
+
   return <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
-    <Box><Typography component="h1" variant="h4">Explorar talentos</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>Encontre perfis profissionais usando os critérios disponíveis.</Typography></Box>
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }} useFlexGap>
+    <PageHeader title="Explorar talentos" description="Encontre perfis profissionais usando os critérios disponíveis." />
+    <Card sx={{ p: 1.5 }}><Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }} useFlexGap>
       <Button variant="outlined" startIcon={<FilterListOutlined />} onClick={() => setMobileOpen(true)} sx={{ display: { md: "none" } }}>Filtros{filterCount ? ` (${filterCount})` : ""}</Button>
       <Button variant="outlined" startIcon={<FilterListOutlined />} onClick={() => setDesktopOpen(true)} sx={{ display: { xs: "none", md: "inline-flex" } }}>Filtros{filterCount ? ` (${filterCount})` : ""}</Button>
       <Typography variant="body2" color="text.secondary">{loading ? "Buscando…" : `${result?.totalItems ?? 0} talento(s) encontrado(s)`}</Typography>
@@ -120,18 +126,17 @@ function TalentDiscoveryState({ initial }: { initial: TalentSearchFilters }) {
         <Select labelId="sort-label" label="Ordenar por" value={initial.ordenacao ?? ""} onChange={(event) => navigate({ ...initial, page: 1, ordenacao: (event.target.value || null) as TalentSort | null })}>
           <MenuItem value=""><em>Padrão</em></MenuItem><MenuItem value="RELEVANCIA">Relevância</MenuItem><MenuItem value="RECENTES">Mais recentes</MenuItem><MenuItem value="NOME">Nome</MenuItem>
         </Select></FormControl>
-    </Stack>
+    </Stack></Card>
     {filterCount > 0 && <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap", alignItems: "center" }}><Typography variant="caption" color="text.secondary">Filtros ativos:</Typography>
       {activeLabels.map((label, index) => <Chip key={`${label}-${index}`} size="small" label={label} />)}<Button size="small" onClick={clear}>Limpar filtros</Button></Stack>}
     <Stack spacing={2} sx={{ minWidth: 0 }}>
         {error && <Alert severity="error" action={<Button color="inherit" onClick={retryResults}>Tentar novamente</Button>}>{error}</Alert>}
         {unavailableMessage && <Alert severity="info" onClose={() => setUnavailableMessage(null)}>{unavailableMessage}</Alert>}
         <ComparisonBar selected={selected} message={selectionMessage} />
-        {loading ? [1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={190} />)
-          : result && result.items.length > 0 ? result.items.map((talent) => <TalentCard key={talent.id} talent={talent} onFavoriteChange={(favorite) => updateFavorite(talent.id, favorite)} onUnavailable={() => talentUnavailable(talent)} comparisonSelected={selected.some((item) => item.id === talent.id)} onComparisonChange={(checked) => updateSelection(talent, checked)} onPreview={() => setPreviewSlug(talent.slug)} />)
-          : !error && <Paper elevation={0} sx={{ p: 5, border: 1, borderColor: "divider", textAlign: "center" }}><SearchOffOutlined color="action" sx={{ fontSize: 48 }} />
-            <Typography variant="h6" sx={{ mt: 1 }}>Nenhum talento encontrado</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>Tente ajustar os critérios da busca.</Typography>
-            {hasTalentFilters(initial) && <Button onClick={clear} sx={{ mt: 2 }}>Limpar filtros</Button>}</Paper>}
+        {loading && <LoadingSkeleton variant="list" count={3} height={190} />}
+        {!loading && items.map((talent, position) => <Reveal key={talent.id} index={position}><TalentCard talent={talent} onFavoriteChange={(favorite) => updateFavorite(talent.id, favorite)} onUnavailable={() => talentUnavailable(talent)} comparisonSelected={selected.some((item) => item.id === talent.id)} onComparisonChange={(checked) => updateSelection(talent, checked)} onPreview={() => setPreviewSlug(talent.slug)} /></Reveal>)}
+        {!loading && !error && items.length === 0 && <EmptyState icon={<SearchOffOutlined />} title="Nenhum talento encontrado" description="Tente ajustar os critérios da busca."
+          action={hasTalentFilters(initial) ? <Button onClick={clear}>Limpar filtros</Button> : undefined} />}
         {!loading && result && result.totalPages > 1 && <Stack sx={{ alignItems: "center", pt: 1 }}><Pagination page={result.page} count={result.totalPages} color="primary"
           onChange={(_, page) => navigate({ ...initial, page })} siblingCount={0} boundaryCount={1} aria-label="Paginação de talentos" /></Stack>}
     </Stack>
@@ -141,12 +146,12 @@ function TalentDiscoveryState({ initial }: { initial: TalentSearchFilters }) {
       <DialogContent dividers>{filters}</DialogContent>
     </Dialog>
     <Drawer anchor="right" open={desktopOpen} onClose={() => setDesktopOpen(false)} aria-labelledby="desktop-filter-title"
-      slotProps={{ paper: { sx: { width: { xs: "100%", sm: 360 }, p: 2.5 } } }}>
-      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-        <Typography id="desktop-filter-title" variant="h6">Filtros</Typography>
+      slotProps={{ paper: { sx: { width: { xs: "100%", sm: 380 }, display: "flex", flexDirection: "column" } } }}>
+      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, borderBottom: 1, borderColor: "divider" }}>
+        <Typography id="desktop-filter-title" component="h2" variant="h6">Filtros</Typography>
         <IconButton aria-label="Fechar filtros" onClick={() => setDesktopOpen(false)}><CloseOutlined /></IconButton>
       </Stack>
-      {filters}
+      <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>{filters}</Box>
     </Drawer>
     <TalentPreviewDialog open={Boolean(previewSlug)} slug={previewSlug} onClose={() => setPreviewSlug(null)}
       onFavoriteChange={previewFavoriteChange} onUnavailable={previewUnavailable} />

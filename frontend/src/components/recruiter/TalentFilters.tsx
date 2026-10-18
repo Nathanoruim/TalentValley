@@ -228,7 +228,11 @@ export function TalentFilters({
           />
         ))}
       </CheckSection>
-      <Stack direction="row" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ position: "sticky", bottom: 0, zIndex: 1, pt: 1.5, pb: 0.5, borderTop: 1, borderColor: "divider", bgcolor: "background.paper" }}
+      >
         <Button type="submit" variant="contained" fullWidth>
           Aplicar
         </Button>
@@ -252,7 +256,9 @@ function CheckSection({
       <Typography component="legend" variant="subtitle2" sx={{ mb: 0.5 }}>
         {label}
       </Typography>
-      <FormGroup>{children}</FormGroup>
+      <FormGroup row sx={{ columnGap: 1.5 }}>
+        {children}
+      </FormGroup>
     </Box>
   );
 }
