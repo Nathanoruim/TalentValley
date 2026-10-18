@@ -57,4 +57,13 @@ describe("StatCard", () => {
     render(card({ value: 0 }));
     expect(group().textContent).toContain("0");
   });
+
+  it("becomes a link to its area when given an href", () => {
+    stubMotionMedia("reduced");
+    render(card({ href: "/admin/alunos" }));
+    const link = screen.getByRole("link", { name: /Novos alunos/ });
+    expect(link.getAttribute("href")).toBe("/admin/alunos");
+    expect(link.textContent).toContain("7");
+    expect(screen.queryByRole("group")).toBeNull();
+  });
 });

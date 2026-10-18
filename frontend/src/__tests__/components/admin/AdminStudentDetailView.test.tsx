@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AdminStudentDetailView } from "@/components/admin/AdminViews";
+import { AdminStudentDetailView } from "@/components/admin/AdminStudentDetailView";
 import { adminApi } from "@/lib/admin";
 import { ApiError } from "@/lib/api";
 import type { AdminStudentDetail } from "@/types/admin";
@@ -62,7 +63,7 @@ function renderView(student: AdminStudentDetail = makeAdminStudentDetail()) {
 }
 
 async function findProfile() {
-  return screen.findByRole("heading", { level: 5, name: "Maria Souza" });
+  return screen.findByRole("heading", { level: 2, name: "Maria Souza" });
 }
 
 function section(title: string) {
