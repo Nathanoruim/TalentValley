@@ -134,6 +134,22 @@ describe("TalentProfileView", () => {
     expect(availability.getByText("Híbrido")).toBeTruthy();
   });
 
+  it("lists the sections in the approved order, with availability and résumé last", async () => {
+    await renderProfile();
+
+    const titles = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
+    expect(titles).toEqual([
+      "Sobre",
+      "Competências gerais",
+      "Trajetória",
+      "Projetos",
+      "Idiomas",
+      "Contato",
+      "Disponibilidade e modalidades",
+      "Currículo",
+    ]);
+  });
+
   it("shows empty-state text for every empty section", async () => {
     await renderProfile({
       bio: null,

@@ -13,7 +13,7 @@ describe("LoadingSkeleton", () => {
     expect(container.querySelectorAll(".MuiSkeleton-root")).toHaveLength(3);
   });
 
-  it.each(["stats", "cards", "list"] as const)("draws the requested number of placeholders for %s", (variant) => {
+  it.each(["stats", "stats-three", "cards", "list"] as const)("draws the requested number of placeholders for %s", (variant) => {
     const { container } = render(<LoadingSkeleton variant={variant} count={5} />);
     expect(container.querySelectorAll(".MuiSkeleton-root")).toHaveLength(5);
   });

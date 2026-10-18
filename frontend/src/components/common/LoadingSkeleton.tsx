@@ -1,6 +1,6 @@
 import { Skeleton } from "@mui/material";
 
-type LoadingSkeletonVariant = "stats" | "cards" | "list";
+type LoadingSkeletonVariant = "stats" | "stats-three" | "cards" | "list";
 
 interface LoadingSkeletonProps {
   variant?: LoadingSkeletonVariant;
@@ -12,6 +12,7 @@ interface LoadingSkeletonProps {
 
 const LAYOUT: Record<LoadingSkeletonVariant, { className: string; height: number }> = {
   stats: { className: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3", height: 104 },
+  "stats-three": { className: "grid gap-4 sm:grid-cols-3", height: 104 },
   cards: { className: "grid gap-4 sm:grid-cols-2", height: 168 },
   list: { className: "flex flex-col gap-3", height: 76 },
 };

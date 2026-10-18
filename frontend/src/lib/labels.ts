@@ -3,6 +3,7 @@ import type {
   ModalidadeTrabalho,
   NivelIdioma,
   StatusFormacao,
+  StatusValidacaoRpv,
   TipoDisponibilidade,
   TipoExperiencia,
   TipoFormacao,
@@ -51,6 +52,12 @@ export const STATUS_FORMACAO_LABELS: Record<StatusFormacao, string> = {
   EM_ANDAMENTO: "Em andamento",
   CONCLUIDO: "Concluído",
   TRANCADO: "Trancado",
+};
+
+export const STATUS_VALIDACAO_RPV_LABELS: Record<StatusValidacaoRpv, string> = {
+  PENDENTE: "Aguardando validação",
+  VERIFICADO: "Verificado pelo Rio Pomba Valley",
+  REJEITADO: "Validação não aprovada",
 };
 
 export const TIPO_EXPERIENCIA_LABELS: Record<TipoExperiencia, string> = {

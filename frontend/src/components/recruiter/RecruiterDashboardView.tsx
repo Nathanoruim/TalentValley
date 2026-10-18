@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Reveal } from "@/components/common/Reveal";
 import { StatCard } from "@/components/common/StatCard";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
+import { brandWash } from "@/components/common/surfaceGradient";
 import { fetchRecruiterDashboard } from "@/lib/recruiter";
 import { getApiErrorMessage } from "@/lib/api";
 import { validateSearchTerm } from "@/lib/validation";
@@ -85,13 +86,7 @@ export function RecruiterDashboardView() {
           <Card
             component="form"
             onSubmit={submitSearch}
-            sx={(theme) => {
-              const { primary, surface } = (theme.vars ?? theme).palette;
-              return {
-                p: { xs: 2.5, sm: 3.5 },
-                backgroundImage: `linear-gradient(135deg, color-mix(in srgb, ${primary.main} 14%, ${surface.raised}) 0%, ${surface.raised} 70%)`,
-              };
-            }}
+            sx={(theme) => ({ p: { xs: 2.5, sm: 3.5 }, backgroundImage: brandWash(theme) })}
           >
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "flex-start" } }}>
               <TextField
@@ -111,7 +106,7 @@ export function RecruiterDashboardView() {
           </Card>
         </Reveal>
         {error && <Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error}</Alert>}
-        {loading ? <LoadingSkeleton variant="stats" count={indicators.length} /> : (
+        {loading ? <LoadingSkeleton variant="stats-three" count={indicators.length} /> : (
           <Box className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {indicators.map((item, position) => (
               <StatCard key={item.key} label={item.label} value={data?.indicadores[item.key] ?? 0} icon={item.icon} index={position + 2} />

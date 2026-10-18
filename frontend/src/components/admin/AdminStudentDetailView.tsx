@@ -11,17 +11,11 @@ import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { formatBrazilianPhone, normalizePhone, validateBrazilianPhone, validateEmail, validateHttpUrl } from "@/lib/validation";
-import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, NIVEL_IDIOMA_LABELS, STATUS_FORMACAO_LABELS, TIPO_EXPERIENCIA_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
+import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, NIVEL_IDIOMA_LABELS, STATUS_FORMACAO_LABELS, STATUS_VALIDACAO_RPV_LABELS, TIPO_EXPERIENCIA_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
 import { ProtectedFileButton } from "@/components/recruiter/ProtectedFileButton";
 import { ProtectedTalentPhoto } from "@/components/recruiter/ProtectedTalentPhoto";
 import { useLoad } from "@/components/admin/useLoad";
 import { Page, LoadState, Status, Confirm } from "@/components/admin/adminShared";
-
-const STATUS_VALIDACAO_RPV_LABELS = {
-  PENDENTE: "Aguardando validação",
-  VERIFICADO: "Verificado pelo Rio Pomba Valley",
-  REJEITADO: "Validação não aprovada",
-};
 
 export function AdminStudentDetailView({ id }: { id: string }) {
   const state = useLoad(() => adminApi.student(id), [id]);

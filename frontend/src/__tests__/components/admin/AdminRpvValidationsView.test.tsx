@@ -184,7 +184,8 @@ describe("AdminRpvValidationsView detail", () => {
     ).toBeTruthy();
     expect(within(dialog).getByText(/800/)).toBeTruthy();
     expect(within(dialog).getByText(/Concluído/)).toBeTruthy();
-    expect(within(dialog).getByText(/PENDENTE/)).toBeTruthy();
+    expect(within(dialog).getByText("Aguardando validação")).toBeTruthy();
+    expect(within(dialog).queryByText(/PENDENTE/)).toBeNull();
     expect(within(dialog).getByRole("button", { name: "Abrir certificado" })).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Aprovar" })).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Rejeitar" })).toBeTruthy();

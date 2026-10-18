@@ -46,6 +46,7 @@ function SidebarNavItem({ item, pathname, compact, idPrefix, onNavigate }: Sideb
       onClick={onNavigate}
       sx={(theme) => ({
         position: "relative",
+        flexGrow: 0,
         minHeight: 44,
         px: 1.5,
         gap: compact ? 0 : 1.5,
