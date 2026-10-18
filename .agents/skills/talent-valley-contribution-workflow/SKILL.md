@@ -41,20 +41,7 @@ Each phase of a plan has its own branch, created from an up-to-date `origin/main
 
 ## 3. Database migrations (one per pull request)
 
-Applies when entities, configurations or `AppDbContext` change. The rules of `talent-valley-database` still apply. Warn the person clearly that the change touches the database.
-
-1. A pull request adds **at most one** new migration.
-2. Bring the branch up to date with `origin/main` so you see every migration already merged by others. Do it at the start of the phase, **before** editing anything, while the working tree is clean: `git fetch origin`, then `git rebase origin/main` if the branch was never pushed, or `git merge origin/main` if it was already pushed (check with `git ls-remote --heads origin <branch>`; empty output means never pushed). Never force-push to make a rebase work. A merge creates a commit: ask the person to approve it first. If the working tree is not clean when you need this step, stop and ask the person; do not commit, stash or discard changes on your own.
-3. Generate the migration with the commands in `AGENTS.md` ("Checks before saying a task is done"), with `ASPNETCORE_ENVIRONMENT=Development`. `dotnet ef migrations has-pending-model-changes` must report no pending changes. If the model changes again after you generated the migration, do not add a second one: remove yours as in step 6 (items 2 and 3) and generate it again.
-4. Never edit, rename, delete or regenerate a migration that is already in `origin/main`, unless the maintainer decides it (`AGENTS.md`, "Ask the maintainer first"). To see which migrations are in `main`: `git ls-tree --name-only origin/main backend/TalentValley.Api/Data/Migrations/`.
-5. Never edit the model snapshot by hand. Only the EF tool changes it.
-6. **If another pull request with a migration reaches `main` after you generated yours** (updating your branch conflicts on the snapshot), do not resolve the conflict by hand. If the update works without a conflict, still re-run `dotnet build backend/TalentValley.slnx` and `dotnet ef migrations has-pending-model-changes`. If the latter reports changes, do not undo the update (no `git reset`); skip item 1 below and follow items 2 to 4 only when the newest migration is yours and is not in `origin/main`; otherwise stop and show the real output to the person. These are the items:
-   1. When there is a conflict, cancel the update: `git rebase --abort` or `git merge --abort`.
-   2. List the migrations of your branch (`ls backend/TalentValley.Api/Data/Migrations/`) and check, with the command in step 4, that the newest one by timestamp is yours and is **not** in `origin/main`. `dotnet ef migrations remove` always removes the newest one, so removing a migration that is in `main` would break rule 4.
-   3. From the repository root, with `ASPNETCORE_ENVIRONMENT=Development`, run `dotnet tool restore` and `dotnet ef migrations remove --project backend/TalentValley.Api`. If it fails (for example because the migration was applied to your local database), stop and show the real error to the person.
-   4. Ask the person to approve a commit of the removal, update the branch with `origin/main` as in step 2, and generate the migration again (step 3).
-
-   If anything is unclear, stop and ask.
+Applies when entities, configurations or `AppDbContext` change. **Read `references/migrations.md` before touching a migration.** It holds the one-migration-per-PR protocol, how to bring the branch up to date, and what to do when another PR with a migration reaches `main` first. The rules of `talent-valley-database` still apply. Warn the person clearly that the change touches the database.
 
 ## 4. Doing the change
 
@@ -73,9 +60,7 @@ The review happens before the commit, so the changes are in the working tree: us
 
 The person must not approve the phase until this review has passed.
 
-Review request to give the person (fill the values):
-
-> Review a Talent Valley change that is not committed yet. Read `AGENTS.md` first (the section "Working on a change" does not apply to you, you are only a reviewer), then `.agents/skills/talent-valley-quality-gate/SKILL.md`. Branch: `<branch>`, base: `origin/main`. Do not edit, commit, stash, fetch, checkout or create branches; only report. Run `git status` and `git diff $(git merge-base HEAD origin/main)` to see the changes, and read every new (untracked) file directly. Re-run the checks from `AGENTS.md` yourself, but for the database only run `dotnet tool restore` and then `dotnet ef migrations has-pending-model-changes` with `ASPNETCORE_ENVIRONMENT=Development`; never run `dotnet ef migrations add` or `remove`. Planned phase: `<where / what / checks>`. Draft report: `<report>`. Answer in pt-BR, with file and line for each finding: (1) was everything in the phase done and nothing outside its scope changed; (2) does every claim in the report match the changes and the real command output; (3) is the change compliant with `AGENTS.md` and the relevant skills; (4) bugs and risks; (5) code quality by SonarQube criteria (`talent-valley-quality-gate` section 7).
+The review request to give the person is in `references/independent-review.md`. Fill its values (`<branch>`, `<where / what / checks>`, `<report>`).
 
 Then fix every finding on the same branch, re-run the checks, and ask for the review again until it passes. Put the review outcome in the report you show to the person (what was checked, problems found, how they were fixed).
 
@@ -87,7 +72,7 @@ After the person approves the phase report (`talent-valley-phased-delivery` sect
 2. `git push -u origin <branch>`. Never push to `main`.
 3. Open a pull request **to `main`**. If the tool cannot open it, give the person the branch name and ask them to open it on GitHub, then wait.
 4. The pull request description states: what changed and why, which files, which migration (if any), and which checks ran with their real results.
-5. Wait for CI and the SonarQube Cloud analysis and handle every issue as described in `talent-valley-quality-gate` section 8, fixing on the same branch. If the pull request shows a conflict on the model snapshot, or CI fails on `has-pending-model-changes`, follow section 3 step 6.
+5. Wait for CI and the SonarQube Cloud analysis and handle every issue as described in `talent-valley-quality-gate` section 8, fixing on the same branch. If the pull request shows a conflict on the model snapshot, or CI fails on `has-pending-model-changes`, follow `references/migrations.md` step 6.
 6. Tell the person the pull request is ready for the maintainer. **Merging is the maintainer's decision.**
 
 ## 7. Closing the phase

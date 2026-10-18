@@ -124,6 +124,23 @@ CI runs these checks, plus dependency audits and a Docker build, on every push a
 
 Use the smallest relevant set of skills under `.agents/skills/`.
 
+Quick guide — which skills to read for each kind of task:
+
+| Task | Read |
+| --- | --- |
+| New or changed screen, component, theme, animation | `talent-valley-frontend-ui` (+ `frontend/AGENTS.md`) |
+| New or changed API endpoint, DTO, service | `talent-valley-backend-api` + `talent-valley-domain-rules` |
+| New or changed entity, table, index, migration | `talent-valley-database` |
+| Login, roles, JWT cookie, CSRF, protected files | `talent-valley-auth-security` (maintainer decides, see above) |
+| Business rule or "what is allowed" question | `talent-valley-domain-rules` |
+| Folder structure, scope or boundary doubt | `talent-valley-architecture` |
+| Any task before saying it is done | `talent-valley-quality-gate` |
+| Phased plan, phase report, resume after context reset | `talent-valley-phased-delivery` + `talent-valley-project-brain` |
+| Branch, commit, migration order, pull request | `talent-valley-contribution-workflow` |
+| Delegating work to subagents | `talent-valley-smart-dispatch` |
+
+Claude Code loads skills from `.claude/skills/`, which is a copy of `.agents/skills/`. `.agents/skills/` is the source of truth: after editing a skill there, copy it to `.claude/skills/` in the same pull request.
+
 - `talent-valley-architecture`: architecture, scope, boundaries, structure.
 - `talent-valley-backend-api`: ASP.NET REST endpoints, DTOs, services, API behavior.
 - `talent-valley-database`: EF Core, SQLite, migrations, indexes, constraints.
@@ -139,6 +156,13 @@ Use the smallest relevant set of skills under `.agents/skills/`.
 Read only the references needed for the current task.
 
 If your tool does not load skills automatically, open `.agents/skills/<skill-name>/SKILL.md` and read it yourself before working in that area.
+
+Model choice (details in `talent-valley-smart-dispatch`): use the cheapest model that can do the task correctly, and do not start a subagent for work that is faster to do directly.
+
+- `opus`: architecture, authentication/authorization, domain rules, database design and migrations, and the final review.
+- `sonnet`: normal implementation (controllers, services, pages, components), integration and debugging.
+- `haiku`: mechanical work (copy/label changes, simple tests, searching files, running checks and summarizing the output).
+- Security, authorization and domain-rule enforcement never go below `sonnet`. When unsure between two levels, pick the higher one.
 
 Before writing any frontend code, read `frontend/AGENTS.md`. The Next.js version in this repository has breaking changes; its docs are in `frontend/node_modules/next/dist/docs/` after `npm ci`.
 
