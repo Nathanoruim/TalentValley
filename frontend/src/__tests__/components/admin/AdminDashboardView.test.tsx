@@ -1,7 +1,8 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AdminDashboardView } from "@/components/admin/AdminViews";
+import { AdminDashboardView } from "@/components/admin/AdminDashboardView";
 import { adminApi } from "@/lib/admin";
 import { ApiError } from "@/lib/api";
 import type { AdminDashboard } from "@/types/admin";
@@ -35,7 +36,7 @@ describe("AdminDashboardView", () => {
     const { container } = render(<AdminDashboardView />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Visão geral" })).toBeTruthy();
-    expect(container.querySelectorAll(".MuiSkeleton-root")).toHaveLength(3);
+    expect(container.querySelectorAll(".MuiSkeleton-root")).toHaveLength(6);
     expect(screen.queryByText(ACTIVE_STUDENTS)).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
   });
@@ -60,6 +61,25 @@ describe("AdminDashboardView", () => {
       expect(within(card).getByText(value)).toBeTruthy();
     }
     expect(dashboardMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("highlights only the cards that ask for attention", async () => {
+    dashboardMock.mockResolvedValue(makeAdminDashboard());
+    render(<AdminDashboardView />);
+    await screen.findByText(ACTIVE_STUDENTS);
+
+    expect(cardFor("Solicitações de cadastro pendentes").getAttribute("aria-label")).toContain("requer atenção");
+    expect(cardFor("Validações RPV pendentes").getAttribute("aria-label")).toContain("requer atenção");
+    expect(cardFor(ACTIVE_STUDENTS).getAttribute("aria-label")).not.toContain("requer atenção");
+  });
+
+  it("does not highlight pending cards that are at zero", async () => {
+    dashboardMock.mockResolvedValue(makeAdminDashboard({ solicitacoesCadastroPendentes: 0, validacoesRpvPendentes: 0 }));
+    render(<AdminDashboardView />);
+    await screen.findByText(ACTIVE_STUDENTS);
+
+    expect(cardFor("Solicitações de cadastro pendentes").getAttribute("aria-label")).not.toContain("requer atenção");
+    expect(cardFor("Validações RPV pendentes").getAttribute("aria-label")).not.toContain("requer atenção");
   });
 
   it("lists the most used skills with their student counts", async () => {
@@ -98,20 +118,18 @@ describe("AdminDashboardView", () => {
     expect(within(cardFor("Validações RPV pendentes")).getByText("0")).toBeTruthy();
   });
 
-  it("offers quick links to the admin areas", async () => {
+  it("has no repeated row of buttons and links the indicator cards to their areas", async () => {
     dashboardMock.mockResolvedValue(makeAdminDashboard());
     render(<AdminDashboardView />);
     await screen.findByText(ACTIVE_STUDENTS);
 
-    const links: [string, string][] = [
-      ["Analisar solicitações", "/admin/solicitacoes"],
-      ["Gerenciar alunos", "/admin/alunos"],
-      ["Gerenciar recrutadores", "/admin/recrutadores"],
-      ["Ver validações RPV", "/admin/validacoes-rpv"],
-      ["Ver auditoria", "/admin/auditoria"],
-    ];
-    for (const [name, href] of links) {
-      expect(screen.getByRole("link", { name }).getAttribute("href")).toBe(href);
+    for (const name of ["Analisar solicitações", "Gerenciar alunos", "Gerenciar recrutadores", "Ver validações RPV", "Ver auditoria"]) {
+      expect(screen.queryByRole("link", { name })).toBeNull();
+      expect(screen.queryByRole("button", { name })).toBeNull();
+    }
+    const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
+    for (const href of ["/admin/solicitacoes", "/admin/alunos", "/admin/recrutadores", "/admin/validacoes-rpv"]) {
+      expect(hrefs).toContain(href);
     }
   });
 

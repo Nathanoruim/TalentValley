@@ -5,21 +5,26 @@ import {
   Alert,
   Box,
   Button,
+  Card,
   Chip,
-  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  InputAdornment,
   MenuItem,
   Pagination,
-  Paper,
-  Skeleton,
   Snackbar,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import HowToRegOutlined from "@mui/icons-material/HowToRegOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { Reveal } from "@/components/common/Reveal";
+import { DetailSkeleton, Page, SearchCard, fieldOnWash } from "@/components/admin/adminShared";
 import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import {
@@ -222,256 +227,250 @@ export function RegistrationRequestsView() {
     setRejectionOpen(false);
   };
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
-      <Stack spacing={2.5}>
-        <Stack spacing={0.5}>
-          <Typography component="h1" variant="h4">
-            Solicitações de cadastro
-          </Typography>
-          <Typography color="text.secondary">
-            Analise pedidos de acesso antes de criar uma conta no Talent Valley.
-          </Typography>
-        </Stack>
-        <Stack
-          component="form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const validation = validateSearchTerm(draft);
-            setSearchError(validation);
-            if (validation) return;
-            setPage(1);
-            setSearch(draft.trim());
+    <Page
+      title="Solicitações de cadastro"
+      description="Analise pedidos de acesso antes de criar uma conta no Talent Valley."
+    >
+      <SearchCard
+        breakpoint="md"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const validation = validateSearchTerm(draft);
+          setSearchError(validation);
+          if (validation) return;
+          setPage(1);
+          setSearch(draft.trim());
+        }}
+      >
+        <TextField
+          fullWidth
+          label="Buscar nome, e-mail, empresa, instituição ou curso"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value.slice(0, 150))}
+          error={Boolean(searchError)}
+          helperText={searchError}
+          slotProps={{
+            htmlInput: { maxLength: 150 },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlined color="action" />
+                </InputAdornment>
+              ),
+            },
           }}
-          direction={{ xs: "column", md: "row" }}
-          spacing={1}
+          sx={fieldOnWash}
+        />
+        <TextField
+          select
+          label="Tipo"
+          value={type}
+          onChange={(e) => {
+            setPage(1);
+            setType(e.target.value as RegistrationRequestType | "");
+          }}
+          sx={{ minWidth: 160, ...fieldOnWash }}
         >
-          <TextField
-            fullWidth
-            size="small"
-            label="Buscar nome, e-mail, empresa, instituição ou curso"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value.slice(0, 150))}
-            error={Boolean(searchError)}
-            helperText={searchError}
-            slotProps={{ htmlInput: { maxLength: 150 } }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Tipo"
-            value={type}
-            onChange={(e) => {
-              setPage(1);
-              setType(e.target.value as RegistrationRequestType | "");
-            }}
-            sx={{ minWidth: 145 }}
-          >
-            <MenuItem value="">Todas</MenuItem>
-            <MenuItem value="ALUNO">Alunos</MenuItem>
-            <MenuItem value="RECRUTADOR">Recrutadores</MenuItem>
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={status}
-            onChange={(e) => {
-              setPage(1);
-              setStatus(e.target.value as RegistrationRequestStatus | "");
-            }}
-            sx={{ minWidth: 145 }}
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="PENDENTE">Pendentes</MenuItem>
-            <MenuItem value="APROVADA">Aprovadas</MenuItem>
-            <MenuItem value="REJEITADA">Rejeitadas</MenuItem>
-          </TextField>
-          <Button type="submit" variant="outlined">
-            Buscar
-          </Button>
-        </Stack>
-        {loading && (
+          <MenuItem value="">Todas</MenuItem>
+          <MenuItem value="ALUNO">Alunos</MenuItem>
+          <MenuItem value="RECRUTADOR">Recrutadores</MenuItem>
+        </TextField>
+        <TextField
+          select
+          label="Status"
+          value={status}
+          onChange={(e) => {
+            setPage(1);
+            setStatus(e.target.value as RegistrationRequestStatus | "");
+          }}
+          sx={{ minWidth: 160, ...fieldOnWash }}
+        >
+          <MenuItem value="">Todos</MenuItem>
+          <MenuItem value="PENDENTE">Pendentes</MenuItem>
+          <MenuItem value="APROVADA">Aprovadas</MenuItem>
+          <MenuItem value="REJEITADA">Rejeitadas</MenuItem>
+        </TextField>
+      </SearchCard>
+      {loading && <LoadingSkeleton variant="list" count={3} height={110} />}
+      {error && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" onClick={reload}>
+              Tentar novamente
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+      {!loading && !error && items && (
+        <>
           <Stack spacing={1.5}>
-            {[1, 2, 3].map((item) => (
-              <Skeleton key={item} variant="rounded" height={110} />
+            {items.map((request, index) => (
+              <RequestCard key={request.id} request={request} index={index} onOpen={open} />
             ))}
           </Stack>
-        )}
-        {error && (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" onClick={reload}>
-                Tentar novamente
-              </Button>
-            }
-          >
-            {error}
-          </Alert>
-        )}
-        {!loading && !error && items && (
-          <>
-            <Stack spacing={1.5}>
-              {items.map((request) => (
-                <RequestCard key={request.id} request={request} onOpen={open} />
-              ))}
-            </Stack>
-            {items.length === 0 && (
-              <Typography color="text.secondary">
-                Nenhuma solicitação encontrada para os filtros selecionados.
-              </Typography>
-            )}
-            {totalPages > 1 && (
+          {items.length === 0 && (
+            <EmptyState
+              icon={<HowToRegOutlined />}
+              title="Nenhuma solicitação encontrada para os filtros selecionados."
+              description="Ajuste a busca, o tipo ou o status para ver outras solicitações."
+            />
+          )}
+          {totalPages > 1 && (
+            <div className="flex justify-center">
               <Pagination
                 page={page}
                 count={totalPages}
                 onChange={(_, next) => setPage(next)}
               />
-            )}
-          </>
-        )}
-        <DetailDialog
-          open={selectedId !== null}
-          loading={detailLoading}
-          error={detailError}
-          actionError={actionError}
-          detail={detail}
-          busy={busy}
-          onClose={closeDetail}
-          onRetry={retryDetail}
-          onApprove={() => void approve()}
-          onReject={startRejection}
-        />
-        <Dialog
-          open={rejectionOpen}
-          onClose={busy ? undefined : cancelRejection}
-          fullWidth
-          maxWidth="xs"
-          aria-labelledby={rejectionTitleId}
-        >
-          <DialogTitle id={rejectionTitleId}>Rejeitar solicitação</DialogTitle>
-          <DialogContent>
-            {actionError && (
-              <Alert severity="error" sx={{ mb: 1.5 }}>
-                {actionError}
-              </Alert>
-            )}
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              label="Motivo (opcional)"
-              value={reason}
-              onChange={(e) =>
-                setReason(stripEmoji(e.target.value).slice(0, 500))
-              }
-              disabled={busy}
-              slotProps={{ htmlInput: { maxLength: 500 } }}
-              sx={{ mt: 1 }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button disabled={busy} onClick={cancelRejection}>
-              Cancelar
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              disabled={busy}
-              onClick={() => void reject()}
-            >
-              {busy ? "Rejeitando..." : "Rejeitar"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Snackbar
-          open={!!notice}
-          autoHideDuration={6000}
-          onClose={() => setNotice(null)}
-          message={notice}
-        />
-        <ActivationSnackbar
-          notice={activation.notice}
-          busy={activation.resendBusy}
-          onClose={() => activation.setNotice(null)}
-          onResend={() => void activation.resend()}
-        />
-      </Stack>
-    </Container>
+            </div>
+          )}
+        </>
+      )}
+      <DetailDialog
+        open={selectedId !== null}
+        loading={detailLoading}
+        error={detailError}
+        actionError={actionError}
+        detail={detail}
+        busy={busy}
+        onClose={closeDetail}
+        onRetry={retryDetail}
+        onApprove={() => void approve()}
+        onReject={startRejection}
+      />
+      <Dialog
+        open={rejectionOpen}
+        onClose={busy ? undefined : cancelRejection}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby={rejectionTitleId}
+      >
+        <DialogTitle id={rejectionTitleId}>Rejeitar solicitação</DialogTitle>
+        <DialogContent>
+          {actionError && (
+            <Alert severity="error" sx={{ mb: 1.5 }}>
+              {actionError}
+            </Alert>
+          )}
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            label="Motivo (opcional)"
+            value={reason}
+            onChange={(e) =>
+              setReason(stripEmoji(e.target.value).slice(0, 500))
+            }
+            disabled={busy}
+            slotProps={{ htmlInput: { maxLength: 500 } }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={busy} onClick={cancelRejection}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={busy}
+            onClick={() => void reject()}
+          >
+            {busy ? "Rejeitando..." : "Rejeitar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={!!notice}
+        autoHideDuration={6000}
+        onClose={() => setNotice(null)}
+        message={notice}
+      />
+      <ActivationSnackbar
+        notice={activation.notice}
+        busy={activation.resendBusy}
+        onClose={() => activation.setNotice(null)}
+        onResend={() => void activation.resend()}
+      />
+    </Page>
   );
 }
 function RequestCard({
   request,
+  index,
   onOpen,
 }: {
   request: AdminRegistrationRequest;
+  index: number;
   onOpen: (id: string) => void;
 }) {
   const student = request.tipo === "ALUNO";
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2.25,
-        border: 1,
-        borderColor:
-          request.status === "PENDENTE" ? "primary.light" : "divider",
-      }}
-    >
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={2}
-        sx={{ justifyContent: "space-between", alignItems: { md: "center" } }}
+    <Reveal index={index}>
+      <Card
+        sx={(theme) => ({
+          p: { xs: 2, sm: 2.5 },
+          ...(request.status === "PENDENTE" && { borderColor: (theme.vars ?? theme).palette.primary.main }),
+        })}
       >
-        <Box>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: "center", mb: 0.5 }}
-          >
-            <Typography sx={{ fontWeight: 700 }}>
-              {request.nomeCompleto}
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          sx={{ justifyContent: "space-between", alignItems: { md: "center" } }}
+        >
+          <Box>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: "center", mb: 0.5 }}
+            >
+              <Typography sx={{ fontWeight: 700 }}>
+                {request.nomeCompleto}
+              </Typography>
+              <Chip
+                size="small"
+                color={
+                  request.status === "PENDENTE"
+                    ? "warning"
+                    : request.status === "APROVADA"
+                      ? "success"
+                      : "default"
+                }
+                label={statusLabel[request.status]}
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                label={student ? "Aluno" : "Recrutador"}
+              />
+            </Stack>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ overflowWrap: "anywhere" }}
+            >
+              {request.email} · {request.telefone} · {request.cidade}/{request.uf}
             </Typography>
-            <Chip
-              size="small"
-              color={
-                request.status === "PENDENTE"
-                  ? "warning"
-                  : request.status === "APROVADA"
-                    ? "success"
-                    : "default"
-              }
-              label={statusLabel[request.status]}
-            />
-            <Chip
-              size="small"
-              variant="outlined"
-              label={student ? "Aluno" : "Recrutador"}
-            />
-          </Stack>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ overflowWrap: "anywhere" }}
-          >
-            {request.email} · {request.telefone} · {request.cidade}/{request.uf}
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ overflowWrap: "anywhere" }}
-          >
-            {student
-              ? `${request.instituicaoEnsino} · ${request.curso}${request.tipoFormacao ? ` · ${TIPO_FORMACAO_LABELS[request.tipoFormacao]}` : ""}`
-              : `${request.empresa} · ${request.cargo}`}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Solicitada {formatUpdatedAt(request.criadoEm)}
-          </Typography>
-        </Box>
-        <Button onClick={() => onOpen(request.id)}>Ver detalhes</Button>
-      </Stack>
-    </Paper>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ overflowWrap: "anywhere" }}
+            >
+              {student
+                ? `${request.instituicaoEnsino} · ${request.curso}${request.tipoFormacao ? ` · ${TIPO_FORMACAO_LABELS[request.tipoFormacao]}` : ""}`
+                : `${request.empresa} · ${request.cargo}`}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Solicitada {formatUpdatedAt(request.criadoEm)}
+            </Typography>
+          </Box>
+          <Button variant="outlined" onClick={() => onOpen(request.id)}>Ver detalhes</Button>
+        </Stack>
+      </Card>
+    </Reveal>
   );
 }
 function DetailDialog({
@@ -512,12 +511,7 @@ function DetailDialog({
       <DialogTitle id={titleId}>Detalhes da solicitação</DialogTitle>
       <DialogContent id={contentId}>
         {loading && (
-          <Stack spacing={1.5} sx={{ pt: 1 }}>
-            <Skeleton variant="text" sx={{ fontSize: "1.5rem" }} />
-            <Skeleton variant="text" width="70%" />
-            <Skeleton variant="text" width="50%" />
-            <Skeleton variant="rounded" height={64} />
-          </Stack>
+          <DetailSkeleton lastHeight={64} />
         )}
         {!loading && error && (
           <Alert

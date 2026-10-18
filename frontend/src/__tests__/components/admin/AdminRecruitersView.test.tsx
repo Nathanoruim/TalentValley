@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AdminRecruitersView } from "@/components/admin/AdminViews";
+import { AdminRecruitersView } from "@/components/admin/AdminRecruitersView";
 import { adminApi } from "@/lib/admin";
 import { ApiError } from "@/lib/api";
 import { formatUpdatedAt } from "@/lib/format";

@@ -4,7 +4,7 @@ import Page from "@/app/(app)/admin/validacoes-rpv/page";
 import { ADMIN, expectViewInGuard } from "@/__tests__/app/(app)/guardedPage";
 
 vi.mock("@/components/auth/ProtectedRoute", async () => ({ ProtectedRoute: (await import("@/__tests__/app/(app)/guardedPage")).ProtectedRouteStub }));
-vi.mock("@/components/admin/AdminViews", () => ({ AdminRpvValidationsView: () => <p>admin rpv validations view</p> }));
+vi.mock("@/components/admin/AdminRpvValidationsView", () => ({ AdminRpvValidationsView: () => <p>admin rpv validations view</p> }));
 
 describe("admin RPV validations page", () => {
   it("shows the RPV validations view inside the role guard, restricted to admins", () => {
