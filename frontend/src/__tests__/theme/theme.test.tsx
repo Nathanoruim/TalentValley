@@ -19,6 +19,26 @@ describe("brand button variant", () => {
     expect(getComputedStyle(standard).borderRadius).not.toBe("30px");
   });
 
+  it("exposes the surface tokens as theme variables", () => {
+    const surface = talentValleyTheme.vars?.palette.surface;
+    expect(surface).toBeDefined();
+    for (const token of [surface?.raised, surface?.sunken, surface?.border, surface?.hover]) {
+      expect(token).toContain("var(--mui-palette-surface-");
+    }
+  });
+
+  it("defines its own warning color for attention highlights", () => {
+    // Darker than the MUI default (#ed6c02) so the attention text keeps 4.5:1 on white.
+    expect(talentValleyTheme.palette.warning.main).toBe("#B45309");
+  });
+
+  it("sets titles in the display font and body text in the base font", () => {
+    for (const level of ["h1", "h2", "h3", "h4", "h5", "h6"] as const) {
+      expect(talentValleyTheme.typography[level].fontFamily).toContain("--font-display");
+    }
+    expect(talentValleyTheme.typography.fontFamily).toContain("--font-inter");
+  });
+
   it("exposes the gradients as theme variables", () => {
     const gradient = talentValleyTheme.vars?.palette.gradient;
     expect(gradient).toBeDefined();
