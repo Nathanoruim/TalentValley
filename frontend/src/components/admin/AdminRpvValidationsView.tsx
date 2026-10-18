@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatDate, formatUpdatedAt } from "@/lib/format";
-import { STATUS_FORMACAO_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
+import { STATUS_FORMACAO_LABELS, STATUS_VALIDACAO_RPV_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
 import { ProtectedFileButton } from "@/components/recruiter/ProtectedFileButton";
 import type { RpvValidationDetail } from "@/types/admin";
 import { useLoad } from "@/components/admin/useLoad";
@@ -194,7 +194,7 @@ export function AdminRpvValidationsView() {
                   ],
                   ["Carga horária", detail.formacao.cargaHoraria ?? "Não informada"],
                   ["Status da formação", STATUS_FORMACAO_LABELS[detail.formacao.status]],
-                  ["Validação RPV", detail.formacao.statusValidacaoRpv],
+                  ["Validação RPV", STATUS_VALIDACAO_RPV_LABELS[detail.formacao.statusValidacaoRpv]],
                 ].map(([label, value]) => (
                   <Box key={String(label)} sx={{ minWidth: 0 }}>
                     <Typography component="dt" variant="caption" color="text.secondary">

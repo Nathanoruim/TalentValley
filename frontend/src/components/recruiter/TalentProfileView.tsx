@@ -69,11 +69,11 @@ export function TalentProfileView({ slug }: { slug: string }) {
       </Stack>)}
     </Stack> : <Empty />}</Section>
     <Section title="Idiomas" index={5}>{profile.idiomas.length ? <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.idiomas.map((item) => <Chip key={item.idiomaId} label={`${item.nome} · ${NIVEL_IDIOMA_LABELS[item.nivel]}`} variant="outlined" />)}</Stack> : <Empty />}</Section>
-    <Section title="Disponibilidade e modalidades" index={6}><Stack spacing={1.5}>
+    <ContactSection profile={profile} />
+    <Section title="Disponibilidade e modalidades" index={7}><Stack spacing={1.5}>
       <Box><Typography variant="subtitle2" gutterBottom>Disponibilidade</Typography>{profile.disponibilidades.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.disponibilidades.map((item) => <Chip key={item} color="primary" variant="outlined" label={DISPONIBILIDADE_LABELS[item]} />)}</Stack> : <Empty />}</Box>
       <Box><Typography variant="subtitle2" gutterBottom>Modalidades</Typography>{profile.modalidades.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.modalidades.map((item) => <Chip key={item} label={MODALIDADE_LABELS[item]} />)}</Stack> : <Empty />}</Box>
     </Stack></Section>
-    <ContactSection profile={profile} />
     <Section title="Currículo" index={8}>{profile.curriculo.possuiCurriculo && profile.curriculo.url
       ? <ProtectedFileButton path={profile.curriculo.url} label={`Abrir currículo de ${profile.nomeCompleto}`} onError={setFileError} />
       : <Empty text="Currículo não informado." />}</Section>
@@ -141,7 +141,7 @@ function ExperienceItem({ experience }: { experience: TalentExperience }) {
 
 function ContactSection({ profile }: { profile: TalentProfile }) {
   const contact = profile.contato; const hasContact = Object.values(contact).some(Boolean);
-  return <Section title="Contato" index={7}>{hasContact ? <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+  return <Section title="Contato" index={6}>{hasContact ? <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
     {contact.emailProfissional && <SafeEmailButton value={contact.emailProfissional} />}
     {contact.telefone && <SafePhoneButton value={contact.telefone} />}
     {contact.linkedInUrl && <ExternalButton href={contact.linkedInUrl} label="LinkedIn" icon={<LinkedIn />} />}
@@ -158,7 +158,12 @@ function ExternalButton({ href, label, icon }: { href: string; label: string; ic
 function PlainText({ children }: { children: React.ReactNode }) { return <Typography variant="body2" sx={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>{children}</Typography>; }
 function SafeEmailButton({ value, label }: { value: string; label?: string }) { return validateEmail(value) === null ? <Button component="a" href={`mailto:${value}`} startIcon={<EmailOutlined />}>{label ?? value}</Button> : <PlainText>{value}</PlainText>; }
 function SafePhoneButton({ value }: { value: string }) { return validateBrazilianPhone(value) === null ? <Button component="a" href={`tel:${normalizePhone(value)}`} startIcon={<PhoneOutlined />}>{value}</Button> : <PlainText>{value}</PlainText>; }
-function period(start: string, end: string | null, current: boolean): string { return `${formatDate(start)} — ${current ? "Atual" : end ? formatDate(end) : "Não informado"}`; }
+function period(start: string, end: string | null, current: boolean): string {
+  let endLabel = "Não informado";
+  if (current) endLabel = "Atual";
+  else if (end) endLabel = formatDate(end);
+  return `${formatDate(start)} — ${endLabel}`;
+}
 
 function StatePage({ title }: { title: string }) { return <Container maxWidth="sm" sx={{ py: 8 }}><EmptyState icon={<PersonSearchOutlined />} title={title} titleAs="h1" action={<Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />}>Voltar para talentos</Button>} /></Container>; }
 function ProfileLoading() { return <Container maxWidth="lg" sx={{ py: 4 }}><Stack spacing={2}>{[150, 140, 180, 260].map((height) => <Skeleton key={height} variant="rounded" height={height} sx={{ borderRadius: "16px" }} />)}</Stack></Container>; }

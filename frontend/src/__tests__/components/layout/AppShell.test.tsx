@@ -347,6 +347,13 @@ describe("AppShell", () => {
       expect(isSelected(navLink("Meu perfil"))).toBe(true);
     });
 
+    it("keeps navigation items at their own height instead of stretching them to fill the menu", () => {
+      signIn("ALUNO", "/meu-perfil");
+      renderShell();
+
+      expect(getComputedStyle(navLink("Meu perfil")).flexGrow).toBe("0");
+    });
+
     it("marks a nested route as active for its section", () => {
       signIn("RECRUTADOR", "/recrutador/talentos/42");
       renderShell();

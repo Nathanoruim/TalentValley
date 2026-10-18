@@ -63,6 +63,10 @@ Order:
 5. Projects
 6. Languages
 7. Contact
+8. Availability and work modes
+9. Résumé
+
+Availability and résumé were added after the original seven (decided 2026-10-18) and stay last.
 
 Trajectory visually combines formation + experience, newest first.
 Projects remain a separate section.
