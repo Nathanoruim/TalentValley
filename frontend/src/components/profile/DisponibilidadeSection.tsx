@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Autocomplete, Checkbox, Chip, Stack, TextField, Typography } from "@mui/material";
+import EventAvailableOutlined from "@mui/icons-material/EventAvailableOutlined";
 import { getApiErrorMessage } from "@/lib/api";
 import {
   DISPONIBILIDADE_LABELS,
@@ -31,6 +32,7 @@ export function DisponibilidadeSection({ profile, onChanged, notify }: SectionPr
       isEmpty={isEmpty}
       emptyMessage="Informe os tipos de vaga que você busca e como prefere trabalhar."
       emptyActionLabel="Informar disponibilidade"
+      emptyIcon={<EventAvailableOutlined />}
     >
       <Stack spacing={2}>
         <Stack spacing={1}>

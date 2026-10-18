@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjetosSection } from "@/components/profile/ProjetosSection";
@@ -119,6 +120,7 @@ describe("ProjetosSection loading and listing", () => {
 
     expect((screen.getByRole("button", { name: ADD_LABEL }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.queryByText(EMPTY_MESSAGE)).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe("Carregando…");
 
     pending.resolve([]);
     expect(await screen.findByText(EMPTY_MESSAGE)).toBeTruthy();
@@ -130,6 +132,7 @@ describe("ProjetosSection loading and listing", () => {
     render(<ProjetosSection {...makeSectionProps()} />);
 
     expect((await screen.findByRole("alert")).textContent).toBe(LOAD_ERROR);
+    expect(screen.queryByRole("status")).toBeNull();
     expect((screen.getByRole("button", { name: ADD_LABEL }) as HTMLButtonElement).disabled).toBe(true);
   });
 

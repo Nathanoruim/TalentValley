@@ -6,17 +6,19 @@ import {
   Alert,
   Box,
   Button,
+  Card,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+import { Reveal } from "@/components/common/Reveal";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/api";
 import { deleteOwnAccount } from "@/lib/student";
@@ -77,16 +79,19 @@ export function ExclusaoSection() {
   }
 
   return (
-    <Paper
+    <Reveal>
+    <Card
       component="section"
-      elevation={0}
       aria-labelledby={`${titleId}-section`}
-      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "error.main" }}
+      sx={{ p: 2.5, borderColor: "error.main" }}
     >
       <Stack spacing={2}>
-        <Typography id={`${titleId}-section`} component="h2" variant="h6" color="error">
-          Excluir conta
-        </Typography>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <WarningAmberOutlined color="error" aria-hidden="true" />
+          <Typography id={`${titleId}-section`} component="h2" variant="h6" color="error">
+            Excluir conta
+          </Typography>
+        </Stack>
         {deleted ? (
           <Alert severity="success" role="status">
             Sua conta foi deletada com sucesso. Redirecionando...
@@ -146,6 +151,7 @@ export function ExclusaoSection() {
           </DialogActions>
         </Box>
       </Dialog>
-    </Paper>
+    </Card>
+    </Reveal>
   );
 }

@@ -10,6 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import TranslateOutlined from "@mui/icons-material/TranslateOutlined";
 import { getApiErrorMessage } from "@/lib/api";
 import { NIVEL_IDIOMA_LABELS, NIVEL_IDIOMA_OPCOES } from "@/lib/labels";
 import { fetchIdiomaCatalog, updateIdiomas } from "@/lib/student";
@@ -35,6 +36,7 @@ export function IdiomasSection({ profile, onChanged, notify }: SectionProps) {
       isEmpty={idiomas.length === 0}
       emptyMessage="Informe os idiomas que você fala e o nível de cada um."
       emptyActionLabel="Adicionar idiomas"
+      emptyIcon={<TranslateOutlined />}
     >
       <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
         {idiomas.map((idioma) => (

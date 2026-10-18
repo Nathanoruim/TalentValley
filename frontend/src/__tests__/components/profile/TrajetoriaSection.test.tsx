@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { TrajetoriaSection } from "@/components/profile/TrajetoriaSection";
@@ -145,7 +146,7 @@ async function renderSection(items: TrajetoriaItemResponse[] = []) {
   const props = makeSectionProps();
   render(<TrajetoriaSection {...props} />);
   await screen.findByText("Formação e certificados");
-  await waitFor(() => expect(screen.queryByRole("progressbar")).toBeNull());
+  await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
   return props;
 }
 
@@ -197,18 +198,28 @@ async function fillValidExperience(user: User) {
 }
 
 describe("TrajetoriaSection loading and listing", () => {
-  it("shows a spinner and hides both groups while the trajectory is loading", async () => {
+  it("shows a loading placeholder and hides both groups while the trajectory is loading", async () => {
     const pending = deferred<TrajetoriaItemResponse[]>();
     fetchMock.mockReturnValue(pending.promise);
     render(<TrajetoriaSection {...makeSectionProps()} />);
 
-    expect(screen.getByRole("progressbar")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe("Carregando…");
     expect(screen.queryByText("Formação e certificados")).toBeNull();
     expect(screen.getByRole("heading", { name: "Trajetória" })).toBeTruthy();
 
     pending.resolve([]);
     expect(await screen.findByText("Formação e certificados")).toBeTruthy();
-    expect(screen.queryByRole("progressbar")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("lists the items of each group as a timeline list", async () => {
+    await renderSection([formationItem(), experienceItem()]);
+
+    const lists = screen.getAllByRole("list");
+    expect(lists).toHaveLength(2);
+    expect(within(lists[0]).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(lists[0]).getByText(FORMATION_NAME)).toBeTruthy();
+    expect(within(lists[1]).getAllByRole("listitem")).toHaveLength(1);
   });
 
   it("shows the load error and no groups when the fetch fails", async () => {
@@ -217,6 +228,7 @@ describe("TrajetoriaSection loading and listing", () => {
 
     expect((await screen.findByRole("alert")).textContent).toBe(LOAD_ERROR);
     expect(screen.queryByText("Formação e certificados")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("shows an empty state with an add action in each group when there are no items", async () => {

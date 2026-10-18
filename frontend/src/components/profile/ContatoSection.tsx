@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import {
+  Box,
   Divider,
   Stack,
   TextField,
@@ -10,6 +11,7 @@ import {
 import AlternateEmailOutlined from "@mui/icons-material/AlternateEmailOutlined";
 import CallOutlined from "@mui/icons-material/CallOutlined";
 import CodeOutlined from "@mui/icons-material/CodeOutlined";
+import ContactPhoneOutlined from "@mui/icons-material/ContactPhoneOutlined";
 import LanguageOutlined from "@mui/icons-material/LanguageOutlined";
 import LinkedInOutlined from "@mui/icons-material/LinkedIn";
 import { getApiErrorMessage } from "@/lib/api";
@@ -43,24 +45,35 @@ export function ContatoSection({ profile, onChanged, notify }: SectionProps) {
       isEmpty={filledItems.length === 0}
       emptyMessage="Informe como recrutadores podem falar com você."
       emptyActionLabel="Adicionar contato"
+      emptyIcon={<ContactPhoneOutlined />}
     >
       <Stack divider={<Divider flexItem />} spacing={1.5}>
         {filledItems.map((item) => (
-          <Stack key={item.label} direction="row" spacing={1.5}>
-            <Typography
+          <Stack key={item.label} direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            <Box
               component="span"
               aria-hidden
-              sx={{alignItems: "center",  display: "inline-flex", color: "primary.main" }}
+              className="flex size-9 shrink-0 items-center justify-center"
+              sx={(theme) => {
+                const { primary, surface } = (theme.vars ?? theme).palette;
+                return { color: primary.main, backgroundColor: surface.sunken, borderRadius: "10px" };
+              }}
             >
               {item.icon}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ minWidth: 130, color: "text.secondary" }}
+            </Box>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 0, sm: 1.5 }}
+              sx={{ minWidth: 0, flex: 1, alignItems: { sm: "center" } }}
             >
-              {item.label}
-            </Typography>
-            <ContactValue item={item} />
+              <Typography
+                variant="body2"
+                sx={{ minWidth: { sm: 130 }, color: "text.secondary" }}
+              >
+                {item.label}
+              </Typography>
+              <ContactValue item={item} />
+            </Stack>
           </Stack>
         ))}
       </Stack>

@@ -9,6 +9,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import PsychologyOutlined from "@mui/icons-material/PsychologyOutlined";
 import { getApiErrorMessage } from "@/lib/api";
 import { fetchCompetenciaCatalog, updateCompetencias } from "@/lib/student";
 import type { CatalogoCompetenciaResponse } from "@/types/student";
@@ -28,6 +29,7 @@ export function CompetenciasSection({ profile, onChanged, notify }: SectionProps
       isEmpty={competencias.length === 0}
       emptyMessage="Selecione as competências que representam suas habilidades."
       emptyActionLabel="Adicionar competências"
+      emptyIcon={<PsychologyOutlined />}
     >
       <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
         {competencias.map((competencia) => (

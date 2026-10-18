@@ -9,7 +9,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Paper,
   Stack,
   Typography,
 } from "@mui/material";
@@ -17,6 +16,8 @@ import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
 import PictureAsPdfOutlined from "@mui/icons-material/PictureAsPdfOutlined";
 import UploadFileOutlined from "@mui/icons-material/UploadFileOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { apiDownload, getApiErrorMessage } from "@/lib/api";
 import {
   deleteStudentCurriculum,
@@ -149,21 +150,8 @@ export function CurriculoSection({ profile, onChanged, notify }: SectionProps) {
   }
 
   return (
-    <Paper
-      component="section"
-      elevation={0}
-      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider" }}
-    >
-      <Stack
-        direction="row"
-        spacing={2}
-      >
-        <Typography component="h2" variant="h6">
-          Currículo
-        </Typography>
-      </Stack>
-
-      <Stack spacing={2} sx={{ mt: 2 }}>
+    <SurfaceCard title="Currículo">
+      <Stack spacing={2}>
         {error && (
           <Alert severity="error" role="alert">
             {error}
@@ -175,13 +163,16 @@ export function CurriculoSection({ profile, onChanged, notify }: SectionProps) {
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
-              sx={{
-                alignItems: { sm: "center" },
-                p: 2,
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 2,
-                bgcolor: "action.hover",
+              sx={(theme) => {
+                const { surface } = (theme.vars ?? theme).palette;
+                return {
+                  alignItems: { sm: "center" },
+                  p: 2,
+                  border: 1,
+                  borderColor: surface.border,
+                  borderRadius: "12px",
+                  bgcolor: surface.sunken,
+                };
               }}
             >
               <Stack direction="row" spacing={1.5}>
@@ -233,31 +224,21 @@ export function CurriculoSection({ profile, onChanged, notify }: SectionProps) {
             </Stack>
           </>
         ) : (
-          <Stack
-            spacing={1.5}
-            sx={{
-              p: 3,
-              border: 1,
-              borderStyle: "dashed",
-              borderColor: "divider",
-              borderRadius: 2,
-              alignItems: "center",
-            }}
-          >
-            <PictureAsPdfOutlined sx={{ color: "text.secondary", fontSize: 32 }} />
-            <Typography variant="body2" color="text.secondary">
-              Nenhum currículo enviado ainda. Envie seu PDF (máx. 10 MB).
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<UploadFileOutlined />}
-              onClick={pickFile}
-              disabled={busy}
-            >
-              Enviar currículo
-            </Button>
-          </Stack>
+          <EmptyState
+            icon={<PictureAsPdfOutlined />}
+            title="Nenhum currículo enviado ainda. Envie seu PDF (máx. 10 MB)."
+            action={
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<UploadFileOutlined />}
+                onClick={pickFile}
+                disabled={busy}
+              >
+                Enviar currículo
+              </Button>
+            }
+          />
         )}
 
         {uploading && (
@@ -304,6 +285,6 @@ export function CurriculoSection({ profile, onChanged, notify }: SectionProps) {
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </SurfaceCard>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Stack, TextField, Typography } from "@mui/material";
+import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
 import { getApiErrorMessage } from "@/lib/api";
 import { sanitizeBio } from "@/lib/validation";
 import { updateSobre } from "@/lib/student";
@@ -23,6 +24,7 @@ export function SobreSection({ profile, onChanged, notify }: SectionProps) {
       isEmpty={!bio}
       emptyMessage="Conte um pouco sobre você, sua experiência e objetivos profissionais."
       emptyActionLabel="Escrever sobre"
+      emptyIcon={<ArticleOutlined />}
     >
       <Typography
         variant="body2"

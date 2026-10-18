@@ -5,19 +5,21 @@ import {
   Avatar,
   Box,
   Button,
+  Card,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
-  Paper,
   Stack,
   Typography,
 } from "@mui/material";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import PhotoCameraOutlined from "@mui/icons-material/PhotoCameraOutlined";
 import PlaceOutlined from "@mui/icons-material/PlaceOutlined";
+import { Reveal } from "@/components/common/Reveal";
+import { brandWash } from "@/components/common/surfaceGradient";
 import { useProtectedFile } from "@/hooks/useProtectedFile";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatUpdatedAt, initialsOf } from "@/lib/format";
@@ -143,11 +145,11 @@ export function ProfileHeader({ profile, onChanged, notify }: SectionProps) {
   const busy = uploading || removing;
 
   return (
-    <Paper
+    <Reveal>
+    <Card
       component="section"
-      elevation={0}
-      sx={{ p: { xs: 2.5, sm: 3 }, border: 1, borderColor: "divider" }}
-        >
+      sx={(theme) => ({ p: { xs: 2.5, sm: 3.5 }, backgroundImage: brandWash(theme) })}
+    >
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={{ xs: 2, sm: 3 }}
@@ -156,7 +158,7 @@ export function ProfileHeader({ profile, onChanged, notify }: SectionProps) {
         <Box sx={{ position: "relative", flexShrink: 0 }}>
           <Avatar
             src={url ?? undefined}
-            sx={{ width: 96, height: 96, fontSize: 28, fontWeight: 600 }}
+            sx={{ width: 112, height: 112, fontSize: 32, fontWeight: 600 }}
           >
             {initialsOf(dados.nomeCompleto)}
           </Avatar>
@@ -189,7 +191,7 @@ export function ProfileHeader({ profile, onChanged, notify }: SectionProps) {
           >
             <PhotoCameraOutlined fontSize="small" />
           </IconButton>
-                </Box>
+        </Box>
 
         <Stack
           spacing={0.75}
@@ -197,10 +199,10 @@ export function ProfileHeader({ profile, onChanged, notify }: SectionProps) {
         >
           <Typography
             component="h1"
-            variant="h5"
-            sx={{ fontWeight: 700, textAlign: { xs: "center", sm: "left" }, overflowWrap: "anywhere" }}
+            variant="h4"
+            sx={{ textAlign: { xs: "center", sm: "left" }, overflowWrap: "anywhere" }}
           >
-                        {dados.nomeCompleto}
+            {dados.nomeCompleto}
           </Typography>
           <Stack
             direction="row"
@@ -276,6 +278,7 @@ export function ProfileHeader({ profile, onChanged, notify }: SectionProps) {
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Card>
+    </Reveal>
   );
 }

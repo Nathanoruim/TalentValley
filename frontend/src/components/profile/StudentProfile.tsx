@@ -5,10 +5,10 @@ import {
   Alert,
   Button,
   Container,
-  CircularProgress,
   Snackbar,
   Stack,
 } from "@mui/material";
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { ContatoSection } from "./ContatoSection";
@@ -34,19 +34,11 @@ export function StudentProfile() {
   }, []);
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 5 }, width: "100%" }}>
-      {loading && (
-                <Stack
-          sx={{ alignItems: "center", justifyContent: "center", py: 10 }}
-          role="status"
-          aria-label="Carregando perfil"
-        >
-          <CircularProgress />
-        </Stack>
-      )}
+    <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 }, width: "100%" }}>
+      {loading && <LoadingSkeleton count={4} height={150} />}
 
       {!loading && error && !profile && (
-        <Stack sx={{ alignItems: "center", py: 8 }}>
+        <Stack spacing={2} sx={{ alignItems: "center", py: 8 }}>
           <Alert severity="error" sx={{ width: "100%" }} role="alert">
             {error}
           </Alert>
