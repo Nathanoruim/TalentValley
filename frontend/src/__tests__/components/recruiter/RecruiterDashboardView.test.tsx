@@ -1,9 +1,12 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ThemeProvider } from "@mui/material/styles";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RecruiterDashboardView } from "@/components/recruiter/RecruiterDashboardView";
 import { ApiError } from "@/lib/api";
+import { talentValleyTheme } from "@/theme/theme";
 import type { RecruiterDashboard } from "@/types/recruiter";
+import { stubMotionMedia } from "../auth/motion/motionMedia";
 import { makeDashboard } from "./recruiterDiscoveryFixtures";
 import { makeTalentListItem } from "./recruiterFixtures";
 
@@ -34,34 +37,42 @@ function searchButton() {
 }
 
 function indicatorValue(label: string) {
-  return screen.getByText(label).previousElementSibling?.textContent;
+  return screen.getByText(label).nextElementSibling?.textContent;
+}
+
+function renderView() {
+  return render(<ThemeProvider theme={talentValleyTheme}><RecruiterDashboardView /></ThemeProvider>);
 }
 
 async function renderLoaded(dashboard: RecruiterDashboard = makeDashboard()) {
   mocks.fetchRecruiterDashboard.mockResolvedValue(dashboard);
-  render(<RecruiterDashboardView />);
+  renderView();
   await screen.findByText(dashboard.favoritosRecentes.length ? dashboard.favoritosRecentes[0].talento.nomeCompleto : NO_FAVORITES);
 }
 
 describe("RecruiterDashboardView", () => {
   beforeEach(() => {
+    stubMotionMedia("reduced");
     mocks.fetchRecruiterDashboard.mockResolvedValue(makeDashboard());
   });
 
   afterEach(() => {
+    cleanup(); // unmount before the stub goes away: a late render still reads matchMedia
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
   describe("loading", () => {
-    it("shows the page structure with welcome copy and no figures while the dashboard loads", () => {
+    it("shows the page structure with welcome copy and a loading state instead of figures while the dashboard loads", () => {
       mocks.fetchRecruiterDashboard.mockReturnValue(new Promise(() => undefined));
-      render(<RecruiterDashboardView />);
+      renderView();
       expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Visão geral");
       expect(screen.getByText(WELCOME_SUBTITLE)).toBeTruthy();
-      expect(indicatorValue("Perfis atualizados")).toBe("");
-      expect(indicatorValue("Novos alunos")).toBe("");
-      expect(indicatorValue("Favoritos")).toBe("");
+      expect(screen.getAllByRole("status").map((item) => item.textContent)).toEqual(["Carregando…", "Carregando…"]);
+      expect(screen.queryByText("Perfis atualizados")).toBeNull();
+      expect(screen.queryByText("Novos alunos")).toBeNull();
+      expect(screen.queryByRole("group")).toBeNull();
       expect(screen.queryByText(NO_FAVORITES)).toBeNull();
       expect(screen.queryByRole("alert")).toBeNull();
     });
@@ -75,6 +86,7 @@ describe("RecruiterDashboardView", () => {
   describe("with data", () => {
     it("shows the three indicators with the values from the API", async () => {
       await renderLoaded();
+      expect(screen.getAllByRole("group")).toHaveLength(3);
       expect(indicatorValue("Perfis atualizados")).toBe("4");
       expect(indicatorValue("Novos alunos")).toBe("7");
       expect(indicatorValue("Favoritos")).toBe("2");
@@ -148,21 +160,21 @@ describe("RecruiterDashboardView", () => {
   describe("failure", () => {
     it("shows the API message and a retry button when the request fails", async () => {
       mocks.fetchRecruiterDashboard.mockRejectedValue(new ApiError(500, "Servidor indisponível"));
-      render(<RecruiterDashboardView />);
+      renderView();
       expect((await screen.findByRole("alert")).textContent).toContain("Servidor indisponível");
       expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeTruthy();
     });
 
     it("falls back to the generic message when the rejection carries no text", async () => {
       mocks.fetchRecruiterDashboard.mockRejectedValue("falhou");
-      render(<RecruiterDashboardView />);
+      renderView();
       expect((await screen.findByRole("alert")).textContent).toContain(LOAD_FALLBACK);
     });
 
     it("reloads the dashboard when the user retries and removes the error", async () => {
       const user = userEvent.setup({ delay: null });
       mocks.fetchRecruiterDashboard.mockRejectedValueOnce(new ApiError(500, "Servidor indisponível"));
-      render(<RecruiterDashboardView />);
+      renderView();
       await screen.findByRole("alert");
 
       await user.click(screen.getByRole("button", { name: "Tentar novamente" }));
@@ -175,14 +187,15 @@ describe("RecruiterDashboardView", () => {
     it("shows the loading state again while a retry is in flight", async () => {
       const user = userEvent.setup({ delay: null });
       mocks.fetchRecruiterDashboard.mockRejectedValueOnce(new ApiError(500, "Servidor indisponível"));
-      render(<RecruiterDashboardView />);
+      renderView();
       await screen.findByRole("alert");
       mocks.fetchRecruiterDashboard.mockReturnValue(new Promise(() => undefined));
 
       await user.click(screen.getByRole("button", { name: "Tentar novamente" }));
       expect(screen.queryByRole("alert")).toBeNull();
       expect(screen.queryByText(NO_FAVORITES)).toBeNull();
-      expect(indicatorValue("Perfis atualizados")).toBe("");
+      expect(screen.queryByText("Perfis atualizados")).toBeNull();
+      expect(screen.getAllByRole("status").map((item) => item.textContent)).toEqual(["Carregando…", "Carregando…"]);
     });
   });
 

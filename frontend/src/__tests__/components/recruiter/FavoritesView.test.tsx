@@ -1,10 +1,13 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ThemeProvider } from "@mui/material/styles";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FavoritesView } from "@/components/recruiter/FavoritesView";
 import { ApiError } from "@/lib/api";
+import { talentValleyTheme } from "@/theme/theme";
 import { addFavorite, fetchFavorites, fetchTalent, removeFavorite } from "@/lib/recruiter";
 import type { FavoriteTalent, PaginatedResponse, TalentListItem } from "@/types/recruiter";
+import { stubMotionMedia } from "../auth/motion/motionMedia";
 import { makeTalentListItem, makeTalentProfile } from "./recruiterFixtures";
 
 vi.setConfig({ testTimeout: 15_000 });
@@ -69,18 +72,25 @@ function compareCheckboxes() {
   return screen.getAllByRole("checkbox", { name: "Comparar" }) as HTMLInputElement[];
 }
 
+function renderView() {
+  return render(<ThemeProvider theme={talentValleyTheme}><FavoritesView /></ThemeProvider>);
+}
+
 beforeEach(() => {
   setPage(null);
+  stubMotionMedia("reduced");
 });
 
 afterEach(() => {
+  cleanup(); // unmount before the stub goes away: a late render still reads matchMedia
+  vi.unstubAllGlobals();
   vi.resetAllMocks();
 });
 
 describe("FavoritesView", () => {
   it("shows skeletons while the favorites are loading", () => {
     fetchFavoritesMock.mockReturnValue(new Promise(() => undefined));
-    const { container } = render(<FavoritesView />);
+    const { container } = renderView();
 
     expect(screen.getByRole("heading", { level: 1, name: "Favoritos" })).toBeTruthy();
     expect(container.querySelectorAll(".MuiSkeleton-root")).toHaveLength(3);
@@ -89,7 +99,7 @@ describe("FavoritesView", () => {
 
   it("lists the favorited talents", async () => {
     fetchFavoritesMock.mockResolvedValue(favorites([ANA, BRUNO]));
-    render(<FavoritesView />);
+    renderView();
 
     expect(await screen.findByRole("heading", { name: "Ana Lima" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Bruno Reis" })).toBeTruthy();
@@ -100,7 +110,7 @@ describe("FavoritesView", () => {
 
   it("shows the empty state with a link to explore talents", async () => {
     fetchFavoritesMock.mockResolvedValue(favorites([]));
-    render(<FavoritesView />);
+    renderView();
 
     expect(await screen.findByText("Nenhum favorito ainda")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Explorar talentos" }).getAttribute("href")).toBe("/recrutador/talentos");
@@ -109,7 +119,7 @@ describe("FavoritesView", () => {
   it("shows the error with the API message and retries", async () => {
     fetchFavoritesMock.mockRejectedValueOnce(new ApiError(SERVER_ERROR, "Falha no servidor")).mockResolvedValueOnce(favorites([ANA]));
     const user = userEvent.setup();
-    render(<FavoritesView />);
+    renderView();
 
     expect((await screen.findByRole("alert")).textContent).toContain("Falha no servidor");
     expect(screen.queryByText("Nenhum favorito ainda")).toBeNull();
@@ -122,7 +132,7 @@ describe("FavoritesView", () => {
 
   it("uses the fallback message for unknown loading failures", async () => {
     fetchFavoritesMock.mockRejectedValue("boom");
-    render(<FavoritesView />);
+    renderView();
 
     expect((await screen.findByRole("alert")).textContent).toContain(LOAD_FALLBACK);
   });
@@ -130,7 +140,7 @@ describe("FavoritesView", () => {
   it("requests the page given in the query string", async () => {
     setPage("2");
     fetchFavoritesMock.mockResolvedValue(favorites([ANA], 2, 3));
-    render(<FavoritesView />);
+    renderView();
 
     await screen.findByRole("heading", { name: "Ana Lima" });
     expect(fetchFavoritesMock).toHaveBeenCalledWith(2);
@@ -140,7 +150,7 @@ describe("FavoritesView", () => {
   it.each(["abc", "0", "-3", "1.5"])("normalizes the invalid page %s to the first page", async (value) => {
     setPage(value);
     fetchFavoritesMock.mockResolvedValue(favorites([ANA]));
-    render(<FavoritesView />);
+    renderView();
 
     await screen.findByRole("heading", { name: "Ana Lima" });
     expect(fetchFavoritesMock).toHaveBeenCalledWith(1);
@@ -150,7 +160,7 @@ describe("FavoritesView", () => {
   it("does not rewrite the URL when the page is explicitly 1", async () => {
     setPage("1");
     fetchFavoritesMock.mockResolvedValue(favorites([ANA]));
-    render(<FavoritesView />);
+    renderView();
 
     await screen.findByRole("heading", { name: "Ana Lima" });
     expect(nav.router.replace).not.toHaveBeenCalled();
@@ -163,7 +173,7 @@ describe("FavoritesView", () => {
     setPage("2");
     fetchFavoritesMock.mockResolvedValue(favorites([ANA], 2, 3));
     const user = userEvent.setup();
-    render(<FavoritesView />);
+    renderView();
 
     const pagination = await screen.findByRole("navigation", { name: "Paginação de favoritos" });
     await user.click(within(pagination).getByRole("button", { name: label }));
@@ -176,7 +186,7 @@ describe("FavoritesView", () => {
     it("lets the user select two talents and blocks a third", async () => {
       fetchFavoritesMock.mockResolvedValue(favorites([ANA, BRUNO, CARLA]));
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(compareCheckboxes()[0]);
@@ -192,7 +202,7 @@ describe("FavoritesView", () => {
     it("clears the limit message and frees a slot when a talent is unselected", async () => {
       fetchFavoritesMock.mockResolvedValue(favorites([ANA, BRUNO, CARLA]));
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
       await user.click(compareCheckboxes()[0]);
       await user.click(compareCheckboxes()[1]);
@@ -212,7 +222,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValueOnce(favorites([ANA, BRUNO])).mockResolvedValueOnce(favorites([BRUNO]));
       removeMock.mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: removeLabel(ANA) }));
@@ -227,7 +237,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValueOnce(favorites([ANA, BRUNO])).mockResolvedValueOnce(favorites([BRUNO]));
       removeMock.mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
       await user.click(compareCheckboxes()[0]);
       expect(screen.getByText("1 de 2 talentos selecionados.")).toBeTruthy();
@@ -242,7 +252,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValue(favorites([unfavorited]));
       addMock.mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: `Adicionar aos favoritos: ${ANA.nomeCompleto}` }));
@@ -259,7 +269,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValue(favorites([ANA], page, page));
       removeMock.mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: removeLabel(ANA) }));
@@ -273,7 +283,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValueOnce(favorites([ANA, BRUNO], 2, 2)).mockResolvedValueOnce(favorites([BRUNO], 2, 2));
       removeMock.mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: removeLabel(ANA) }));
@@ -286,7 +296,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValueOnce(favorites([ANA, BRUNO])).mockResolvedValueOnce(favorites([BRUNO]));
       removeMock.mockRejectedValue(new ApiError(NOT_FOUND, "Not found"));
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: removeLabel(ANA) }));
@@ -304,7 +314,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValue(favorites([ANA], 2, 2));
       removeMock.mockRejectedValue(new ApiError(NOT_FOUND, "Not found"));
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: removeLabel(ANA) }));
@@ -319,7 +329,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValue(favorites([ANA]));
       fetchTalentMock.mockResolvedValue(makeTalentProfile({ slug: "ana-lima", nomeCompleto: "Ana Lima", favorito: true }));
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
       expect(screen.queryByRole("dialog")).toBeNull();
 
@@ -338,7 +348,7 @@ describe("FavoritesView", () => {
       fetchTalentMock.mockResolvedValue(makeTalentProfile({ slug: "ana-lima", nomeCompleto: "Ana Lima", favorito: true }));
       removeMock.mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
       await user.click(screen.getByRole("button", { name: "Abrir prévia de Ana Lima" }));
       const dialog = await screen.findByRole("dialog");
@@ -353,7 +363,7 @@ describe("FavoritesView", () => {
       fetchFavoritesMock.mockResolvedValueOnce(favorites([ANA])).mockResolvedValueOnce(favorites([]));
       fetchTalentMock.mockRejectedValue(new ApiError(NOT_FOUND, "Not found"));
       const user = userEvent.setup();
-      render(<FavoritesView />);
+      renderView();
       await screen.findByRole("heading", { name: "Ana Lima" });
 
       await user.click(screen.getByRole("button", { name: "Abrir prévia de Ana Lima" }));

@@ -3,8 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Alert, Button, Container, Pagination, Paper, Skeleton, Stack, Typography } from "@mui/material";
+import { Alert, Button, Container, Pagination, Stack } from "@mui/material";
 import FavoriteBorderOutlined from "@mui/icons-material/FavoriteBorderOutlined";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Reveal } from "@/components/common/Reveal";
 import { getApiErrorMessage } from "@/lib/api";
 import { fetchFavorites } from "@/lib/recruiter";
 import type { FavoriteTalent, PaginatedResponse, TalentListItem } from "@/types/recruiter";
@@ -51,15 +55,18 @@ export function FavoritesView() {
       setSelected((items) => [...items, talent]);
     } else setSelected((items) => items.filter((item) => item.id !== talent.id));
   }
+  const items = data?.items ?? [];
   return <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
-    <div><Typography component="h1" variant="h4">Favoritos</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>Perfis que você salvou para consultar depois.</Typography></div>
+    <PageHeader title="Favoritos" description="Perfis que você salvou para consultar depois." />
     <ComparisonBar selected={selected} message={selectionMessage} />
     {error && <Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error}</Alert>}
     {unavailableMessage && <Alert severity="info" onClose={() => setUnavailableMessage(null)}>{unavailableMessage}</Alert>}
-    {loading ? [1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={190} />) : data?.items.length ? <>
-      {data.items.map(({ talento }) => <TalentCard key={talento.id} talent={talento} onFavoriteChange={(favorite) => favoriteChanged(talento.slug, favorite)} onUnavailable={() => favoriteUnavailable(talento.slug)} comparisonSelected={selected.some((item) => item.id === talento.id)} onComparisonChange={(checked) => selectionChanged(talento, checked)} onPreview={() => setPreviewSlug(talento.slug)} />)}
-      {data.totalPages > 1 && <Stack sx={{ alignItems: "center", pt: 1 }}><Pagination page={data.page} count={data.totalPages} color="primary" onChange={(_, next) => navigate(next)} siblingCount={0} boundaryCount={1} aria-label="Paginação de favoritos" /></Stack>}
-    </> : !error && <Paper elevation={0} sx={{ p: 5, textAlign: "center", border: 1, borderColor: "divider" }}><FavoriteBorderOutlined color="action" sx={{ fontSize: 48 }} /><Typography variant="h6" sx={{ mt: 1 }}>Nenhum favorito ainda</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>Salve talentos para encontrá-los rapidamente aqui.</Typography><Button component={Link} href="/recrutador/talentos" variant="contained" sx={{ mt: 2 }}>Explorar talentos</Button></Paper>}
+    {loading && <LoadingSkeleton variant="list" count={3} />}
+    {!loading && items.length > 0 && <>
+      {items.map(({ talento }, position) => <Reveal key={talento.id} index={position}><TalentCard talent={talento} onFavoriteChange={(favorite) => favoriteChanged(talento.slug, favorite)} onUnavailable={() => favoriteUnavailable(talento.slug)} comparisonSelected={selected.some((item) => item.id === talento.id)} onComparisonChange={(checked) => selectionChanged(talento, checked)} onPreview={() => setPreviewSlug(talento.slug)} /></Reveal>)}
+      {data && data.totalPages > 1 && <Stack sx={{ alignItems: "center", pt: 1 }}><Pagination page={data.page} count={data.totalPages} color="primary" onChange={(_, next) => navigate(next)} siblingCount={0} boundaryCount={1} aria-label="Paginação de favoritos" /></Stack>}
+    </>}
+    {!loading && !error && items.length === 0 && <EmptyState icon={<FavoriteBorderOutlined />} title="Nenhum favorito ainda" description="Salve talentos para encontrá-los rapidamente aqui." action={<Button component={Link} href="/recrutador/talentos" variant="contained">Explorar talentos</Button>} />}
     <TalentPreviewDialog open={Boolean(previewSlug)} slug={previewSlug} onClose={() => setPreviewSlug(null)}
       onFavoriteChange={(favorite) => { if (previewSlug) favoriteChanged(previewSlug, favorite); }}
       onUnavailable={() => { if (previewSlug) favoriteUnavailable(previewSlug); }} />
