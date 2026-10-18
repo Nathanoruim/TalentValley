@@ -32,6 +32,11 @@ internal static class DemoData
 
     private static DateOnly D(int year, int month, int day) => new(year, month, day);
 
+    // Course taken at Rio Pomba Valley: always marked as RPV and, without a certificate, left pending.
+    private static DemoFormation RpvCourse(string name, DateOnly start, DateOnly end, int hours) =>
+        new(TipoFormacao.CURSO_LIVRE, name, RioPombaValleyName, start, end, hours, StatusFormacao.CONCLUIDO,
+            RioPombaValley: true);
+
     public static readonly DemoRecruiter Recruiter = new("Helena Martins Rocha", $"helena.rocha@{EmailDomain}",
         "Vale Tecnologia Demonstração", "Analista de Recrutamento", "32900000000", RioPomba, "MG");
 
@@ -51,8 +56,7 @@ internal static class DemoData
             [
                 new(TipoFormacao.GRADUACAO, "Sistemas de Informação", "Universidade Federal Demonstração",
                     D(2023, 2, 1), null, 3200, StatusFormacao.EM_ANDAMENTO, Principal: true),
-                new(TipoFormacao.CURSO_LIVRE, "Desenvolvimento Web Full Stack", RioPombaValleyName,
-                    D(2024, 3, 4), D(2025, 6, 27), 240, StatusFormacao.CONCLUIDO, RioPombaValley: true),
+                RpvCourse("Desenvolvimento Web Full Stack", D(2024, 3, 4), D(2025, 6, 27), 240),
                 new(TipoFormacao.CURSO_LIVRE, "Lógica de Programação", "Escola Digital Exemplo",
                     D(2022, 8, 1), D(2022, 11, 30), 40, StatusFormacao.CONCLUIDO)
             ],
@@ -88,8 +92,7 @@ internal static class DemoData
             [
                 new(TipoFormacao.TECNOLOGO, "Gestão Comercial", "Faculdade Vale do Ubá Demonstração",
                     D(2024, 2, 1), null, 1600, StatusFormacao.EM_ANDAMENTO, Principal: true),
-                new(TipoFormacao.CURSO_LIVRE, "Análise de Dados com Power BI", RioPombaValleyName,
-                    D(2025, 3, 3), D(2025, 6, 20), 60, StatusFormacao.CONCLUIDO, RioPombaValley: true)
+                RpvCourse("Análise de Dados com Power BI", D(2025, 3, 3), D(2025, 6, 20), 60)
             ],
             [
                 new("Mercado Central Ubá", "Estagiário Administrativo", TipoExperiencia.ESTAGIO,
@@ -166,8 +169,7 @@ internal static class DemoData
             [
                 new(TipoFormacao.TECNICO, "Técnico em Informática", "Escola Técnica Cataguases Demonstração",
                     D(2023, 2, 1), D(2025, 12, 5), 1200, StatusFormacao.CONCLUIDO, Principal: true),
-                new(TipoFormacao.CURSO_LIVRE, "Desenvolvimento Mobile com Flutter", RioPombaValleyName,
-                    D(2025, 8, 4), D(2025, 11, 28), 120, StatusFormacao.CONCLUIDO, RioPombaValley: true)
+                RpvCourse("Desenvolvimento Mobile com Flutter", D(2025, 8, 4), D(2025, 11, 28), 120)
             ],
             [],
             [
@@ -188,8 +190,7 @@ internal static class DemoData
             [
                 new(TipoFormacao.TECNOLOGO, "Análise e Desenvolvimento de Sistemas", "Instituto Federal Demonstração",
                     D(2024, 2, 1), null, 2000, StatusFormacao.EM_ANDAMENTO, Principal: true),
-                new(TipoFormacao.CURSO_LIVRE, "APIs com ASP.NET Core", RioPombaValleyName,
-                    D(2025, 2, 10), D(2025, 5, 23), 100, StatusFormacao.CONCLUIDO, RioPombaValley: true)
+                RpvCourse("APIs com ASP.NET Core", D(2025, 2, 10), D(2025, 5, 23), 100)
             ],
             [
                 new("Startup Fio Condutor", "Estagiário de Back-end", TipoExperiencia.ESTAGIO,
