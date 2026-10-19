@@ -14,8 +14,8 @@ public abstract class SolicitarCadastroBaseRequest
     // LGPD: the terms checkbox must be explicitly accepted; a missing value binds as false and is rejected.
     [Range(typeof(bool), "true", "true", ErrorMessage = "É necessário aceitar os termos de uso e a política de privacidade.")]
     public bool ConsentTermos { get; init; }
-    // Optional: a missing value binds as false (no newsletter).
-    public bool ConsentNewsletter { get; init; }
+    // Optional: a missing or null value means no newsletter.
+    public bool? ConsentNewsletter { get; init; }
     private static string Normalize(string? value) => string.Join(' ', (value ?? string.Empty).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 }
 

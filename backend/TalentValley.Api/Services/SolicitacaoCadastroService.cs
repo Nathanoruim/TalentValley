@@ -153,12 +153,13 @@ public sealed class SolicitacaoCadastroService(AppDbContext database, UserManage
     private static SolicitacaoCadastro Base(SolicitarCadastroBaseRequest request, TipoSolicitacaoCadastro type)
     {
         var now = DateTimeOffset.UtcNow;
+        var newsletter = request.ConsentNewsletter == true;
         return new()
         { Id = Guid.NewGuid(), Tipo = type, Status = StatusSolicitacaoCadastro.PENDENTE, NomeCompleto = request.NomeCompleto, Email = request.Email,
             EmailNormalizado = request.Email.ToUpperInvariant(), Telefone = request.Telefone, Cidade = request.Cidade, Uf = request.Uf, CriadoEm = now,
             // Validation guarantees ConsentTermos is true; the server records when and which terms version was accepted.
             ConsentimentoEm = now, VersaoTermos = VersaoTermosAtual,
-            NewsletterAceita = request.ConsentNewsletter, NewsletterAtualizadaEm = request.ConsentNewsletter ? now : null };
+            NewsletterAceita = newsletter, NewsletterAtualizadaEm = newsletter ? now : null };
     }
     private Guid CurrentAdminId() => Guid.Parse(context.HttpContext!.User.FindFirst("sub")!.Value);
 }

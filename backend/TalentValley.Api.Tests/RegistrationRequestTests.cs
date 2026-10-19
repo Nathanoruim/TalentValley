@@ -304,8 +304,8 @@ public sealed class RegistrationRequestTests : IDisposable
             ["nomeCompleto"] = "Ana Silva", ["email"] = "news@example.test", ["telefone"] = "(32) 99999-0000", ["cidade"] = "Rio Pomba", ["uf"] = "MG",
             ["consentTermos"] = true
         };
-        // null means the field is left out of the request: the newsletter is optional.
-        if (newsletter is not null) body["consentNewsletter"] = newsletter;
+        // null is sent as an explicit JSON null: the newsletter is optional.
+        body["consentNewsletter"] = newsletter;
         if (kind == "aluno") { body["instituicaoEnsino"] = "IF Sudeste MG"; body["curso"] = "Sistemas de Informação"; body["tipoFormacao"] = "GRADUACAO"; }
         else { body["empresa"] = "Empresa Exemplo"; body["cargo"] = "Analista de RH"; }
         Assert.Equal(HttpStatusCode.Accepted, (await publicClient.PostAsJsonAsync($"/api/cadastro/{kind}", body)).StatusCode);
