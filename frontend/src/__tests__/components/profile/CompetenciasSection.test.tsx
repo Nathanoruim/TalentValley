@@ -15,13 +15,13 @@ const EDIT_LABEL = "Editar competências";
 const ADD_LABEL = "Adicionar competências";
 const EMPTY_MESSAGE = "Selecione as competências que representam suas habilidades.";
 const DIALOG_NAME = "Editar competências";
-const COMBOBOX_NAME = "Competências";
+const COMBOBOX_NAME = "Competências técnicas";
 const SAVE_ERROR_FALLBACK = "Não foi possível salvar as competências. Tente novamente.";
 const CATALOG_ERROR = "Não foi possível carregar o catálogo de competências.";
 const NOTIFY_UPDATED = "Competências atualizadas.";
-const REACT = { id: 1, nome: "React" };
-const TYPESCRIPT = { id: 2, nome: "TypeScript" };
-const DOTNET = { id: 3, nome: "ASP.NET Core" };
+const REACT: CatalogoCompetenciaResponse = { id: 1, nome: "React", categoria: "Tecnologia · Frontend", tipo: "TECNICA" };
+const TYPESCRIPT: CatalogoCompetenciaResponse = { id: 2, nome: "TypeScript", categoria: "Tecnologia · Linguagens", tipo: "TECNICA" };
+const DOTNET: CatalogoCompetenciaResponse = { id: 3, nome: "ASP.NET Core", categoria: "Tecnologia · Backend e APIs", tipo: "TECNICA" };
 const CATALOG: CatalogoCompetenciaResponse[] = [REACT, TYPESCRIPT, DOTNET];
 
 const catalogMock = vi.mocked(fetchCompetenciaCatalog);
@@ -75,6 +75,44 @@ describe("CompetenciasSection", () => {
 
     expect(catalogMock).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("groups the catalog options under their category", async () => {
+    const user = userEvent.setup();
+    renderSection([]);
+
+    const { combobox } = await openDialog(user);
+    await user.click(combobox);
+
+    const listbox = await screen.findByRole("listbox");
+    expect(within(listbox).getByText("Tecnologia · Frontend")).toBeTruthy();
+    expect(within(listbox).getByText("Tecnologia · Linguagens")).toBeTruthy();
+    expect(within(listbox).getByText("Tecnologia · Backend e APIs")).toBeTruthy();
+  });
+
+  it("keeps behavioral competencies in their own field, limited to six", { timeout: 20_000 }, async () => {
+    const user = userEvent.setup();
+    const soft = Array.from({ length: 7 }, (_, index): CatalogoCompetenciaResponse => ({
+      id: 100 + index, nome: `Soft ${index + 1}`, categoria: "Postura e autogestão", tipo: "COMPORTAMENTAL",
+    }));
+    catalogMock.mockResolvedValue([...CATALOG, ...soft]);
+    renderSection([]);
+
+    const { dialog } = await openDialog(user);
+    const technical = within(dialog).getByRole("combobox", { name: COMBOBOX_NAME });
+    await user.click(technical);
+    expect(screen.queryByRole("option", { name: "Soft 1" })).toBeNull();
+    await user.keyboard("{Escape}");
+
+    const behavioral = within(dialog).getByRole("combobox", { name: "Competências comportamentais" });
+    await user.click(behavioral);
+    // The list stays open after each pick (disableCloseOnSelect).
+    for (const item of soft.slice(0, 6)) {
+      await user.click(await screen.findByRole("option", { name: item.nome }));
+    }
+
+    expect(within(dialog).getByText("6 de 6 selecionadas")).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Soft 7" }).getAttribute("aria-disabled")).toBe("true");
   });
 
   it("opens the dialog from the empty-state action", async () => {

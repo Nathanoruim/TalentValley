@@ -18,6 +18,9 @@ public enum AlunoSelfDeleteResult { Deleted, NotFound, InvalidPassword, LockedOu
 public sealed class AlunoService(AppDbContext database, SignInManager<ApplicationUser> signIn,
     AlunoDeletionService deletion)
 {
+    // Business limit: a student picks at most this many behavioral (soft) competencies.
+    public const int MaxCompetenciasComportamentais = 6;
+
     // LGPD self-deletion: the student confirms with the current password; failures count toward lockout.
     public async Task<AlunoSelfDeleteResult> DeleteOwnAsync(Guid userId, string password, CancellationToken cancellationToken)
     {
@@ -108,10 +111,12 @@ public sealed class AlunoService(AppDbContext database, SignInManager<Applicatio
         var desired = competenciaIds.Distinct().ToHashSet();
         var current = aluno.Competencias.Select(x => x.CompetenciaId).ToHashSet();
         if (current.SetEquals(desired)) return;
-        var knownIds = await database.Competencias
-            .Where(x => desired.Contains(x.Id)).Select(x => x.Id).ToHashSetAsync();
-        var unknown = desired.Except(knownIds).ToList();
+        var known = await database.Competencias
+            .Where(x => desired.Contains(x.Id)).Select(x => new { x.Id, x.Categoria }).ToListAsync();
+        var unknown = desired.Except(known.Select(x => x.Id)).ToList();
         if (unknown.Count > 0) throw new ArgumentException($"Unknown competency IDs: {string.Join(", ", unknown)}");
+        if (known.Count(x => x.Categoria.Tipo() == TipoCompetencia.COMPORTAMENTAL) > MaxCompetenciasComportamentais)
+            throw new ArgumentException($"Escolha no máximo {MaxCompetenciasComportamentais} competências comportamentais.");
         foreach (var item in aluno.Competencias.Where(x => !desired.Contains(x.CompetenciaId)).ToList())
             aluno.Competencias.Remove(item);
         foreach (var id in desired.Where(x => !current.Contains(x)))
@@ -174,8 +179,10 @@ public sealed class AlunoService(AppDbContext database, SignInManager<Applicatio
             var normalized = NameNormalizer.Normalize(search);
             query = query.Where(x => x.NomeBusca.Contains(normalized));
         }
-        return await query.OrderBy(x => x.NomeBusca)
-            .Select(x => new CatalogoCompetenciaResponse(x.Id, x.Nome)).ToListAsync();
+        // The category is stored as text, so the list is ordered by category (enum order) in memory.
+        var items = await query.ToListAsync();
+        return items.OrderBy(x => x.Categoria).ThenBy(x => x.NomeBusca, StringComparer.Ordinal)
+            .Select(x => new CatalogoCompetenciaResponse(x.Id, x.Nome, x.Categoria.Grupo(), x.Categoria.Tipo())).ToList();
     }
 
     public async Task<IReadOnlyCollection<CatalogoIdiomaResponse>> GetIdiomasAsync() =>

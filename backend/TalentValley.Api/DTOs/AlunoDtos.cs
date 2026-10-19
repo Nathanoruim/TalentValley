@@ -32,7 +32,7 @@ public sealed record CompetenciaResponse(int Id, string Nome);
 public sealed record AlunoIdiomaResponse(int IdiomaId, string Nome, NivelIdioma Nivel);
 
 // Catalog responses
-public sealed record CatalogoCompetenciaResponse(int Id, string Nome);
+public sealed record CatalogoCompetenciaResponse(int Id, string Nome, string Categoria, TipoCompetencia Tipo);
 public sealed record CatalogoIdiomaResponse(int Id, string Nome);
 
 // Update requests

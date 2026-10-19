@@ -47,8 +47,8 @@ const MARIA = makeTalentListItem();
 const JOAO = makeTalentListItem({ id: "talento-2", slug: "joao-lima", nomeCompleto: "João Lima", competencias: [{ id: 2, nome: "Python" }] });
 const ANA = makeTalentListItem({ id: "talento-3", slug: "ana-reis", nomeCompleto: "Ana Reis", competencias: [] });
 const CATALOG: CatalogoCompetenciaResponse[] = [
-  { id: 1, nome: "React" },
-  { id: 2, nome: "Python" },
+  { id: 1, nome: "React", categoria: "Tecnologia · Frontend", tipo: "TECNICA" },
+  { id: 2, nome: "Python", categoria: "Tecnologia · Linguagens", tipo: "TECNICA" },
 ];
 
 function setQuery(query: string) {
@@ -396,7 +396,7 @@ describe("TalentDiscoveryView", () => {
       await user.click(screen.getByRole("button", { name: RETRY }));
       await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
       expect(mocks.fetchRecruiterCompetencies).toHaveBeenCalledTimes(2);
-      await user.click(screen.getByLabelText("Competências"));
+      await user.click(screen.getByLabelText("Competências técnicas"));
       expect(screen.getByRole("option", { name: "React" })).toBeTruthy();
     });
   });

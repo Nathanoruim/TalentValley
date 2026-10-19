@@ -55,6 +55,8 @@ export interface AlunoIdiomaResponse {
 export interface CatalogoCompetenciaResponse {
   id: number;
   nome: string;
+  categoria: string;
+  tipo: "TECNICA" | "COMPORTAMENTAL";
 }
 
 export interface CatalogoIdiomaResponse {

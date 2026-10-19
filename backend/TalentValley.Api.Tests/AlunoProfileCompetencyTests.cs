@@ -28,7 +28,7 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     public async Task Competencias_catalog_returned()
     {
         using var client = await StudentClientAsync();
-        var items = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias");
+        var items = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions);
         Assert.NotNull(items);
         Assert.Equal(CatalogSeedService.CompetenciaNames.Length, items!.Count);
     }
@@ -72,7 +72,7 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     public async Task Competencias_catalog_contains_representative_categories()
     {
         using var client = await StudentClientAsync();
-        var items = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias"))!;
+        var items = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions))!;
         var names = items.Select(x => x.Nome).ToHashSet();
 
         var required = new[]
@@ -84,10 +84,90 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     }
 
     [Fact]
+    public async Task Competencias_catalog_is_grouped_by_category_in_a_stable_order()
+    {
+        using var client = await StudentClientAsync();
+        var items = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions))!;
+
+        Assert.Equal("Tecnologia · Linguagens", items.Single(x => x.Nome == "C#").Categoria);
+        Assert.Equal("Tecnologia · Frontend", items.Single(x => x.Nome == "React").Categoria);
+        Assert.Equal("Gestão de projetos e processos · Metodologias ágeis", items.Single(x => x.Nome == "Scrum").Categoria);
+        Assert.Equal("Marketing, design e comunicação · Design", items.Single(x => x.Nome == "Figma").Categoria);
+        Assert.Equal("Liderança e colaboração", items.Single(x => x.Nome == "Liderança").Categoria);
+        Assert.Equal(TipoCompetencia.TECNICA, items.Single(x => x.Nome == "React").Tipo);
+        Assert.Equal(TipoCompetencia.COMPORTAMENTAL, items.Single(x => x.Nome == "Liderança").Tipo);
+
+        var expectedOrder = Enum.GetValues<CategoriaCompetencia>().Select(x => x.Grupo()).ToList();
+        var categoriesInResponse = items.Select(x => x.Categoria).Distinct().ToList();
+        Assert.Equal(expectedOrder, categoriesInResponse);
+        Assert.Equal(categoriesInResponse.Count, items.Select(x => x.Categoria).Aggregate(
+            new List<string>(), (list, categoria) => { if (list.LastOrDefault() != categoria) list.Add(categoria); return list; }).Count);
+    }
+
+    [Fact]
+    public async Task Competencias_catalog_has_technical_and_behavioral_items_in_every_category()
+    {
+        using var client = await StudentClientAsync();
+        var items = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions))!;
+
+        Assert.Contains(items, x => x.Tipo == TipoCompetencia.TECNICA);
+        Assert.Contains(items, x => x.Tipo == TipoCompetencia.COMPORTAMENTAL);
+        Assert.Equal(Enum.GetValues<CategoriaCompetencia>().Length, items.Select(x => x.Categoria).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task UpdateCompetencias_accepts_up_to_the_behavioral_limit_and_rejects_more()
+    {
+        using var client = await StudentClientAsync();
+        var catalog = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions))!;
+        var behavioral = catalog.Where(x => x.Tipo == TipoCompetencia.COMPORTAMENTAL).Select(x => x.Id).ToList();
+        var technical = catalog.First(x => x.Tipo == TipoCompetencia.TECNICA).Id;
+
+        var accepted = await client.PutAsJsonAsync("/api/alunos/me/competencias",
+            new { competenciaIds = behavioral.Take(AlunoService.MaxCompetenciasComportamentais).Append(technical) });
+        var rejected = await client.PutAsJsonAsync("/api/alunos/me/competencias",
+            new { competenciaIds = behavioral.Take(AlunoService.MaxCompetenciasComportamentais + 1) });
+
+        Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+    }
+
+    [Fact]
+    public async Task Competencias_catalog_does_not_contain_removed_generic_items()
+    {
+        using var client = await StudentClientAsync();
+        var names = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions))!
+            .Select(x => x.Nome).ToHashSet();
+
+        var removed = new[]
+        {
+            "REST", "Version Control", "Validation", "Logging", "System Integration", "REST Client",
+            "Search", "Sorting", "Filtering", "Pagination", "HTTP", "JSON", "Data Integrity"
+        };
+        Assert.All(removed, name => Assert.DoesNotContain(name, names));
+    }
+
+    [Fact]
+    public async Task Competencias_seed_corrects_the_category_of_existing_items()
+    {
+        await factory.InScopeAsync(async provider =>
+        {
+            var db = provider.GetRequiredService<AppDbContext>();
+            var react = await db.Competencias.SingleAsync(x => x.NomeBusca == "react");
+            react.Categoria = CategoriaCompetencia.Mobile;
+            await db.SaveChangesAsync();
+
+            await provider.GetRequiredService<CatalogSeedService>().InitializeAsync();
+
+            Assert.Equal(CategoriaCompetencia.Frontend, (await db.Competencias.AsNoTracking().SingleAsync(x => x.NomeBusca == "react")).Categoria);
+        });
+    }
+
+    [Fact]
     public async Task Competencias_search_works()
     {
         using var client = await StudentClientAsync();
-        var items = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias?search=react");
+        var items = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias?search=react", ApiFactory.JsonOptions);
         Assert.NotNull(items);
         Assert.Contains(items!, item => item.Nome == "React");
     }
@@ -96,7 +176,7 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     public async Task Competencias_search_is_case_insensitive()
     {
         using var client = await StudentClientAsync();
-        var items = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias?search=ReAcT");
+        var items = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias?search=ReAcT", ApiFactory.JsonOptions);
 
         Assert.Contains(items!, item => item.Nome == "React");
     }
@@ -118,13 +198,13 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
 
         var catalogResponse = await client.GetAsync("/api/competencias");
         Assert.Equal(HttpStatusCode.OK, catalogResponse.StatusCode);
-        var items = await catalogResponse.Content.ReadFromJsonAsync<List<CatalogoCompetenciaResponse>>();
+        var items = await catalogResponse.Content.ReadFromJsonAsync<List<CatalogoCompetenciaResponse>>(ApiFactory.JsonOptions);
         Assert.NotNull(items);
         Assert.Equal(CatalogSeedService.CompetenciaNames.Length, items!.Count);
 
         var searchResponse = await client.GetAsync("/api/competencias?search=react");
         Assert.Equal(HttpStatusCode.OK, searchResponse.StatusCode);
-        var matches = await searchResponse.Content.ReadFromJsonAsync<List<CatalogoCompetenciaResponse>>();
+        var matches = await searchResponse.Content.ReadFromJsonAsync<List<CatalogoCompetenciaResponse>>(ApiFactory.JsonOptions);
         Assert.Contains(matches!, item => item.Nome == "React");
     }
 
@@ -163,7 +243,7 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     public async Task UpdateCompetencias_full_replacement_works()
     {
         using var client = await StudentClientAsync();
-        var catalog = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias");
+        var catalog = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions);
         var ids = catalog!.Take(3).Select(x => x.Id).ToList();
         var response = await client.PutAsJsonAsync("/api/alunos/me/competencias", new { competenciaIds = ids });
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -184,7 +264,7 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     public async Task UpdateCompetencias_duplicates_normalized()
     {
         using var client = await StudentClientAsync();
-        var catalog = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias");
+        var catalog = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions);
         var id = catalog!.First().Id;
         var response = await client.PutAsJsonAsync("/api/alunos/me/competencias", new { competenciaIds = new[] { id, id, id } });
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -197,7 +277,7 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     public async Task UpdateCompetencias_idempotent_same_state_no_duplicates()
     {
         using var client = await StudentClientAsync();
-        var catalog = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias");
+        var catalog = await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions);
         var ids = catalog!.Take(2).Select(x => x.Id).ToList();
         await client.PutAsJsonAsync("/api/alunos/me/competencias", new { competenciaIds = ids });
         await client.PutAsJsonAsync("/api/alunos/me/competencias", new { competenciaIds = ids });

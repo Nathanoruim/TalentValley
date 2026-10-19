@@ -14,6 +14,8 @@ public sealed class CompetenciaConfiguration : IEntityTypeConfiguration<Competen
 
         builder.Property(x => x.NomeBusca).IsRequired().HasMaxLength(100);
 
+        builder.Property(x => x.Categoria).HasConversion<string>().HasMaxLength(30);
+
         builder.HasIndex(x => x.NomeBusca).IsUnique();
     }
 }

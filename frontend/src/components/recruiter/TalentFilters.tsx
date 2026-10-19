@@ -114,28 +114,47 @@ export function TalentFilters({
         />
       </Stack>
       <Box>
-        <Autocomplete
-          multiple
-          options={competencies}
-          value={competencies.filter((item) =>
-            value.competenciaIds.includes(item.id),
-          )}
-          getOptionLabel={(option) => option.nome}
-          isOptionEqualToValue={(option, selected) => option.id === selected.id}
-          onChange={(_, selected) =>
-            set(
-              "competenciaIds",
-              selected.map((item) => item.id),
-            )
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Competências"
-              placeholder="Selecione"
-            />
-          )}
-        />
+        <Stack spacing={2}>
+          {(
+            [
+              ["Competências técnicas", "TECNICA"],
+              ["Competências comportamentais", "COMPORTAMENTAL"],
+            ] as const
+          ).map(([label, tipo]) => {
+            const group = competencies.filter((item) => item.tipo === tipo);
+            return (
+              <Autocomplete
+                key={tipo}
+                multiple
+                options={group}
+                groupBy={(option) => option.categoria}
+                value={group.filter((item) =>
+                  value.competenciaIds.includes(item.id),
+                )}
+                getOptionLabel={(option) => option.nome}
+                isOptionEqualToValue={(option, selected) =>
+                  option.id === selected.id
+                }
+                // Both fields feed the same list of IDs; only this group's IDs are replaced.
+                onChange={(_, selected) =>
+                  set("competenciaIds", [
+                    ...value.competenciaIds.filter(
+                      (id) => !group.some((item) => item.id === id),
+                    ),
+                    ...selected.map((item) => item.id),
+                  ])
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={label}
+                    placeholder="Selecione"
+                  />
+                )}
+              />
+            );
+          })}
+        </Stack>
         {catalogError && (
           <Alert
             severity="warning"
