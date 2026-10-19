@@ -213,6 +213,12 @@ namespace TalentValley.Api.Data.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
 
+                    b.Property<bool>("NewsletterAceita")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("NewsletterAtualizadaEm")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PortfolioUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
@@ -745,6 +751,9 @@ namespace TalentValley.Api.Data.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<DateTimeOffset?>("ConsentimentoEm")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Empresa")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -754,6 +763,12 @@ namespace TalentValley.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<bool>("NewsletterAceita")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("NewsletterAtualizadaEm")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -768,6 +783,10 @@ namespace TalentValley.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)");
+
+                    b.Property<string>("VersaoTermos")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("UserId");
 
@@ -831,6 +850,12 @@ namespace TalentValley.Api.Data.Migrations
                     b.Property<string>("MotivoRejeicao")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("NewsletterAceita")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("NewsletterAtualizadaEm")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NomeCompleto")
                         .IsRequired()

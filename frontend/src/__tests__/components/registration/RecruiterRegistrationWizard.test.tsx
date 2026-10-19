@@ -151,6 +151,7 @@ describe("RecruiterRegistrationWizard", () => {
       cargo: "Analista de RH",
       siteEmpresa: SITE.trim(),
       consentTermos: true,
+      consentNewsletter: false,
     });
     expect(screen.queryByRole("button", { name: SUBMIT_LABEL })).toBeNull();
     expect(screen.getByRole("link", { name: "Voltar à página inicial" }).getAttribute("href")).toBe("/");

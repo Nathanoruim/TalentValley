@@ -23,6 +23,8 @@ public sealed class RecrutadorConfiguration : IEntityTypeConfiguration<Recrutado
 
         builder.Property(x => x.Status).HasConversion<string>();
 
+        builder.Property(x => x.VersaoTermos).HasMaxLength(20);
+
         builder.HasOne(x => x.User).WithOne()
             .HasForeignKey<Recrutador>(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
 

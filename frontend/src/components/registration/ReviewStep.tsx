@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Box, Button, Checkbox, FormControlLabel, Paper, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { duration, ease } from "@/components/auth/motion/tokens";
@@ -67,10 +67,12 @@ interface ReviewStepProps {
   details: ReviewDetails;
   consent: boolean;
   consentError: string | null | undefined;
+  newsletter: boolean;
   disabled: boolean;
   /** The summary folds away while the request is being sent, and unfolds again if it fails. */
   collapsed: boolean;
   onConsentChange: (checked: boolean) => void;
+  onNewsletterChange: (checked: boolean) => void;
   onEditStep: (step: number) => void;
   registerFieldRef: (key: string) => (node: FocusableControl) => void;
 }
@@ -88,13 +90,14 @@ export function ReviewStep({
   details,
   consent,
   consentError,
+  newsletter,
   disabled,
   collapsed,
   onConsentChange,
+  onNewsletterChange,
   onEditStep,
   registerFieldRef,
 }: ReviewStepProps) {
-  const [newsletter, setNewsletter] = useState(false);
   const policy = useMotionPolicy();
   const animated = policy === "touch" || policy === "pointer";
   // With reduced motion the summary still folds, but at once.
@@ -159,13 +162,13 @@ export function ReviewStep({
         inputRef={registerFieldRef("consentTermos")}
       />
 
-      {/* Optional and not sent to the API: it does not gate the submission. */}
+      {/* Optional: it is sent to the API but does not gate the submission. */}
       <FormControlLabel
         sx={{ display: "flex", mt: 1 }}
         control={
           <Checkbox
             checked={newsletter}
-            onChange={(event) => setNewsletter(event.target.checked)}
+            onChange={(event) => onNewsletterChange(event.target.checked)}
             disabled={disabled}
           />
         }

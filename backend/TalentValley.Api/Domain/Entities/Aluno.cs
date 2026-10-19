@@ -20,6 +20,9 @@ public class Aluno
     // LGPD consent copied from the approved registration request.
     public DateTimeOffset? ConsentimentoEm { get; set; }
     public string? VersaoTermos { get; set; }
+    // Optional newsletter consent: current choice and when it was last changed.
+    public bool NewsletterAceita { get; set; }
+    public DateTimeOffset? NewsletterAtualizadaEm { get; set; }
     public ICollection<AlunoCompetencia> Competencias { get; set; } = [];
     public ICollection<AlunoIdioma> Idiomas { get; set; } = [];
     public ICollection<Formacao> Formacoes { get; set; } = [];

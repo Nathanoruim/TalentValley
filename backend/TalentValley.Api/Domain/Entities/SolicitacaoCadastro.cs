@@ -30,4 +30,7 @@ public class SolicitacaoCadastro
     // LGPD: when and which version of the terms the requester accepted.
     public DateTimeOffset? ConsentimentoEm { get; set; }
     public string? VersaoTermos { get; set; }
+    // Optional newsletter consent given in the registration form.
+    public bool NewsletterAceita { get; set; }
+    public DateTimeOffset? NewsletterAtualizadaEm { get; set; }
 }

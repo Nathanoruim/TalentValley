@@ -40,7 +40,7 @@ const details = {
 type StepProps = Partial<ComponentProps<typeof ReviewStep>>;
 
 function createHandlers() {
-  return { onConsentChange: vi.fn(), onEditStep: vi.fn(), registerFieldRef: vi.fn(() => vi.fn()) };
+  return { onConsentChange: vi.fn(), onNewsletterChange: vi.fn(), onEditStep: vi.fn(), registerFieldRef: vi.fn(() => vi.fn()) };
 }
 
 function stepElement(props: StepProps, handlers: ReturnType<typeof createHandlers>) {
@@ -50,6 +50,7 @@ function stepElement(props: StepProps, handlers: ReturnType<typeof createHandler
       details={details}
       consent={false}
       consentError={null}
+      newsletter={false}
       disabled={false}
       collapsed={false}
       {...handlers}
@@ -142,9 +143,9 @@ describe("ReviewStep", () => {
     expect(screen.getByText(CONSENT_ERROR)).toBeTruthy();
   });
 
-  it("offers an optional newsletter checkbox that starts unchecked and does not touch the terms consent", async () => {
+  it("offers an optional newsletter checkbox that reports changes without touching the terms consent", async () => {
     const user = userEvent.setup({ delay: null });
-    const { onConsentChange } = renderStep();
+    const { onConsentChange, onNewsletterChange } = renderStep({ newsletter: false });
     const newsletter = screen.getByRole("checkbox", { name: NEWSLETTER_CHECKBOX }) as HTMLInputElement;
 
     expect(newsletter.checked).toBe(false);
@@ -152,8 +153,14 @@ describe("ReviewStep", () => {
 
     await user.click(newsletter);
 
-    expect(newsletter.checked).toBe(true);
+    expect(onNewsletterChange).toHaveBeenCalledExactlyOnceWith(true);
     expect(onConsentChange).not.toHaveBeenCalled();
+  });
+
+  it("shows the newsletter checkbox checked when the choice was made", () => {
+    renderStep({ newsletter: true });
+
+    expect((screen.getByRole("checkbox", { name: NEWSLETTER_CHECKBOX }) as HTMLInputElement).checked).toBe(true);
   });
 
   it("registers the consent input under consentTermos", () => {
