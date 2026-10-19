@@ -1,4 +1,4 @@
-import type { ClipboardEvent } from "react";
+import type { ChangeEvent, ClipboardEvent } from "react";
 
 export const BRAZILIAN_UFS = [
   "AC",
@@ -61,14 +61,73 @@ export function normalizePhone(value: string): string {
     : digits;
 }
 
-export function formatBrazilianPhone(value: string): string {
+/**
+ * Display format. A complete number is split by its length (8 or 9 digits after the area code).
+ * While the user is typing (`mobileFirst`), a number starting with 9 is already shown as 5 + 4,
+ * so the hyphen does not move when the last digits arrive.
+ */
+export function formatBrazilianPhone(value: string, mobileFirst = false): string {
   const digits = normalizePhone(value);
   if (!digits) return "";
   if (digits.length <= 2) return `(${digits}`;
   const subscriber = digits.slice(2);
-  if (subscriber.length <= 4) return `(${digits.slice(0, 2)}) ${subscriber}`;
-  const splitAt = subscriber.length > 8 ? 5 : 4;
+  const splitAt =
+    (mobileFirst && subscriber.startsWith("9")) || subscriber.length > 8 ? 5 : 4;
+  if (subscriber.length <= splitAt) return `(${digits.slice(0, 2)}) ${subscriber}`;
   return `(${digits.slice(0, 2)}) ${subscriber.slice(0, splitAt)}-${subscriber.slice(splitAt)}`;
+}
+
+const PHONE_MAX_DIGITS = 11;
+
+/**
+ * Digits of a phone being typed or pasted, capped at 11. The country code is dropped only when it
+ * is explicit ("+55 ...") or the value cannot be a national number (13 digits); otherwise a leading
+ * 55 is the area code (Santa Maria, RS) and must stay. `removed` counts the dropped digits.
+ */
+function nationalPhoneDigits(value: string): { digits: string; removed: number } {
+  const all = digitsOnly(value);
+  const hasCountryCode =
+    all.startsWith("55") && (value.trimStart().startsWith("+") || all.length === 13);
+  const national = hasCountryCode ? all.slice(2) : all;
+  return {
+    digits: national.slice(0, PHONE_MAX_DIGITS),
+    removed: all.length - national.length,
+  };
+}
+
+/** Input mask: digits only, capped at 11, formatted as (DD) 99999-9999 or (DD) 9999-9999. */
+export function maskBrazilianPhone(value: string): string {
+  return formatBrazilianPhone(nationalPhoneDigits(value).digits, true);
+}
+
+/**
+ * onChange helper for phone inputs: returns the masked value and keeps the caret next to the
+ * digit being edited, so formatting does not push it to the end of the field.
+ */
+export function maskPhoneChange(
+  event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+): string {
+  const input = event.currentTarget;
+  const raw = input.value;
+  const caret = input.selectionStart ?? raw.length;
+  const masked = maskBrazilianPhone(raw);
+  const digitsBeforeCaret = Math.max(
+    0,
+    digitsOnly(raw.slice(0, caret)).length - nationalPhoneDigits(raw).removed,
+  );
+  requestAnimationFrame(() => {
+    let seen = 0;
+    let position = masked.length;
+    for (let index = 0; index < masked.length; index += 1) {
+      if (seen === digitsBeforeCaret) {
+        position = index;
+        break;
+      }
+      if (/\d/.test(masked.charAt(index))) seen += 1;
+    }
+    input.setSelectionRange(position, position);
+  });
+  return masked;
 }
 
 export function normalizeUF(value: string): string {
@@ -182,10 +241,15 @@ export function validateBrazilianPhone(
   if (!/^[0-9 ()+.\-]+$/.test(value))
     return "Informe um telefone brasileiro válido.";
   const digits = normalizePhone(value);
+  // Area codes run from 11 to 99. After the area code, a mobile number (11 digits) starts with
+  // 9 and a landline (10 digits) starts with 2 to 5. Keep in sync with the backend rule.
+  const hasValidPrefix =
+    digits.length === 11 ? digits[2] === "9" : /^[2-5]$/.test(digits[2] ?? "");
   if (
     !/^\d{10,11}$/.test(digits) ||
     /^(\d)\1+$/.test(digits) ||
-    digits.slice(0, 2) === "00"
+    Number(digits.slice(0, 2)) < 11 ||
+    !hasValidPrefix
   ) {
     return "Informe um telefone brasileiro válido.";
   }

@@ -106,12 +106,27 @@ describe("PersonalDataStep", () => {
       expect(handlers.onChange).toHaveBeenLastCalledWith("email", "x".repeat(254));
     });
 
-    it("strips emoji from the phone without capping it", () => {
+    it("strips emoji from the phone", () => {
       renderStep();
 
       fireEvent.change(field(PHONE), { target: { value: `(32) 99999-9999${EMOJI}` } });
 
       expect(handlers.onChange).toHaveBeenLastCalledWith("telefone", "(32) 99999-9999");
+    });
+
+    it.each([
+      ["3299999", "(32) 99999"],
+      ["32999991234", "(32) 99999-1234"],
+      ["3233334444", "(32) 3333-4444"],
+      ["letras32", "(32"],
+      ["+55 (32) 99999-1234", "(32) 99999-1234"],
+      ["(32) 99999-12345678", "(32) 99999-1234"],
+    ])("masks the phone typed or pasted as %s", (typed, expected) => {
+      renderStep();
+
+      fireEvent.change(field(PHONE), { target: { value: typed } });
+
+      expect(handlers.onChange).toHaveBeenLastCalledWith("telefone", expected);
     });
 
     it.each([

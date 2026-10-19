@@ -145,6 +145,9 @@ public sealed class RegistrationRequestTests : IDisposable
     [InlineData("João da Silva", "Cidade123", "32999990000", "MG")]
     [InlineData("João da Silva", "Rio Pomba", "abc99999999", "MG")]
     [InlineData("João da Silva", "Rio Pomba", "32999990000", "XX")]
+    [InlineData("João da Silva", "Rio Pomba", "10999990000", "MG")]
+    [InlineData("João da Silva", "Rio Pomba", "32899990000", "MG")]
+    [InlineData("João da Silva", "Rio Pomba", "3263334444", "MG")]
     public async Task Public_registration_rejects_invalid_semantic_identity_fields(string name, string city, string phone, string uf)
     {
         using var client = factory.Client();

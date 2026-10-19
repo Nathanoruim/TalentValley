@@ -518,6 +518,17 @@ describe("AdminRecruitersView creation", () => {
     expect((within(dialog).getByLabelText(/^Empresa/) as HTMLInputElement).value).toBe("Vale 2");
   });
 
+  it("masks the phone while typing and caps it at 11 digits", async () => {
+    const user = userEvent.setup();
+    await renderList();
+    const dialog = await openCreate(user);
+    const phone = within(dialog).getByLabelText(/^Telefone/) as HTMLInputElement;
+
+    await user.type(phone, "ab3298888777799");
+
+    expect(phone.value).toBe("(32) 98888-7777");
+  });
+
   it.each([
     ["Nome completo", "Al", "Informe um nome válido, sem números."],
     ["E-mail", "paulo@valetech", "Informe um e-mail válido."],

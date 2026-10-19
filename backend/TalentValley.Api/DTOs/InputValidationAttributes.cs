@@ -27,8 +27,12 @@ public static partial class InputValidation
 
     public static bool IsBrazilianUf(string value) => BrazilianUfs.Contains(value.ToUpperInvariant());
 
+    // Area codes run from 11 to 99. After the area code, a mobile number (11 digits) starts with 9
+    // and a landline (10 digits) starts with 2 to 5.
     public static bool IsBrazilianPhone(string value) =>
-        PhoneRegex().IsMatch(value) && value[..2] != "00" && value.Distinct().Count() > 1;
+        PhoneRegex().IsMatch(value) && value.Distinct().Count() > 1 &&
+        value[0] != '0' && !value.StartsWith("10", StringComparison.Ordinal) &&
+        (value.Length == 11 ? value[2] == '9' : value[2] is >= '2' and <= '5');
 
     public static bool IsValidPhoneInput(string value) =>
         PhoneInputRegex().IsMatch(value) && IsBrazilianPhone(NormalizePhone(value));

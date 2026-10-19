@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, MenuItem, Snackbar, Stack, TextField, Typography } from "@mui/material";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import BusinessCenterOutlined from "@mui/icons-material/BusinessCenterOutlined";
@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatUpdatedAt } from "@/lib/format";
-import { normalizePhone, normalizeWhitespace, sanitizeCityName, sanitizePersonName, validateBrazilianPhone, validateCityName, validateCompanyName, validateEmail, validateJobTitle, validatePersonName, validateSearchTerm, validateUF } from "@/lib/validation";
+import { maskPhoneChange, normalizePhone, normalizeWhitespace, sanitizeCityName, sanitizePersonName, validateBrazilianPhone, validateCityName, validateCompanyName, validateEmail, validateJobTitle, validatePersonName, validateSearchTerm, validateUF } from "@/lib/validation";
 import { ActivationSnackbar, useActivationFeedback } from "@/components/admin/activationFeedback";
 import type { AdminRecruiter, AdminRecruiterCreated, AdminRecruiterDetail } from "@/types/admin";
 import { useLoad } from "@/components/admin/useLoad";
@@ -256,8 +256,8 @@ interface RecruiterField {
   label: string;
   type: string;
   maxLength?: number;
-  /** Cleans what the admin types into the field. */
-  sanitize: (value: string) => string;
+  /** Cleans what the admin types into the field; the event lets a mask keep the caret in place. */
+  sanitize: (value: string, event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => string;
   /** Cleans the value right before it is sent to the API. */
   normalize: (value: string) => string;
 }
@@ -279,7 +279,7 @@ const RECRUITER_FIELDS: RecruiterField[] = [
   { key: "email", label: "E-mail", type: "email", maxLength: 254, sanitize: keepAsTyped, normalize: normalizeWhitespace },
   { key: "empresa", label: "Empresa", type: "text", maxLength: 150, sanitize: keepAsTyped, normalize: normalizeWhitespace },
   { key: "cargo", label: "Cargo", type: "text", maxLength: 150, sanitize: keepAsTyped, normalize: normalizeWhitespace },
-  { key: "telefone", label: "Telefone", type: "tel", sanitize: keepAsTyped, normalize: normalizePhone },
+  { key: "telefone", label: "Telefone", type: "tel", sanitize: (_value, event) => maskPhoneChange(event), normalize: normalizePhone },
   { key: "cidade", label: "Cidade", type: "text", maxLength: 120, sanitize: sanitizeCityName, normalize: normalizeWhitespace },
   {
     key: "uf",
@@ -354,7 +354,7 @@ function RecruiterCreate({
                 type={type}
                 value={data[key]}
                 onChange={(e) => {
-                  const value = sanitize(e.target.value);
+                  const value = sanitize(e.target.value, e);
                   setData((p) => ({ ...p, [key]: value }));
                 }}
                 slotProps={{ htmlInput: { maxLength, inputMode: key === "telefone" ? "tel" : undefined } }}

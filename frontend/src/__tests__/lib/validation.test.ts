@@ -1,4 +1,4 @@
-import type { ClipboardEvent } from "react";
+import type { ChangeEvent, ClipboardEvent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BRAZILIAN_UFS,
@@ -6,6 +6,8 @@ import {
   containsEmoji,
   digitsOnly,
   formatBrazilianPhone,
+  maskBrazilianPhone,
+  maskPhoneChange,
   normalizeEmailInput,
   normalizeOptionalUrl,
   normalizePhone,
@@ -149,6 +151,97 @@ describe("normalizers and sanitizers", () => {
     expect(formatBrazilianPhone("32999991234")).toBe("(32) 99999-1234");
   });
 
+  it("shows a stored number by its length, even when a 10-digit number starts with 9", () => {
+    expect(formatBrazilianPhone("3299991234")).toBe("(32) 9999-1234");
+    expect(formatBrazilianPhone("32999991234")).toBe("(32) 99999-1234");
+  });
+
+  it("keeps the phone hyphen in place while a mobile number is typed", () => {
+    expect(formatBrazilianPhone("329999", true)).toBe("(32) 9999");
+    expect(formatBrazilianPhone("3299999", true)).toBe("(32) 99999");
+    expect(formatBrazilianPhone("32999991", true)).toBe("(32) 99999-1");
+    expect(formatBrazilianPhone("3233334", true)).toBe("(32) 3333-4");
+  });
+
+  it("masks phone input as digits only, capped at 11, without an explicit +55", () => {
+    expect(maskBrazilianPhone("")).toBe("");
+    expect(maskBrazilianPhone("abc")).toBe("");
+    expect(maskBrazilianPhone("(32) 99999-1234")).toBe("(32) 99999-1234");
+    expect(maskBrazilianPhone("+55 (32) 99999-1234")).toBe("(32) 99999-1234");
+    expect(maskBrazilianPhone("+55 3233334444")).toBe("(32) 3333-4444");
+    expect(maskBrazilianPhone("5532999991234")).toBe("(32) 99999-1234");
+    expect(maskBrazilianPhone("329999912349999")).toBe("(32) 99999-1234");
+  });
+
+  it("keeps 55 as the area code when it is not an explicit country code", () => {
+    expect(maskBrazilianPhone("55")).toBe("(55");
+    expect(maskBrazilianPhone("55912345678")).toBe("(55) 91234-5678");
+    // A 12th digit is dropped; it never turns the 55 into a country code.
+    expect(maskBrazilianPhone("559123456781")).toBe("(55) 91234-5678");
+    expect(maskBrazilianPhone("(55) 33334-4445")).toBe("(55) 33334-4445");
+  });
+
+  describe("maskPhoneChange caret", () => {
+    const frames: FrameRequestCallback[] = [];
+
+    beforeEach(() => {
+      frames.length = 0;
+      vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    function change(value: string, selectionStart: number | null) {
+      const setSelectionRange = vi.fn();
+      const event = {
+        currentTarget: { value, selectionStart, setSelectionRange },
+      } as unknown as ChangeEvent<HTMLInputElement>;
+      const masked = maskPhoneChange(event);
+      for (const frame of frames) frame(0);
+      return { masked, setSelectionRange };
+    }
+
+    it("puts the caret after the digit that was just typed in the middle of the number", () => {
+      // "(32) 98888-7777" with a "1" typed after the 9: the caret stays right after the typed digit.
+      const { masked, setSelectionRange } = change("(32) 918888-7777", 7);
+
+      expect(masked).toBe("(32) 91888-8777");
+      expect(setSelectionRange).toHaveBeenCalledWith(7, 7);
+    });
+
+    it("moves the caret past the separators the mask adds", () => {
+      const { masked, setSelectionRange } = change("32988", 5);
+
+      expect(masked).toBe("(32) 988");
+      expect(setSelectionRange).toHaveBeenCalledWith(8, 8);
+    });
+
+    it("ignores the dropped country code when counting digits before the caret", () => {
+      const { masked, setSelectionRange } = change("+55 32 98888-7777", 8);
+
+      expect(masked).toBe("(32) 98888-7777");
+      expect(setSelectionRange).toHaveBeenCalledWith(6, 6);
+    });
+
+    it("keeps the area code 55 and the caret in place when a digit is inserted", () => {
+      const { masked, setSelectionRange } = change("(55) 912345-678", 12);
+
+      expect(masked).toBe("(55) 91234-5678");
+      expect(setSelectionRange).toHaveBeenCalledWith(12, 12);
+    });
+
+    it("falls back to the end of the value when the caret is unknown", () => {
+      const { masked, setSelectionRange } = change("32988887777", null);
+
+      expect(setSelectionRange).toHaveBeenCalledWith(masked.length, masked.length);
+    });
+  });
+
   it("normalizes the UF", () => {
     expect(normalizeUF(" mgx ")).toBe("MG");
     expect(BRAZILIAN_UFS).toHaveLength(27);
@@ -208,6 +301,26 @@ describe("phone, UF and URL", () => {
     expect(validateBrazilianPhone("")).toBe(phoneError);
     expect(validateBrazilianPhone("", false)).toBeNull();
     for (const invalid of ["abc", "123", "11111111111", "0012345678"]) {
+      expect(validateBrazilianPhone(invalid)).toBe(phoneError);
+    }
+  });
+
+  it("validates the area code and the first digit of a Brazilian phone", () => {
+    // Area codes run from 11 to 99.
+    expect(validateBrazilianPhone("(11) 91234-5678")).toBeNull();
+    expect(validateBrazilianPhone("(99) 91234-5678")).toBeNull();
+    for (const invalid of ["(10) 91234-5678", "(01) 91234-5678", "(00) 91234-5678"]) {
+      expect(validateBrazilianPhone(invalid)).toBe(phoneError);
+    }
+    // 11 digits (mobile) must start with 9 after the area code.
+    expect(validateBrazilianPhone("(32) 98888-7777")).toBeNull();
+    expect(validateBrazilianPhone("(32) 88888-7777")).toBe(phoneError);
+    expect(validateBrazilianPhone("(32) 12345-6789")).toBe(phoneError);
+    // 10 digits (landline) must start with 2 to 5 after the area code.
+    for (const valid of ["(32) 2333-4444", "(32) 3333-4444", "(32) 4333-4444", "(32) 5333-4444"]) {
+      expect(validateBrazilianPhone(valid)).toBeNull();
+    }
+    for (const invalid of ["(32) 1333-4444", "(32) 6333-4444", "(32) 9333-4444"]) {
       expect(validateBrazilianPhone(invalid)).toBe(phoneError);
     }
   });
