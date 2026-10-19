@@ -161,7 +161,7 @@ export function registerWizardTests(config: WizardSuiteConfig) {
     await user.click(button(SUBMIT_LABEL));
 
     expect(alertText()).toBe(CONSENT_ERROR);
-    expect(document.activeElement).toBe(screen.getByRole("checkbox"));
+    expect(document.activeElement).toBe(screen.getByRole("checkbox", { name: /Eu li e concordo/ }));
     expect(screen.getAllByText(CONSENT_ERROR)).toHaveLength(2);
     expect(api).not.toHaveBeenCalled();
 
@@ -183,7 +183,8 @@ export function registerWizardTests(config: WizardSuiteConfig) {
     expect(button(SUBMITTING).disabled).toBe(true);
     expect(button(BACK).disabled).toBe(true);
     expect(button(EDIT_PERSONAL).disabled).toBe(true);
-    expect(screen.getByRole("checkbox").hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("checkbox", { name: /Eu li e concordo/ }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("checkbox", { name: /novidades/ }).hasAttribute("disabled")).toBe(true);
 
     await act(async () => finishRequest());
 
