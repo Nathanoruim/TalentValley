@@ -41,7 +41,7 @@ public sealed class TalentSearchQuery : IValidatableObject
     }
 }
 
-public sealed record TalentCompetencyResponse(int Id, string Nome);
+public sealed record TalentCompetencyResponse(int Id, string Nome, TipoCompetencia Tipo);
 public sealed record TalentFormationPreview(TipoFormacao Tipo, string Nome, string Instituicao, bool RpvVerificado);
 
 public sealed record TalentListItem(

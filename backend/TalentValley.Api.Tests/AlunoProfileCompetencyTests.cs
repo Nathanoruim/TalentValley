@@ -133,6 +133,23 @@ public sealed class AlunoProfileCompetencyTests : IDisposable
     }
 
     [Fact]
+    public async Task Profile_returns_the_type_of_each_competency_so_hard_and_soft_skills_can_be_split()
+    {
+        using var client = await StudentClientAsync();
+        var catalog = (await client.GetFromJsonAsync<List<CatalogoCompetenciaResponse>>("/api/competencias", ApiFactory.JsonOptions))!;
+        var technical = catalog.First(x => x.Tipo == TipoCompetencia.TECNICA);
+        var behavioral = catalog.First(x => x.Tipo == TipoCompetencia.COMPORTAMENTAL);
+
+        var saved = await client.PutAsJsonAsync("/api/alunos/me/competencias",
+            new { competenciaIds = new[] { technical.Id, behavioral.Id } });
+        var profile = (await client.GetFromJsonAsync<MeResponse>("/api/alunos/me", ApiFactory.JsonOptions))!;
+
+        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        Assert.Equal(TipoCompetencia.TECNICA, profile.Competencias.Single(x => x.Id == technical.Id).Tipo);
+        Assert.Equal(TipoCompetencia.COMPORTAMENTAL, profile.Competencias.Single(x => x.Id == behavioral.Id).Tipo);
+    }
+
+    [Fact]
     public async Task Competencias_catalog_does_not_contain_removed_generic_items()
     {
         using var client = await StudentClientAsync();

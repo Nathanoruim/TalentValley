@@ -10,7 +10,7 @@ export function makeTalentListItem(overrides: Partial<TalentListItem> = {}): Tal
     cidade: "Rio Pomba",
     uf: "MG",
     bio: "Estudante de sistemas de informação.",
-    competencias: [{ id: 1, nome: "React" }],
+    competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }],
     formacaoPrincipal: {
       tipo: "GRADUACAO",
       nome: "Sistemas de Informação",
@@ -42,7 +42,7 @@ export function makeTalentProfile(overrides: Partial<TalentProfile> = {}): Talen
       portfolioUrl: "https://maria.dev",
     },
     bio: "Estudante de sistemas de informação.",
-    competencias: [{ id: 1, nome: "React" }],
+    competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }],
     idiomas: [{ idiomaId: 1, nome: "Inglês", nivel: "INTERMEDIARIO" }],
     disponibilidades: ["ESTAGIO"],
     modalidades: ["REMOTO"],

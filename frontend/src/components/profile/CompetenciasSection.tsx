@@ -4,15 +4,15 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   Alert,
   Autocomplete,
-  Chip,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import PsychologyOutlined from "@mui/icons-material/PsychologyOutlined";
+import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { getApiErrorMessage } from "@/lib/api";
 import { fetchCompetenciaCatalog, updateCompetencias } from "@/lib/student";
-import type { CatalogoCompetenciaResponse } from "@/types/student";
+import type { CatalogoCompetenciaResponse, CompetenciaResponse } from "@/types/student";
 import { FormDialog } from "./FormDialog";
 import { SectionCard } from "./SectionCard";
 import type { SectionProps } from "./sectionProps";
@@ -34,17 +34,7 @@ export function CompetenciasSection({ profile, onChanged, notify }: SectionProps
       emptyActionLabel="Adicionar competências"
       emptyIcon={<PsychologyOutlined />}
     >
-      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-        {competencias.map((competencia) => (
-          <Chip
-            key={competencia.id}
-            label={competencia.nome}
-            color="primary"
-            variant="outlined"
-            size="small"
-          />
-        ))}
-      </Stack>
+      <CompetencyGroups competencias={competencias} color="primary" variant="outlined" />
       {open && (
         <CompetenciasForm
           selecionadas={competencias}
@@ -60,7 +50,7 @@ export function CompetenciasSection({ profile, onChanged, notify }: SectionProps
   );
 }
 interface CompetenciasFormProps {
-  selecionadas: { id: number; nome: string }[];
+  selecionadas: CompetenciaResponse[];
   onClose: () => void;
   onSaved: () => void;
 }

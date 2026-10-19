@@ -146,7 +146,7 @@ describe("TalentPreviewDialog", () => {
   });
 
   it("limits the previewed competencies to eight", async () => {
-    const competencias = Array.from({ length: MAX_VISIBLE_COMPETENCIES + 2 }, (_, index) => ({ id: index + 1, nome: `Skill ${index + 1}` }));
+    const competencias = Array.from({ length: MAX_VISIBLE_COMPETENCIES + 2 }, (_, index) => ({ id: index + 1, nome: `Skill ${index + 1}`, tipo: "TECNICA" as const }));
     await renderLoaded(makeTalentProfile({ competencias }));
 
     expect(screen.getByText(`Skill ${MAX_VISIBLE_COMPETENCIES}`)).toBeTruthy();

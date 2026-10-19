@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Alert, Box, Button, Card, Chip, Container, Divider, Skeleton, Stack, Typography } from "@mui/material";
 import ArrowBackOutlined from "@mui/icons-material/ArrowBackOutlined";
 import CompareArrowsOutlined from "@mui/icons-material/CompareArrowsOutlined";
+import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Reveal } from "@/components/common/Reveal";
@@ -70,7 +71,7 @@ function Common({ common }: { common: TalentCommon }) { return <Card component="
 }}><Stack spacing={2.5}><Typography component="h2" variant="h6" align="center">Em comum</Typography><CompareSection title="Competências gerais"><CompetencyChips values={common.competencias} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Disponibilidade"><Chips values={common.disponibilidades.map((item) => DISPONIBILIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Modalidades"><Chips values={common.modalidades.map((item) => MODALIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection></Stack></Card>; }
 function CompareSection({ title, children }: { title: string; children: React.ReactNode }) { return <Box component="section"><Typography variant="subtitle1" sx={{ fontWeight: 700, mb: .75 }}>{title}</Typography>{children}</Box>; }
 function Chips({ values, emptyText = "Nenhuma informação cadastrada." }: { values: string[]; emptyText?: string }) { return values.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{values.map((item) => <Chip key={item} label={item} size="small" />)}</Stack> : <Empty text={emptyText} />; }
-function CompetencyChips({ values, emptyText = "Nenhuma informação cadastrada." }: { values: TalentCompetency[]; emptyText?: string }) { return values.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{values.map((item) => <Chip key={item.id} label={item.nome} size="small" />)}</Stack> : <Empty text={emptyText} />; }
+function CompetencyChips({ values, emptyText = "Nenhuma informação cadastrada." }: { values: TalentCompetency[]; emptyText?: string }) { return values.length ? <CompetencyGroups competencias={values} /> : <Empty text={emptyText} />; }
 function Empty({ text = "Nenhuma informação cadastrada." }: { text?: string }) { return <Typography variant="body2" color="text.secondary">{text}</Typography>; }
 // Contact values and external links are only rendered clickable when they pass
 // validation. Malformed legacy values stay visible as plain text.

@@ -9,6 +9,7 @@ import ArrowForwardOutlined from "@mui/icons-material/ArrowForwardOutlined";
 import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import PlaceOutlined from "@mui/icons-material/PlaceOutlined";
 import VerifiedOutlined from "@mui/icons-material/VerifiedOutlined";
+import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { brandWash } from "@/components/common/surfaceGradient";
 import { ApiError, getApiErrorMessage } from "@/lib/api";
 import { fetchTalent } from "@/lib/recruiter";
@@ -120,7 +121,7 @@ function TalentPreviewContent({ slug, onClose, onFavoriteChange, onUnavailable }
           {mainFormation.rpvVerificado && <Chip icon={<VerifiedOutlined />} size="small" color="success" label="Verificado pelo Rio Pomba Valley" sx={{ alignSelf: "flex-start" }} />}
         </Stack></Box>}
       <Box><Typography variant="subtitle2" color="text.secondary" gutterBottom>Competências</Typography>
-        {profile.competencias.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.competencias.slice(0, 8).map((item) => <Chip key={item.id} label={item.nome} size="small" variant="outlined" />)}</Stack>
+        {profile.competencias.length ? <CompetencyGroups competencias={profile.competencias} variant="outlined" limit={8} />
           : <Typography variant="body2" color="text.secondary">Nenhuma competência informada.</Typography>}</Box>
       <Box><Typography variant="subtitle2" color="text.secondary" gutterBottom>Disponibilidade e modalidades</Typography>
         {profile.disponibilidades.length || profile.modalidades.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>

@@ -2,6 +2,7 @@ import type {
   ModalidadeTrabalho,
   NivelIdioma,
   StatusFormacao,
+  TipoCompetencia,
   TipoDisponibilidade,
   TipoExperiencia,
   TipoFormacao,
@@ -20,6 +21,7 @@ export interface PaginatedResponse<T> {
 export interface TalentCompetency {
   id: number;
   nome: string;
+  tipo: TipoCompetencia;
 }
 
 export interface TalentFormationPreview {

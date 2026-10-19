@@ -44,7 +44,7 @@ const RETRY = "Tentar novamente";
 const MAX_TWO = "A comparação permite selecionar apenas dois talentos.";
 
 const MARIA = makeTalentListItem();
-const JOAO = makeTalentListItem({ id: "talento-2", slug: "joao-lima", nomeCompleto: "João Lima", competencias: [{ id: 2, nome: "Python" }] });
+const JOAO = makeTalentListItem({ id: "talento-2", slug: "joao-lima", nomeCompleto: "João Lima", competencias: [{ id: 2, nome: "Python", tipo: "TECNICA" }] });
 const ANA = makeTalentListItem({ id: "talento-3", slug: "ana-reis", nomeCompleto: "Ana Reis", competencias: [] });
 const CATALOG: CatalogoCompetenciaResponse[] = [
   { id: 1, nome: "React", categoria: "Tecnologia · Frontend", tipo: "TECNICA" },

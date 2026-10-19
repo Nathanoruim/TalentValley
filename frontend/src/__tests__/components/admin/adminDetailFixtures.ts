@@ -25,7 +25,7 @@ export function makeAdminStudentDetail(
       portfolioUrl: "https://maria.dev",
     },
     bio: "Estudante de sistemas de informação.",
-    competencias: [{ id: 1, nome: "React" }],
+    competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }],
     idiomas: [{ idiomaId: 1, nome: "Inglês", nivel: "INTERMEDIARIO" }],
     disponibilidades: ["ESTAGIO"],
     modalidades: ["REMOTO"],

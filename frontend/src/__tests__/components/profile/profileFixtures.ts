@@ -16,7 +16,7 @@ export function makeProfile(overrides: Partial<MeResponse> = {}): MeResponse {
       gitHubUrl: "https://github.com/maria",
       portfolioUrl: "https://maria.dev",
     },
-    competencias: [{ id: 1, nome: "React" }],
+    competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }],
     idiomas: [{ idiomaId: 1, nome: "Inglês", nivel: "INTERMEDIARIO" }],
     disponibilidades: ["ESTAGIO"],
     modalidades: ["REMOTO"],

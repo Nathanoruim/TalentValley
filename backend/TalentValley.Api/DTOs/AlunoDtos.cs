@@ -28,7 +28,7 @@ public sealed record SobreResponse(string? Bio);
 public sealed record ContatoResponse(string? Telefone, string? EmailProfissional, string? LinkedInUrl, string? GitHubUrl, string? PortfolioUrl);
 public sealed record CurriculoResponse(bool PossuiCurriculo, string? NomeArquivo);
 
-public sealed record CompetenciaResponse(int Id, string Nome);
+public sealed record CompetenciaResponse(int Id, string Nome, TipoCompetencia Tipo);
 public sealed record AlunoIdiomaResponse(int IdiomaId, string Nome, NivelIdioma Nivel);
 
 // Catalog responses
