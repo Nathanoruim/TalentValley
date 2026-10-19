@@ -10,6 +10,7 @@ import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Reveal } from "@/components/common/Reveal";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { ApiError, getApiErrorMessage } from "@/lib/api";
 import { fetchTalentComparison } from "@/lib/recruiter";
 import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, NIVEL_IDIOMA_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
@@ -38,10 +39,10 @@ export function TalentComparisonView() {
     return () => { active = false; };
   }, [slugs, version]);
   if (!slugs) return <ComparisonState title="Selecione exatamente dois talentos para comparar." />;
-  if (loading) return <Container maxWidth="xl" sx={{ py: 4 }}><Stack spacing={2}>{[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={180} sx={{ borderRadius: "16px" }} />)}</Stack></Container>;
+  if (loading) return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: 4 }}><Stack spacing={2}>{[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={180} sx={{ borderRadius: "16px" }} />)}</Stack></Container>;
   function retry() { setLoading(true); setError(null); setVersion((value) => value + 1); }
   if (error || !comparison) return <Container maxWidth="md" sx={{ py: 5 }}><Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error ?? "Não foi possível carregar a comparação."}</Alert></Container>;
-  return <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
+  return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
     <Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />} sx={{ alignSelf: "flex-start" }}>Voltar para talentos</Button>
     <PageHeader title="Comparar talentos" description="Informações apresentadas lado a lado, sem ranking ou recomendação." />
     <Box className="grid grid-cols-1 gap-5 lg:grid-cols-3">

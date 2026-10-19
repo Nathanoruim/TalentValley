@@ -9,6 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { ContatoSection } from "./ContatoSection";
@@ -34,7 +35,7 @@ export function StudentProfile() {
   }, []);
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 }, width: "100%" }}>
+    <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 }, width: "100%" }}>
       {loading && <LoadingSkeleton count={4} height={150} />}
 
       {!loading && error && !profile && (

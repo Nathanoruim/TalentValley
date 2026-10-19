@@ -21,6 +21,7 @@ import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Reveal } from "@/components/common/Reveal";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { ApiError, getApiErrorMessage } from "@/lib/api";
 import { fetchTalent } from "@/lib/recruiter";
 import { formatDate, formatUpdatedAt } from "@/lib/format";
@@ -54,7 +55,7 @@ export function TalentProfileView({ slug }: { slug: string }) {
   if (notFound) return <StatePage title="Este perfil não está mais disponível." />;
   if (error || !profile) return <Container maxWidth="md" sx={{ py: 5 }}><Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error ?? "Não foi possível carregar o perfil."}</Alert></Container>;
 
-  return <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
+  return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
     <Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />} sx={{ alignSelf: "flex-start" }}>Voltar para talentos</Button>
     {fileError && <Alert severity="error" onClose={() => setFileError(null)}>{fileError}</Alert>}
     <ProfileHeader profile={profile} onFileError={setFileError} onFavoriteChange={(favorite) => setProfile((current) => current ? { ...current, favorito: favorite } : current)} onUnavailable={() => setNotFound(true)} />
@@ -167,4 +168,4 @@ function period(start: string, end: string | null, current: boolean): string {
 }
 
 function StatePage({ title }: { title: string }) { return <Container maxWidth="sm" sx={{ py: 8 }}><EmptyState icon={<PersonSearchOutlined />} title={title} titleAs="h1" action={<Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />}>Voltar para talentos</Button>} /></Container>; }
-function ProfileLoading() { return <Container maxWidth="lg" sx={{ py: 4 }}><Stack spacing={2}>{[150, 140, 180, 260].map((height) => <Skeleton key={height} variant="rounded" height={height} sx={{ borderRadius: "16px" }} />)}</Stack></Container>; }
+function ProfileLoading() { return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: 4 }}><Stack spacing={2}>{[150, 140, 180, 260].map((height) => <Skeleton key={height} variant="rounded" height={height} sx={{ borderRadius: "16px" }} />)}</Stack></Container>; }

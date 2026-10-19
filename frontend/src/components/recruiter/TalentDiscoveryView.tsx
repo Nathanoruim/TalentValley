@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Reveal } from "@/components/common/Reveal";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { fetchRecruiterCompetencies, fetchTalents, talentSearchParams } from "@/lib/recruiter";
 import { hasTalentFilters, parseTalentSearch } from "@/lib/recruiter-search";
 import { getApiErrorMessage } from "@/lib/api";
@@ -116,7 +117,7 @@ function TalentDiscoveryState({ initial }: { initial: TalentSearchFilters }) {
 
   const items = result?.items ?? [];
 
-  return <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
+  return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
     <PageHeader title="Explorar talentos" description="Encontre perfis profissionais usando os critérios disponíveis." />
     <Card sx={{ p: 1.5 }}><Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }} useFlexGap>
       <Button variant="outlined" startIcon={<FilterListOutlined />} onClick={() => setMobileOpen(true)} sx={{ display: { md: "none" } }}>Filtros{filterCount ? ` (${filterCount})` : ""}</Button>

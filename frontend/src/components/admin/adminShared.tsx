@@ -6,6 +6,7 @@ import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { brandWash } from "@/components/common/surfaceGradient";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { PageHeader } from "@/components/common/PageHeader";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { Reveal } from "@/components/common/Reveal";
 import type { PaginatedResponse } from "@/types/admin";
 
@@ -21,7 +22,7 @@ export function Page({
   children: ReactNode;
 }) {
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
+    <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}>
       <Stack spacing={3}>
         <PageHeader title={title} description={description} action={action} />
         {children}
