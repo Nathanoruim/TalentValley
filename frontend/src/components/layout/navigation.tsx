@@ -34,6 +34,8 @@ export const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
 };
 
 export const CHANGE_PASSWORD_HREF = "/conta/senha";
+// Recruiters only: students have the same section inside "Meu perfil".
+export const PRIVACY_HREF = "/conta/privacidade";
 
 /** The overview routes match only themselves; every other item also owns its nested routes. */
 export function isNavItemActive(item: NavItem, pathname: string): boolean {

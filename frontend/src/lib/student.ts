@@ -143,3 +143,8 @@ export async function deleteOwnAccount(senhaAtual: string): Promise<void> {
   await ensureCsrfToken();
   await apiMutation<void>("DELETE", "/api/alunos/me", { senhaAtual });
 }
+
+// LGPD export of the signed-in student's own data (downloaded as a JSON file).
+export function fetchMyDataExport(): Promise<unknown> {
+  return apiGet<unknown>("/api/alunos/me/exportacao");
+}

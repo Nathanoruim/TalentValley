@@ -12,7 +12,7 @@ namespace TalentValley.Api.Controllers;
 [Authorize(Policy = AppPolicies.RequireActiveStudent)]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class AlunosController(AlunoService alunoService, TrajetoriaService trajetoriaService,
-    StudentFileService files, IHostEnvironment environment) : ControllerBase
+    StudentFileService files, DataExportService dataExport, IHostEnvironment environment) : ControllerBase
 {
     private Guid CurrentUserId => Guid.Parse(User.FindFirst("sub")!.Value);
 
@@ -27,6 +27,16 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
         return profile is null
             ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
             : Ok(profile);
+    }
+
+    // LGPD data export: only the signed-in student's own data (identity-derived, no ID accepted).
+    [HttpGet("me/exportacao")]
+    public async Task<ActionResult<ExportacaoAlunoResponse>> ExportMyData(CancellationToken cancellationToken)
+    {
+        var export = await dataExport.ExportAlunoAsync(CurrentUserId, cancellationToken);
+        return export is null
+            ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
+            : Ok(export);
     }
 
     // LGPD self-deletion. Class-level policy requires an active student; the CSRF middleware covers DELETE.

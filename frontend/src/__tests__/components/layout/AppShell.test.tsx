@@ -472,6 +472,31 @@ describe("AppShell", () => {
       expect(within(menu).getByRole("menuitem", { name: "Sair" })).not.toBeNull();
     });
 
+    it("offers the privacy page only to recruiters, who have no profile page for it", async () => {
+      signIn("RECRUTADOR");
+      renderShell();
+      const { menu } = await openAccountMenu();
+
+      expect(within(menu).getByRole("menuitem", { name: "Privacidade" }).getAttribute("href")).toBe("/conta/privacidade");
+    });
+
+    it.each(["ALUNO", "ADMIN"] as const)("does not offer the privacy page to %s users", async (role) => {
+      signIn(role);
+      renderShell();
+      const { menu } = await openAccountMenu();
+
+      expect(within(menu).queryByRole("menuitem", { name: "Privacidade" })).toBeNull();
+    });
+
+    it("highlights the privacy entry only on the privacy page", async () => {
+      signIn("RECRUTADOR", "/conta/privacidade");
+      renderShell();
+      const { menu } = await openAccountMenu();
+
+      expect(isSelected(within(menu).getByRole("menuitem", { name: "Privacidade" }))).toBe(true);
+      expect(isSelected(within(menu).getByRole("menuitem", { name: "Alterar senha" }))).toBe(false);
+    });
+
     it("marks the trigger as expanded while the menu is open", async () => {
       renderShell();
       await openAccountMenu();
