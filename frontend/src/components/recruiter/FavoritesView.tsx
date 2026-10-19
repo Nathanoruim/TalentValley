@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Alert, Button, Container, Pagination, Stack } from "@mui/material";
 import FavoriteBorderOutlined from "@mui/icons-material/FavoriteBorderOutlined";
 import { EmptyState } from "@/components/common/EmptyState";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Reveal } from "@/components/common/Reveal";
@@ -56,7 +57,7 @@ export function FavoritesView() {
     } else setSelected((items) => items.filter((item) => item.id !== talent.id));
   }
   const items = data?.items ?? [];
-  return <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
+  return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
     <PageHeader title="Favoritos" description="Perfis que você salvou para consultar depois." />
     <ComparisonBar selected={selected} message={selectionMessage} />
     {error && <Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error}</Alert>}

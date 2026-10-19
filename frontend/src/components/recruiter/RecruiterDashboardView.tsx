@@ -17,6 +17,7 @@ import { Reveal } from "@/components/common/Reveal";
 import { StatCard } from "@/components/common/StatCard";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { brandWash } from "@/components/common/surfaceGradient";
+import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { fetchRecruiterDashboard } from "@/lib/recruiter";
 import { getApiErrorMessage } from "@/lib/api";
 import { validateSearchTerm } from "@/lib/validation";
@@ -75,7 +76,7 @@ export function RecruiterDashboardView() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
+    <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}>
       <Stack spacing={3}>
         <PageHeader
           title="Visão geral"
