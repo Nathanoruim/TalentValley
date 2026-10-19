@@ -1,12 +1,12 @@
 # Talent Valley
 
-**🇬🇧 [English](#-english)** · **🇧🇷 [Português](#-português-brasil)**
+**[English](#-english)** · **[Português](#-português-brasil)**
 
 ---
 
 <a id="-english"></a>
 
-# 🇬🇧 English
+# English
 
 > The career platform for **Rio Pomba Valley** (RPV): trusted, current student profiles and structured talent search for authorized recruiters.
 
@@ -363,7 +363,7 @@ The MVP is deliberately **not** an applicant tracking system, a job board, an in
 
 <a id="-português-brasil"></a>
 
-# 🇧🇷 Português (Brasil)
+#Português (Brasil)
 
 > A plataforma de carreira do **Rio Pomba Valley** (RPV): perfis de estudantes confiáveis e atualizados, e busca estruturada de talentos para recrutadores autorizados.
 
