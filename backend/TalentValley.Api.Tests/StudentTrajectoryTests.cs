@@ -362,7 +362,7 @@ public sealed class StudentTrajectoryTests : IDisposable
     {
         var (client, studentId) = await StudentAsync();
         using var ownerClient = client;
-        var catalog = (await client.GetFromJsonAsync<CatalogoCompetenciaResponse[]>("/api/competencias"))!;
+        var catalog = (await client.GetFromJsonAsync<CatalogoCompetenciaResponse[]>("/api/competencias", ApiFactory.JsonOptions))!;
         var requestA = Project(1, catalog[0].Id);
         var requestB = Project(2, catalog[1].Id);
         requestB["nome"] = "Second project";
@@ -435,7 +435,7 @@ public sealed class StudentTrajectoryTests : IDisposable
     {
         var (client, _) = await StudentAsync();
         using var ownerClient = client;
-        var catalog = (await client.GetFromJsonAsync<CatalogoCompetenciaResponse[]>("/api/competencias"))!;
+        var catalog = (await client.GetFromJsonAsync<CatalogoCompetenciaResponse[]>("/api/competencias", ApiFactory.JsonOptions))!;
         var ids = catalog.Take(3).Select(x => x.Id).ToArray();
         (await client.PutAsJsonAsync(Root + "competencias", new { competenciaIds = new[] { ids[0] } })).EnsureSuccessStatusCode();
         var created = await CreateAsync(client, "projetos", Project(1, ids[0], ids[1]));
@@ -586,7 +586,7 @@ public sealed class StudentTrajectoryTests : IDisposable
     {
         var (client, _) = await StudentAsync();
         using var ownerClient = client;
-        var catalog = (await client.GetFromJsonAsync<CatalogoCompetenciaResponse[]>("/api/competencias"))!;
+        var catalog = (await client.GetFromJsonAsync<CatalogoCompetenciaResponse[]>("/api/competencias", ApiFactory.JsonOptions))!;
         var section = operation == "principal" ? "formacoes" : "projetos";
         var a = await CreateAsync(client, section, operation == "principal" ? Formation(true) : Project(1, catalog[0].Id));
         var request = operation == "principal" ? Formation() : Project(2, catalog[1].Id);

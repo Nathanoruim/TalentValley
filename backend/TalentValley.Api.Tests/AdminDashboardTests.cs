@@ -290,14 +290,14 @@ public sealed class AdminDashboardTests : IDisposable
         await factory.InScopeAsync(async services =>
         {
             var db = services.GetRequiredService<AppDbContext>();
-            db.Competencias.Add(new Competencia { Id = 300, Nome = "Podman", NomeBusca = "podman" });
+            db.Competencias.Add(new Competencia { Id = 12300, Nome = "Podman", NomeBusca = "podman" });
             await db.SaveChangesAsync();
         });
 
-        await AddProjectToStudentAsync(studentId, 300);
+        await AddProjectToStudentAsync(studentId, 12300);
 
         var dashboard = await GetDashboardAsync();
-        Assert.DoesNotContain(dashboard.CompetenciasMaisUtilizadas, x => x.Id == 300);
+        Assert.DoesNotContain(dashboard.CompetenciasMaisUtilizadas, x => x.Id == 12300);
     }
 
     [Fact]

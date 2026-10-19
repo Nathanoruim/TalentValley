@@ -33,8 +33,8 @@ const REPO_URL = "https://github.com/maria/portal";
 const SAVE = "Salvar";
 
 const CATALOG: CatalogoCompetenciaResponse[] = [
-  { id: 1, nome: "React" },
-  { id: 2, nome: "TypeScript" },
+  { id: 1, nome: "React", categoria: "Tecnologia · Frontend", tipo: "TECNICA" },
+  { id: 2, nome: "TypeScript", categoria: "Tecnologia · Linguagens", tipo: "TECNICA" },
 ];
 
 const fetchMock = vi.mocked(fetchProjetos);

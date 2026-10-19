@@ -17,6 +17,9 @@ import { FormDialog } from "./FormDialog";
 import { SectionCard } from "./SectionCard";
 import type { SectionProps } from "./sectionProps";
 
+// Same limit the API enforces for behavioral competencies.
+const MAX_COMPORTAMENTAIS = 6;
+
 export function CompetenciasSection({ profile, onChanged, notify }: SectionProps) {
   const [open, setOpen] = useState(false);
   const competencias = profile.competencias;
@@ -63,7 +66,7 @@ interface CompetenciasFormProps {
 }
 
 function CompetenciasForm({ selecionadas, onClose, onSaved }: CompetenciasFormProps) {
-  const [selecao, setSelecao] = useState(selecionadas);
+  const [selecaoIds, setSelecaoIds] = useState(() => selecionadas.map((item) => item.id));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [catalogo, setCatalogo] = useState<CatalogoCompetenciaResponse[] | null>(null);
@@ -84,7 +87,19 @@ function CompetenciasForm({ selecionadas, onClose, onSaved }: CompetenciasFormPr
   }, []);
 
   const opcoes = catalogo ?? [];
+  const tecnicas = opcoes.filter((item) => item.tipo === "TECNICA");
+  const comportamentais = opcoes.filter((item) => item.tipo === "COMPORTAMENTAL");
+  const selecaoTecnicas = tecnicas.filter((item) => selecaoIds.includes(item.id));
+  const selecaoComportamentais = comportamentais.filter((item) => selecaoIds.includes(item.id));
   const catalogoLoading = catalogo === null && !catalogoError;
+
+  // Replaces the selection of one group (technical or behavioral) and keeps the other one untouched.
+  function replaceGroup(grupo: CatalogoCompetenciaResponse[], novos: CatalogoCompetenciaResponse[]) {
+    setSelecaoIds((atuais) => [
+      ...atuais.filter((id) => !grupo.some((item) => item.id === id)),
+      ...novos.map((item) => item.id),
+    ]);
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -92,7 +107,7 @@ function CompetenciasForm({ selecionadas, onClose, onSaved }: CompetenciasFormPr
     setSaving(true);
     try {
       // Only controlled catalog IDs are sent; no skill levels in this phase.
-      await updateCompetencias({ competenciaIds: selecao.map((item) => item.id) });
+      await updateCompetencias({ competenciaIds: selecaoIds });
       onSaved();
     } catch (err) {
       setError(
@@ -121,34 +136,88 @@ function CompetenciasForm({ selecionadas, onClose, onSaved }: CompetenciasFormPr
           </Alert>
         )}
         <Typography variant="body2" color="text.secondary">
-          Selecione quantas competências quiser do catálogo do Rio Pomba Valley.
+          Selecione quantas competências técnicas quiser do catálogo do Rio Pomba Valley.
         </Typography>
-        <Autocomplete
-          multiple
-          disableCloseOnSelect
-          options={opcoes}
-          value={selecao}
-          onChange={(_, value) => setSelecao(value)}
-          getOptionLabel={(option) => option.nome}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          loading={catalogoLoading}
+        <CompetenciasField
+          label="Competências técnicas"
+          placeholder="Buscar competência técnica"
+          options={tecnicas}
+          value={selecaoTecnicas}
+          onChange={(novos) => replaceGroup(tecnicas, novos)}
           disabled={saving || catalogoLoading}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              slotProps={{
-                ...params.slotProps,
-                htmlInput: {
-                  ...params.slotProps.htmlInput,
-                  value: params.slotProps.htmlInput.value ?? "",
-                },
-              }}
-              label="Competências"
-              placeholder="Buscar competência"
-            />
-          )}
+          loading={catalogoLoading}
+        />
+        <Typography variant="body2" color="text.secondary">
+          Escolha até {MAX_COMPORTAMENTAIS} competências comportamentais, as que mais combinam com você.
+        </Typography>
+        <CompetenciasField
+          label="Competências comportamentais"
+          placeholder="Buscar competência comportamental"
+          options={comportamentais}
+          value={selecaoComportamentais}
+          onChange={(novos) => replaceGroup(comportamentais, novos)}
+          disabled={saving || catalogoLoading}
+          loading={catalogoLoading}
+          limit={MAX_COMPORTAMENTAIS}
         />
       </Stack>
     </FormDialog>
-    );
+  );
+}
+
+interface CompetenciasFieldProps {
+  label: string;
+  placeholder: string;
+  options: CatalogoCompetenciaResponse[];
+  value: CatalogoCompetenciaResponse[];
+  onChange: (value: CatalogoCompetenciaResponse[]) => void;
+  disabled: boolean;
+  loading: boolean;
+  limit?: number;
+}
+
+function CompetenciasField({
+  label,
+  placeholder,
+  options,
+  value,
+  onChange,
+  disabled,
+  loading,
+  limit,
+}: CompetenciasFieldProps) {
+  const limitReached = limit !== undefined && value.length >= limit;
+
+  return (
+    <Autocomplete
+      multiple
+      disableCloseOnSelect
+      options={options}
+      groupBy={(option) => option.categoria}
+      value={value}
+      onChange={(_, novos) => onChange(novos)}
+      getOptionLabel={(option) => option.nome}
+      getOptionDisabled={(option) =>
+        limitReached && !value.some((item) => item.id === option.id)
+      }
+      isOptionEqualToValue={(option, selecionada) => option.id === selecionada.id}
+      loading={loading}
+      disabled={disabled}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          slotProps={{
+            ...params.slotProps,
+            htmlInput: {
+              ...params.slotProps.htmlInput,
+              value: params.slotProps.htmlInput.value ?? "",
+            },
+          }}
+          label={label}
+          placeholder={placeholder}
+          helperText={limit !== undefined ? `${value.length} de ${limit} selecionadas` : undefined}
+        />
+      )}
+    />
+  );
 }

@@ -85,7 +85,7 @@ internal static class DemoData
             "ajudam a decidir melhor e melhorar rotinas de equipes comerciais. Procuro estágio na área administrativa " +
             "ou de análise de dados.",
             3,
-            ["Excel", PowerBi, "SQL", "Data Analysis", "Data Visualization", "Agile", "Trello"],
+            ["Microsoft Excel", PowerBi, "SQL", "Data Analysis", "Data Visualization", "Agile", "Trello"],
             [new(Portuguese, NivelIdioma.NATIVO), new(English, NivelIdioma.INTERMEDIARIO)],
             [TipoDisponibilidade.ESTAGIO, TipoDisponibilidade.TRAINEE],
             [ModalidadeTrabalho.PRESENCIAL, ModalidadeTrabalho.HIBRIDO],
@@ -103,7 +103,7 @@ internal static class DemoData
                 new("Painel de Vendas", D(2025, 5, 1), D(2025, 9, 15),
                     "Painel interativo com vendas por região, produto e vendedor, criado a partir de dados fictícios de " +
                     "um comércio local.",
-                    [PowerBi, "Excel", "SQL"])
+                    [PowerBi, "Microsoft Excel", "SQL"])
             ]),
 
         new("Camila Ferraz Duarte", $"camila.duarte@{EmailDomain}", "Juiz de Fora", "MG", "32900000003",

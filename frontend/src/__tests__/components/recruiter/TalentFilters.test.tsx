@@ -10,9 +10,10 @@ import { makeFilters } from "./recruiterDiscoveryFixtures";
 vi.setConfig({ testTimeout: 15_000 });
 
 const COMPETENCIES: CatalogoCompetenciaResponse[] = [
-  { id: 1, nome: "React" },
-  { id: 2, nome: "Python" },
-  { id: 3, nome: "SQL" },
+  { id: 1, nome: "React", categoria: "Tecnologia · Frontend", tipo: "TECNICA" },
+  { id: 2, nome: "Python", categoria: "Tecnologia · Linguagens", tipo: "TECNICA" },
+  { id: 3, nome: "SQL", categoria: "Tecnologia · Linguagens", tipo: "TECNICA" },
+  { id: 4, nome: "Liderança", categoria: "Liderança e colaboração", tipo: "COMPORTAMENTAL" },
 ];
 const INVALID_SEARCH = "Informe uma busca válida.";
 const INVALID_UF = "Selecione uma UF válida.";
@@ -180,16 +181,34 @@ describe("TalentFilters", () => {
       expect(lastChange(setup).uf).toBe("MG");
     });
 
+    it("groups the catalog options under their category", async () => {
+      const user = userEvent.setup({ delay: null });
+      renderFilters();
+      await user.click(screen.getByLabelText("Competências técnicas"));
+      const listbox = screen.getByRole("listbox");
+      expect(within(listbox).getByText("Tecnologia · Frontend")).toBeTruthy();
+      expect(within(listbox).getByText("Tecnologia · Linguagens")).toBeTruthy();
+    });
+
     it("selects competencies from the catalog and keeps the previous ones", async () => {
       const user = userEvent.setup({ delay: null });
       const setup = renderFilters({ competenciaIds: [1] });
-      await user.click(screen.getByLabelText("Competências"));
+      await user.click(screen.getByLabelText("Competências técnicas"));
       expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["React", "Python", "SQL"]);
       expect(screen.getByRole("option", { name: "React" }).getAttribute("aria-selected")).toBe("true");
       expect(screen.getByRole("option", { name: "SQL" }).getAttribute("aria-selected")).toBe("false");
       await user.click(screen.getByRole("option", { name: "SQL" }));
       expect(lastChange(setup).competenciaIds).toEqual([1, 3]);
       expect(screen.getByRole("button", { name: "SQL" })).toBeTruthy();
+    });
+
+    it("offers behavioral competencies in their own field and keeps the technical ones selected", async () => {
+      const user = userEvent.setup({ delay: null });
+      const setup = renderFilters({ competenciaIds: [1] });
+      await user.click(screen.getByLabelText("Competências comportamentais"));
+      expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Liderança"]);
+      await user.click(screen.getByRole("option", { name: "Liderança" }));
+      expect(lastChange(setup).competenciaIds).toEqual([1, 4]);
     });
 
     it("removes a competency from the selection", async () => {
