@@ -15,7 +15,7 @@ import ContactPhoneOutlined from "@mui/icons-material/ContactPhoneOutlined";
 import LanguageOutlined from "@mui/icons-material/LanguageOutlined";
 import LinkedInOutlined from "@mui/icons-material/LinkedIn";
 import { getApiErrorMessage } from "@/lib/api";
-import { formatBrazilianPhone, normalizeEmailInput, normalizeOptionalUrl, normalizePhone, validateBrazilianPhone, validateEmail, validateHttpUrl } from "@/lib/validation";
+import { formatBrazilianPhone, maskPhoneChange, normalizeEmailInput, normalizeOptionalUrl, normalizePhone, validateBrazilianPhone, validateEmail, validateHttpUrl } from "@/lib/validation";
 import { updateContato } from "@/lib/student";
 import type { ContatoResponse } from "@/types/student";
 import { FormDialog } from "./FormDialog";
@@ -105,8 +105,8 @@ type FilledContactItem = ContactItem & { value: string };
 
 function resolveContactLink(kind: ContactKind, value: string): { href: string | null; display: string; external: boolean } {
   if (kind === "phone") {
-    const digits = normalizePhone(value);
-    if (/^\d{10,11}$/.test(digits) && !/^(\d)\1+$/.test(digits) && digits.slice(0, 2) !== "00") {
+    if (validateBrazilianPhone(value) === null) {
+      const digits = normalizePhone(value);
       return { href: `tel:+55${digits}`, display: formatBrazilianPhone(digits), external: false };
     }
     return { href: null, display: value, external: false };
@@ -214,7 +214,7 @@ function ContatoForm({ contato, onClose, onSaved }: ContatoFormProps) {
           id="contato-telefone"
           label="Telefone"
           value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
+          onChange={(e) => setTelefone(maskPhoneChange(e))}
           fullWidth
           disabled={saving}
           placeholder="(11) 91234-5678"

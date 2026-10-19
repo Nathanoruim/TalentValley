@@ -118,6 +118,9 @@ describe("ContatoSection display", () => {
     ["too short", "123"],
     ["all repeated digits", "11111111111"],
     ["starting with 00", "0012345678"],
+    ["an area code below 11", "1091234567"],
+    ["a mobile number not starting with 9", "32888887777"],
+    ["a landline not starting with 2 to 5", "3263334444"],
   ])("shows a malformed phone (%s) as plain text instead of a link", (_case, telefone) => {
     renderSection({ telefone });
 
@@ -283,10 +286,12 @@ describe("ContatoSection form", () => {
   });
 
   it.each([
-    ["letters", "abc"],
     ["too few digits", "1234"],
     ["repeated digits", "(11) 11111-1111"],
     ["a 00 area code", "(00) 91234-5678"],
+    ["an area code below 11", "(10) 91234-5678"],
+    ["a mobile number not starting with 9", "(32) 88888-7777"],
+    ["a landline not starting with 2 to 5", "(32) 6333-4444"],
   ])("rejects an invalid phone (%s) on submit, flags the field and does not call the API", async (_case, telefone) => {
     const user = userEvent.setup();
     const props = renderSection();
@@ -376,11 +381,31 @@ describe("ContatoSection form", () => {
     expect(screen.getByText(PHONE_HINT)).toBeTruthy();
   });
 
+  it.each([
+    ["32", "(32"],
+    ["32988", "(32) 988"],
+    ["329888877", "(32) 98888-77"],
+    ["32988887777", "(32) 98888-7777"],
+    ["3233334444", "(32) 3333-4444"],
+    ["+55 32 98888-7777", "(32) 98888-7777"],
+    ["(32) 98888-7777999", "(32) 98888-7777"],
+    ["32abc9-8888(7777", "(32) 98888-7777"],
+    ["abc", ""],
+  ])("masks the phone typed or pasted as %s", async (typed, expected) => {
+    const user = userEvent.setup();
+    renderSection();
+    await openForm(user);
+
+    setValue(PHONE_LABEL, typed);
+
+    expect(input(PHONE_LABEL).value).toBe(expected);
+  });
+
   it("drops the phone error once the phone becomes valid and then saves", async () => {
     const user = userEvent.setup();
     const props = renderSection();
     await openForm(user);
-    setValue(PHONE_LABEL, "abc");
+    setValue(PHONE_LABEL, "1234");
     submit();
     await screen.findByText(PHONE_ERROR);
 

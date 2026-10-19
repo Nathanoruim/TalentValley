@@ -15,6 +15,7 @@ import type { CepStatus } from "./useCepLookup";
 import { useMunicipios } from "./useMunicipios";
 import {
   BRAZILIAN_UFS,
+  maskPhoneChange,
   sanitizeCityName,
   sanitizePersonName,
   stripEmoji,
@@ -107,9 +108,8 @@ export function PersonalDataStep({
         type="tel"
         autoComplete="tel"
         value={value.telefone}
-        onChange={(e) => onChange("telefone", stripEmoji(e.target.value))}
+        onChange={(e) => onChange("telefone", maskPhoneChange(e))}
         onBlur={() => onBlur("telefone")}
-        onPaste={stripEmojiOnPaste}
         inputRef={registerFieldRef("telefone")}
         disabled={disabled}
         error={Boolean(errors.telefone)}
