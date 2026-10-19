@@ -93,5 +93,5 @@ export async function goToDetails(user: UserEvent, detailsHeading: RegExp) {
 }
 
 export async function acceptTerms(user: UserEvent) {
-  await user.click(screen.getByRole("checkbox"));
+  await user.click(screen.getByRole("checkbox", { name: /Eu li e concordo/ }));
 }

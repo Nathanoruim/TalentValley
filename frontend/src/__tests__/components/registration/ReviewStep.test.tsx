@@ -14,6 +14,8 @@ const PERSONAL_TITLE = "Dados pessoais";
 const EDIT_PERSONAL = "Editar dados pessoais";
 const DETAILS_TITLE = "Formação";
 const EDIT_DETAILS = "Editar formação";
+const TERMS_CHECKBOX = /Eu li e concordo/;
+const NEWSLETTER_CHECKBOX = /novidades/;
 const FOLDED_CARD = "translateY(-12px) scale(0.97)";
 const UNFOLDED_CARD = "translateY(0px) scale(1)";
 
@@ -120,14 +122,15 @@ describe("ReviewStep", () => {
 
     expect((screen.getByRole("button", { name: EDIT_PERSONAL }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: EDIT_DETAILS }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("checkbox") as HTMLInputElement).disabled).toBe(true);
+    expect((screen.getByRole("checkbox", { name: TERMS_CHECKBOX }) as HTMLInputElement).disabled).toBe(true);
+    expect((screen.getByRole("checkbox", { name: NEWSLETTER_CHECKBOX }) as HTMLInputElement).disabled).toBe(true);
   });
 
   it("reflects the consent and reports changes to it", async () => {
     const user = userEvent.setup({ delay: null });
     const { onConsentChange } = renderStep({ consent: false });
 
-    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("checkbox", { name: TERMS_CHECKBOX }));
 
     expect(onConsentChange).toHaveBeenCalledExactlyOnceWith(true);
   });
@@ -135,8 +138,22 @@ describe("ReviewStep", () => {
   it("shows the checked consent and its error", () => {
     renderStep({ consent: true, consentError: CONSENT_ERROR });
 
-    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole("checkbox", { name: TERMS_CHECKBOX }) as HTMLInputElement).checked).toBe(true);
     expect(screen.getByText(CONSENT_ERROR)).toBeTruthy();
+  });
+
+  it("offers an optional newsletter checkbox that starts unchecked and does not touch the terms consent", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { onConsentChange } = renderStep();
+    const newsletter = screen.getByRole("checkbox", { name: NEWSLETTER_CHECKBOX }) as HTMLInputElement;
+
+    expect(newsletter.checked).toBe(false);
+    expect(newsletter.required).toBe(false);
+
+    await user.click(newsletter);
+
+    expect(newsletter.checked).toBe(true);
+    expect(onConsentChange).not.toHaveBeenCalled();
   });
 
   it("registers the consent input under consentTermos", () => {
@@ -158,7 +175,7 @@ describe("ReviewStep", () => {
 
     expect(foldContainer().hasAttribute("inert")).toBe(true);
     expect(foldContainer().style.height).toBe("0px");
-    expect(screen.getByRole("checkbox")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: TERMS_CHECKBOX })).toBeTruthy();
   });
 
   it.each(["pointer", "touch"] as const)("lifts and shrinks the folded cards when the motion policy is %s", (policy) => {

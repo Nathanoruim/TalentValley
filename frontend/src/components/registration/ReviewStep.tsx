@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Box, Button, Paper, Typography } from "@mui/material";
+import { useState, type ReactNode } from "react";
+import { Box, Button, Checkbox, FormControlLabel, Paper, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { duration, ease } from "@/components/auth/motion/tokens";
 import { useMotionPolicy } from "@/components/auth/motion/useMotionPolicy";
@@ -94,6 +94,7 @@ export function ReviewStep({
   onEditStep,
   registerFieldRef,
 }: ReviewStepProps) {
+  const [newsletter, setNewsletter] = useState(false);
   const policy = useMotionPolicy();
   const animated = policy === "touch" || policy === "pointer";
   // With reduced motion the summary still folds, but at once.
@@ -156,6 +157,19 @@ export function ReviewStep({
         disabled={disabled}
         onChange={onConsentChange}
         inputRef={registerFieldRef("consentTermos")}
+      />
+
+      {/* Optional and not sent to the API: it does not gate the submission. */}
+      <FormControlLabel
+        sx={{ display: "flex", mt: 1 }}
+        control={
+          <Checkbox
+            checked={newsletter}
+            onChange={(event) => setNewsletter(event.target.checked)}
+            disabled={disabled}
+          />
+        }
+        label="Aceito receber novidades e comunicações da Talent Valley por e-mail (opcional)."
       />
     </div>
   );
