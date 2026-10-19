@@ -107,10 +107,14 @@ public sealed class AdminDeletionTests : IDisposable
             Assert.All(audit, entry => Assert.Equal(id.ToString(), entry.EntidadeId));
             Assert.Equal(AcaoAuditoria.ALUNO_BLOQUEADO,
                 audit.Single(x => x.Acao == AcaoAuditoria.ALUNO_BLOQUEADO).Acao);
-            if (!failIdentity)
+            if (failIdentity)
+                Assert.Equal("Acesso do aluno Maria Álvares criado.", audit.Single(x => x.Acao == AcaoAuditoria.ALUNO_CRIADO).Descricao);
+            else
             {
                 var deleted = audit.Single(x => x.Acao == AcaoAuditoria.ALUNO_EXCLUIDO);
-                Assert.Equal("Aluno Maria Álvares excluído.", deleted.Descricao);
+                Assert.Equal($"Aluno {id} excluído.", deleted.Descricao);
+                // LGPD: the earlier entry about the same student loses the name too.
+                Assert.Equal("Aluno criado.", audit.Single(x => x.Acao == AcaoAuditoria.ALUNO_CRIADO).Descricao);
             }
         });
         if (!failIdentity)
@@ -205,7 +209,7 @@ public sealed class AdminDeletionTests : IDisposable
                 var deleted = audit.Single(x => x.Acao == AcaoAuditoria.RECRUTADOR_EXCLUIDO);
                 Assert.Equal(adminId, deleted.AdminUserId);
                 Assert.Equal(AppRoles.Recruiter, deleted.EntidadeTipo);
-                Assert.Equal("Recrutador Maria Álvares excluído.", deleted.Descricao);
+                Assert.Equal($"Recrutador {id} excluído.", deleted.Descricao);
             }
         });
         if (!failIdentity)

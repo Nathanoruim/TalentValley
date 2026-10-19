@@ -59,6 +59,7 @@ public sealed class RecruiterSelfDeletionTests : IDisposable
             Assert.Equal(AppRoles.Recruiter, entry.EntidadeTipo);
             Assert.Equal(id.ToString(), entry.EntidadeId);
             Assert.DoesNotContain("Maria", entry.Descricao);
+            Assert.All(await db.Auditorias.ToListAsync(), x => Assert.DoesNotContain("Maria", x.Descricao));
         });
 
         // The old session and the credentials no longer authenticate.

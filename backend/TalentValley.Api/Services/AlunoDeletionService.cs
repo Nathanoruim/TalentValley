@@ -32,15 +32,24 @@ public sealed class AlunoDeletionService(AppDbContext database, UserManager<Appl
                 AppRoles.Student, aluno.UserId, "Aluno excluiu a própria conta.");
         else
             await audit.RecordAsync(AcaoAuditoria.ALUNO_EXCLUIDO, AppRoles.Student, aluno.UserId,
-                $"Aluno {user.NomeCompleto} excluído.");
+                AuditoriaService.NamelessDescription(AcaoAuditoria.ALUNO_EXCLUIDO, aluno.UserId.ToString())!);
 
         // Registration requests hold the same personal data, so they are removed with the account.
+        var requestIds = new List<Guid>();
         if (user.Email is not null)
         {
             var normalizedEmail = user.Email.ToUpperInvariant();
-            database.SolicitacoesCadastro.RemoveRange(await database.SolicitacoesCadastro
-                .Where(x => x.EmailNormalizado == normalizedEmail).ToListAsync(cancellationToken));
+            var requests = await database.SolicitacoesCadastro
+                .Where(x => x.EmailNormalizado == normalizedEmail).ToListAsync(cancellationToken);
+            requestIds.AddRange(requests.Select(x => x.Id));
+            database.SolicitacoesCadastro.RemoveRange(requests);
         }
+
+        // LGPD: earlier audit entries about this person must not keep their name.
+        await audit.RemoveNamesAsync(AppRoles.Student, [aluno.UserId], cancellationToken);
+        await audit.RemoveNamesAsync(AuditoriaService.RegistrationRequestEntityType, requestIds, cancellationToken);
+        await audit.RemoveNamesAsync(AuditoriaService.FormationEntityType,
+            aluno.Formacoes.Select(x => x.Id).ToList(), cancellationToken);
 
         // Remove the profile first: owned rows/favorites cascade, while its Identity FK is Restrict.
         database.Alunos.Remove(aluno);

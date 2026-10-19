@@ -7,7 +7,8 @@ using TalentValley.Api.Storage;
 
 namespace TalentValley.Api.Services;
 
-public sealed class FormacaoService(AppDbContext database, IFileStorage storage, ILogger<FormacaoService> logger)
+public sealed class FormacaoService(AppDbContext database, IFileStorage storage, AuditoriaService audit,
+    ILogger<FormacaoService> logger)
 {
     private static string LockKey(Guid alunoId) => $"formacao:{alunoId}";
 
@@ -67,6 +68,8 @@ public sealed class FormacaoService(AppDbContext database, IFileStorage storage,
         if (item is null) return false;
         var certificateKey = item.CertificadoStorageKey;
         database.Formacoes.Remove(item);
+        // LGPD: the formation is gone, so its audit entries must not keep the student's name.
+        await audit.RemoveNamesAsync(AuditoriaService.FormationEntityType, [item.Id]);
         await TouchAsync(alunoId, DateTimeOffset.UtcNow);
         await database.SaveChangesAsync();
         await transaction.CommitAsync();

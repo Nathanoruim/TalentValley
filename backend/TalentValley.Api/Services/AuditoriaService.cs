@@ -39,6 +39,42 @@ public sealed class AuditoriaService(AppDbContext database, IHttpContextAccessor
             CriadoEm = DateTimeOffset.UtcNow
         });
 
+    public const string FormationEntityType = "FORMACAO";
+    public const string RegistrationRequestEntityType = "SOLICITACAO_CADASTRO";
+
+    // LGPD: once a person is erased, no audit entry may keep their name. Description without any personal data;
+    // null for actions whose text never carries a person's name.
+    public static string? NamelessDescription(AcaoAuditoria action, string entityId) => action switch
+    {
+        AcaoAuditoria.ALUNO_CRIADO => "Aluno criado.",
+        AcaoAuditoria.ALUNO_BLOQUEADO => "Aluno bloqueado.",
+        AcaoAuditoria.ALUNO_REATIVADO => "Aluno reativado.",
+        AcaoAuditoria.ALUNO_EXCLUIDO => $"Aluno {entityId} excluído.",
+        AcaoAuditoria.RECRUTADOR_CRIADO => "Recrutador criado.",
+        AcaoAuditoria.RECRUTADOR_BLOQUEADO => "Recrutador bloqueado.",
+        AcaoAuditoria.RECRUTADOR_REATIVADO => "Recrutador reativado.",
+        AcaoAuditoria.RECRUTADOR_EXCLUIDO => $"Recrutador {entityId} excluído.",
+        AcaoAuditoria.SOLICITACAO_CADASTRO_APROVADA => "Solicitação de cadastro aprovada.",
+        AcaoAuditoria.SOLICITACAO_CADASTRO_REJEITADA => "Solicitação de cadastro rejeitada.",
+        AcaoAuditoria.FORMACAO_RPV_APROVADA => "Formação RPV aprovada.",
+        AcaoAuditoria.FORMACAO_RPV_REJEITADA => "Formação RPV rejeitada.",
+        AcaoAuditoria.FORMACAO_RPV_VALIDACAO_REMOVIDA => "Validação de formação RPV removida.",
+        _ => null
+    };
+
+    // Rewrites the earlier entries about the erased person's records (account, registration requests,
+    // formations) without their name. Stages the change; the caller saves it with the deletion.
+    public async Task RemoveNamesAsync(string entityType, IReadOnlyCollection<Guid> entityIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (entityIds.Count == 0) return;
+        var ids = entityIds.Select(x => x.ToString()).ToList();
+        var entries = await database.Auditorias
+            .Where(x => x.EntidadeTipo == entityType && ids.Contains(x.EntidadeId)).ToListAsync(cancellationToken);
+        foreach (var entry in entries)
+            entry.Descricao = NamelessDescription(entry.Acao, entry.EntidadeId) ?? entry.Descricao;
+    }
+
     public async Task<PaginatedResponse<AuditoriaListItem>> ListAsync(int page)
     {
         var query = database.Auditorias.AsNoTracking();
