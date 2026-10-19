@@ -16,9 +16,11 @@ Use this skill at the end of every implementation task.
 
 ## 2. Backend validation
 
+Run locally only what the change touches; CI runs the full suite on every push and pull request (see `AGENTS.md`, "Checks before saying a task is done").
+
 When backend exists and is affected:
 - restore/build using repository commands;
-- run relevant tests;
+- run the tests of the changed area (`--filter`); the full `dotnet test` stays in CI;
 - verify warnings/errors introduced by the change;
 - if EF schema changed, ensure a new migration exists and applies cleanly;
 - do not rewrite old migrations without explicit need.
@@ -27,10 +29,10 @@ When backend exists and is affected:
 
 When frontend exists and is affected:
 - use the repository's package manager;
-- run relevant lint;
+- run lint on the changed files;
 - run type checking if configured;
-- run tests if configured;
-- run production build when practical for the task.
+- run the tests of the changed files;
+- `npm ci`, the production build, the full `npm test` and the dependency audit stay in CI, unless the change touches shared code (theme, layout, API client, shared validation), authentication/security, or the person asks for the full local suite.
 
 Do not invent package-manager commands if the repository already defines scripts.
 
@@ -59,7 +61,7 @@ For auth/security/file changes:
 Report:
 - what changed;
 - files/modules affected;
-- commands/checks run;
+- commands/checks run locally, and which ones were left to CI;
 - test/build result;
 - migrations added, if any;
 - any unresolved issue.

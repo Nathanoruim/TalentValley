@@ -104,9 +104,9 @@ Collaborators follow the complete process: `talent-valley-phased-delivery`, `tal
 
 ## Checks before saying a task is done
 
-Follow `talent-valley-quality-gate`, and run what applies to the files you changed, reporting the real result:
+Follow `talent-valley-quality-gate`. Run on the local machine only the checks that apply to the files you changed, and report the real result. The full suite is run by CI on every push and pull request (see below), so do not repeat it locally.
 
-- Backend: `dotnet build backend/TalentValley.slnx` and `dotnet test backend/TalentValley.slnx`.
+- Backend changed: `dotnet build backend/TalentValley.slnx` and `dotnet test backend/TalentValley.slnx --filter <tests of the changed area>`. The full `dotnet test` stays in CI.
 - Database model changed (entities in `backend/TalentValley.Api/Domain/Entities`, `backend/TalentValley.Api/Data/Configurations`, or `backend/TalentValley.Api/Data/AppDbContext.cs`): from the repository root, with `ASPNETCORE_ENVIRONMENT=Development` set (PowerShell: `$env:ASPNETCORE_ENVIRONMENT = 'Development'`; bash: `export ASPNETCORE_ENVIRONMENT=Development`), run:
 
   ```
@@ -116,9 +116,10 @@ Follow `talent-valley-quality-gate`, and run what applies to the files you chang
   ```
 
   The last command must report no pending changes.
-- Frontend (inside `frontend/`): run `npm ci` first (not `npm install`, which can rewrite the lockfile), then `npm run lint`, `npm run typecheck`, `npm test` and `npm run build`.
+- Frontend changed (inside `frontend/`): `npx eslint <changed files>`, `npm run typecheck` and `npx vitest run <tests of the changed files>`. Run `npm ci` (never `npm install`, which can rewrite the lockfile) only when `node_modules` is missing or `package.json`/`package-lock.json` changed. `npm run build`, the full `npm test` and the dependency audit stay in CI.
+- Always run the full local suite (the complete commands above, `npm ci` and `npm run build` included) when the change touches shared code used across the app (theme, layout, API client, validation shared by several screens), authentication/security, or when the person asks for it.
 
-CI runs these checks, plus dependency audits and a Docker build, on every push and pull request. A failing check must be fixed, not bypassed. If a command fails and you cannot find the cause, stop, show the real error to the person and ask. Do not try random fixes.
+CI runs the full checks (build, all tests, lint, typecheck, migrations, dependency audits, Docker build) on every push and pull request. In the final report, say plainly which checks ran locally and that the rest is confirmed by CI. A failing check, local or in CI, must be fixed, not bypassed. If a command fails and you cannot find the cause, stop, show the real error to the person and ask. Do not try random fixes.
 
 ## Repository skills
 
