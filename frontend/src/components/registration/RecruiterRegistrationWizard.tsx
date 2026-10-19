@@ -78,6 +78,7 @@ export function RecruiterRegistrationWizard() {
   const [common, setCommon] = useState<CommonForm>(commonBlank);
   const [company, setCompany] = useState<RecruiterCompanyForm>(recruiterCompanyBlank);
   const [consent, setConsent] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -144,6 +145,7 @@ export function RecruiterRegistrationWizard() {
         cargo: normalizeWhitespace(company.cargo),
         siteEmpresa: company.siteEmpresa.trim() || null,
         consentTermos: true,
+        consentNewsletter: newsletter,
       });
       // The check is drawn on the button before the confirmation takes over.
       setFinished(true);
@@ -263,6 +265,7 @@ export function RecruiterRegistrationWizard() {
             }}
             consent={consent}
             consentError={errors.consentTermos}
+            newsletter={newsletter}
             disabled={busy}
             collapsed={busy}
             onConsentChange={(checked) => {
@@ -270,6 +273,7 @@ export function RecruiterRegistrationWizard() {
               setErrors((currentErrors) => ({ ...currentErrors, consentTermos: null }));
               clearError();
             }}
+            onNewsletterChange={setNewsletter}
             onEditStep={editStep}
             registerFieldRef={registerFieldRef}
           />

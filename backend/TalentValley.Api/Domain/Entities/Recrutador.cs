@@ -13,4 +13,10 @@ public class Recrutador
     public string Cidade { get; set; } = string.Empty;
     public string Uf { get; set; } = string.Empty;
     public StatusRecrutador Status { get; set; }
+    // LGPD consent copied from the approved registration request.
+    public DateTimeOffset? ConsentimentoEm { get; set; }
+    public string? VersaoTermos { get; set; }
+    // Optional newsletter consent: current choice and when it was last changed.
+    public bool NewsletterAceita { get; set; }
+    public DateTimeOffset? NewsletterAtualizadaEm { get; set; }
 }

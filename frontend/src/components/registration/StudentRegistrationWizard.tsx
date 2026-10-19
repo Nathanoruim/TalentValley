@@ -85,6 +85,7 @@ export function StudentRegistrationWizard() {
   const [common, setCommon] = useState<CommonForm>(commonBlank);
   const [school, setSchool] = useState<StudentEducationForm>(studentEducationBlank);
   const [consent, setConsent] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -156,6 +157,7 @@ export function StudentRegistrationWizard() {
           : null,
         relacaoRioPombaValley: school.relacaoRioPombaValley.trim() || null,
         consentTermos: true,
+        consentNewsletter: newsletter,
       });
       // The check is drawn on the button before the confirmation takes over.
       setFinished(true);
@@ -280,6 +282,7 @@ export function StudentRegistrationWizard() {
             }}
             consent={consent}
             consentError={errors.consentTermos}
+            newsletter={newsletter}
             disabled={busy}
             collapsed={busy}
             onConsentChange={(checked) => {
@@ -287,6 +290,7 @@ export function StudentRegistrationWizard() {
               setErrors((currentErrors) => ({ ...currentErrors, consentTermos: null }));
               clearError();
             }}
+            onNewsletterChange={setNewsletter}
             onEditStep={editStep}
             registerFieldRef={registerFieldRef}
           />

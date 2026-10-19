@@ -288,6 +288,50 @@ public sealed class RegistrationRequestTests : IDisposable
         Assert.Equal(HttpStatusCode.Conflict, (await admin.PostAsync($"/api/admin/solicitacoes-cadastro/{requestId}/aprovar", null)).StatusCode);
     }
 
+    [Theory]
+    [InlineData("aluno", true)]
+    [InlineData("aluno", false)]
+    [InlineData("aluno", null)]
+    [InlineData("recrutador", true)]
+    [InlineData("recrutador", false)]
+    [InlineData("recrutador", null)]
+    public async Task Newsletter_choice_is_recorded_on_the_request_and_copied_to_the_profile_on_approval(string kind, bool? newsletter)
+    {
+        using var publicClient = factory.Client();
+        await ApiFactory.SetCsrfAsync(publicClient);
+        var body = new Dictionary<string, object?>
+        {
+            ["nomeCompleto"] = "Ana Silva", ["email"] = "news@example.test", ["telefone"] = "(32) 99999-0000", ["cidade"] = "Rio Pomba", ["uf"] = "MG",
+            ["consentTermos"] = true
+        };
+        // null means the field is left out of the request: the newsletter is optional.
+        if (newsletter is not null) body["consentNewsletter"] = newsletter;
+        if (kind == "aluno") { body["instituicaoEnsino"] = "IF Sudeste MG"; body["curso"] = "Sistemas de Informação"; body["tipoFormacao"] = "GRADUACAO"; }
+        else { body["empresa"] = "Empresa Exemplo"; body["cargo"] = "Analista de RH"; }
+        Assert.Equal(HttpStatusCode.Accepted, (await publicClient.PostAsJsonAsync($"/api/cadastro/{kind}", body)).StatusCode);
+        var expected = newsletter == true;
+        await factory.CreateUserAsync("admin@example.test", AppRoles.Admin);
+        using var admin = factory.Client();
+        Assert.Equal(HttpStatusCode.OK, (await ApiFactory.LoginAsync(admin, "admin@example.test")).StatusCode);
+        await ApiFactory.SetCsrfAsync(admin);
+        Assert.Equal(HttpStatusCode.OK, (await admin.PostAsync($"/api/admin/solicitacoes-cadastro/{await RequestIdAsync()}/aprovar", null)).StatusCode);
+        await factory.InScopeAsync(async provider =>
+        {
+            var db = provider.GetRequiredService<AppDbContext>();
+            var request = await db.SolicitacoesCadastro.SingleAsync();
+            Assert.Equal(expected, request.NewsletterAceita);
+            Assert.Equal(expected, request.NewsletterAtualizadaEm is not null);
+            var (accepted, updatedAt, consentAt, terms) = kind == "aluno"
+                ? await db.Alunos.Select(x => new Tuple<bool, DateTimeOffset?, DateTimeOffset?, string?>(x.NewsletterAceita, x.NewsletterAtualizadaEm, x.ConsentimentoEm, x.VersaoTermos)).SingleAsync()
+                : await db.Recrutadores.Select(x => new Tuple<bool, DateTimeOffset?, DateTimeOffset?, string?>(x.NewsletterAceita, x.NewsletterAtualizadaEm, x.ConsentimentoEm, x.VersaoTermos)).SingleAsync();
+            Assert.Equal(request.NewsletterAceita, accepted);
+            Assert.Equal(request.NewsletterAtualizadaEm, updatedAt);
+            Assert.NotNull(consentAt);
+            Assert.Equal(request.ConsentimentoEm, consentAt);
+            Assert.Equal(SolicitacaoCadastroService.VersaoTermosAtual, terms);
+        });
+    }
+
     [Fact]
     public async Task Public_recruiter_request_requires_csrf_and_admin_approval_creates_recruiter()
     {

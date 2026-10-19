@@ -171,6 +171,19 @@ export function registerWizardTests(config: WizardSuiteConfig) {
     expect(screen.queryByText(CONSENT_ERROR)).toBeNull();
   });
 
+  it("sends consentNewsletter as true when the box is ticked", async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<Wizard />);
+    await goToReview(user);
+    await acceptTerms(user);
+    await user.click(screen.getByRole("checkbox", { name: /novidades/ }));
+
+    await user.click(button(SUBMIT_LABEL));
+
+    await screen.findByRole("heading", { name: SUCCESS_TITLE });
+    expect(api).toHaveBeenCalledWith(expect.objectContaining({ consentTermos: true, consentNewsletter: true }));
+  });
+
   it("locks the form while the request is pending", async () => {
     const user = userEvent.setup({ delay: null });
     let finishRequest: () => void = () => undefined;
