@@ -52,6 +52,9 @@ public sealed class StudentSelfDeletionTests : IDisposable
             Assert.Equal(AppRoles.Student, entry.EntidadeTipo);
             Assert.Equal(id.ToString(), entry.EntidadeId);
             Assert.DoesNotContain("Ana", entry.Descricao);
+            var all = await db.Auditorias.ToListAsync();
+            Assert.Equal(3, all.Count); // solicitação aprovada, aluno criado, exclusão própria
+            Assert.All(all, x => Assert.DoesNotContain("Ana", x.Descricao));
         });
 
         // The old session and the credentials no longer authenticate.

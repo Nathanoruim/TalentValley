@@ -85,6 +85,9 @@ public sealed class SolicitacaoCadastroService(AppDbContext database, UserManage
             .ToListAsync(cancellationToken);
         if (expired.Count == 0) return;
         database.SolicitacoesCadastro.RemoveRange(expired);
+        // LGPD: the request is gone, so its rejection entry must not keep the person's name.
+        await audit.RemoveNamesAsync(AuditoriaService.RegistrationRequestEntityType,
+            expired.Select(x => x.Id).ToList(), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Cleaned up {Count} rejected registration requests older than {Days} days",
             expired.Count, REJECTED_REQUEST_RETENTION_DAYS);

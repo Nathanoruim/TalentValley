@@ -25,15 +25,22 @@ public sealed class RecrutadorDeletionService(AppDbContext database, SignInManag
                 AppRoles.Recruiter, recrutador.UserId, "Recrutador excluiu a própria conta.");
         else
             await audit.RecordAsync(AcaoAuditoria.RECRUTADOR_EXCLUIDO, AppRoles.Recruiter, recrutador.UserId,
-                $"Recrutador {user.NomeCompleto} excluído.");
+                AuditoriaService.NamelessDescription(AcaoAuditoria.RECRUTADOR_EXCLUIDO, recrutador.UserId.ToString())!);
 
         // Registration requests hold the same personal data, so they are removed with the account.
+        var requestIds = new List<Guid>();
         if (user.Email is not null)
         {
             var normalizedEmail = user.Email.ToUpperInvariant();
-            database.SolicitacoesCadastro.RemoveRange(await database.SolicitacoesCadastro
-                .Where(x => x.EmailNormalizado == normalizedEmail).ToListAsync(cancellationToken));
+            var requests = await database.SolicitacoesCadastro
+                .Where(x => x.EmailNormalizado == normalizedEmail).ToListAsync(cancellationToken);
+            requestIds.AddRange(requests.Select(x => x.Id));
+            database.SolicitacoesCadastro.RemoveRange(requests);
         }
+
+        // LGPD: earlier audit entries about this person must not keep their name.
+        await audit.RemoveNamesAsync(AppRoles.Recruiter, [recrutador.UserId], cancellationToken);
+        await audit.RemoveNamesAsync(AuditoriaService.RegistrationRequestEntityType, requestIds, cancellationToken);
 
         // Remove the profile first: favorites cascade, while its Identity FK is Restrict.
         database.Recrutadores.Remove(recrutador);
