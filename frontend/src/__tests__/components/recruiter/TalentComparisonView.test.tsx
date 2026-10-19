@@ -35,9 +35,9 @@ const NO_INFO = "Nenhuma informação cadastrada.";
 const LOAD_FALLBACK = "Não foi possível carregar a comparação.";
 const UNSAFE_URL = "javascript:alert(1)";
 
-const REACT = { id: 1, nome: "React" };
-const VUE = { id: 2, nome: "Vue" };
-const ANGULAR = { id: 3, nome: "Angular" };
+const REACT = { id: 1, nome: "React", tipo: "TECNICA" as const };
+const VUE = { id: 2, nome: "Vue", tipo: "TECNICA" as const };
+const ANGULAR = { id: 3, nome: "Angular", tipo: "TECNICA" as const };
 
 function makeComparison(overrides: Partial<TalentComparison> = {}): TalentComparison {
   return {
@@ -195,7 +195,7 @@ describe("TalentComparisonView", () => {
         makeComparison({
           talentoA: makeTalentProfile({ nomeCompleto: "Ana Lima", competencias: [REACT, VUE] }),
           // Same display name as a common competency but a different id: it is exclusive.
-          talentoB: makeTalentProfile({ nomeCompleto: "Bruno Reis", competencias: [REACT, { id: 99, nome: "React" }, ANGULAR] }),
+          talentoB: makeTalentProfile({ nomeCompleto: "Bruno Reis", competencias: [REACT, { id: 99, nome: "React", tipo: "TECNICA" as const }, ANGULAR] }),
         }),
       );
 

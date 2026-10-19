@@ -1,4 +1,5 @@
 using TalentValley.Api.Domain.Entities;
+using TalentValley.Api.Domain.Enums;
 using TalentValley.Api.DTOs;
 
 namespace TalentValley.Api.Services;
@@ -15,6 +16,6 @@ internal static class TrajetoriaMapping
     public static ProjetoResponse Map(Projeto x) => new(x.Id, x.Ordem, x.Nome, x.DataInicio,
         x.DataFim, x.EmAndamento, x.Descricao, x.DemoUrl, x.RepositorioUrl,
         x.Competencias.OrderBy(c => c.Competencia.NomeBusca).ThenBy(c => c.CompetenciaId)
-            .Select(c => new CompetenciaResponse(c.CompetenciaId, c.Competencia.Nome)).ToList(),
+            .Select(c => new CompetenciaResponse(c.CompetenciaId, c.Competencia.Nome, c.Competencia.Categoria.Tipo())).ToList(),
         x.CriadoEm, x.AtualizadoEm);
 }

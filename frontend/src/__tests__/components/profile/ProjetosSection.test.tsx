@@ -56,7 +56,7 @@ function makeProject(overrides: Partial<ProjetoResponse> = {}): ProjetoResponse 
     descricao: "Plataforma de vagas para estudantes.",
     demoUrl: DEMO_URL,
     repositorioUrl: REPO_URL,
-    competencias: [{ id: 1, nome: "React" }],
+    competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }],
     criadoEm: "2025-03-01T00:00:00Z",
     atualizadoEm: "2025-06-30T00:00:00Z",
     ...overrides,
@@ -505,7 +505,7 @@ describe("ProjetosSection edit form", () => {
   it("removes a selected technology and sends the remaining ids", async () => {
     const user = userEvent.setup();
     updateMock.mockResolvedValue(makeProject());
-    const props = await renderSection([makeProject({ competencias: [{ id: 1, nome: "React" }, { id: 2, nome: "TypeScript" }] })]);
+    const props = await renderSection([makeProject({ competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }, { id: 2, nome: "TypeScript", tipo: "TECNICA" }] })]);
     const dialog = await openEditDialog(user, PROJECT_NAME);
 
     await user.click(within(dialog).getByRole("combobox", { name: "Tecnologias" }));

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Box, Button, Card, Chip, Snackbar, Stack, Typography } from "@mui/material";
 import ArrowBackOutlined from "@mui/icons-material/ArrowBackOutlined";
+import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { Reveal } from "@/components/common/Reveal";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { brandWash } from "@/components/common/surfaceGradient";
@@ -105,16 +106,7 @@ export function AdminStudentDetailView({ id }: { id: string }) {
       </SurfaceCard>
       <SurfaceCard title="Competências">
         {p.competencias.length ? (
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            sx={{ flexWrap: "wrap" }}
-          >
-            {p.competencias.map((x) => (
-              <Chip key={x.id} label={x.nome} />
-            ))}
-          </Stack>
+          <CompetencyGroups competencias={p.competencias} size="medium" />
         ) : (
           <Empty />
         )}

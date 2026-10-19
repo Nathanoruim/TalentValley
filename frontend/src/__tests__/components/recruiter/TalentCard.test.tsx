@@ -75,7 +75,7 @@ describe("TalentCard", () => {
   });
 
   it("limits visible competencies and summarizes the remainder", () => {
-    const competencias = Array.from({ length: MAX_VISIBLE_COMPETENCIES + 2 }, (_, index) => ({ id: index + 1, nome: `Skill ${index + 1}` }));
+    const competencias = Array.from({ length: MAX_VISIBLE_COMPETENCIES + 2 }, (_, index) => ({ id: index + 1, nome: `Skill ${index + 1}`, tipo: "TECNICA" as const }));
     render(<TalentCard talent={makeTalentListItem({ competencias })} />);
 
     expect(screen.getByText(`Skill ${MAX_VISIBLE_COMPETENCIES}`)).toBeTruthy();
@@ -84,7 +84,7 @@ describe("TalentCard", () => {
   });
 
   it("does not show the remainder chip when competencies fit", () => {
-    const competencias = Array.from({ length: MAX_VISIBLE_COMPETENCIES }, (_, index) => ({ id: index + 1, nome: `Skill ${index + 1}` }));
+    const competencias = Array.from({ length: MAX_VISIBLE_COMPETENCIES }, (_, index) => ({ id: index + 1, nome: `Skill ${index + 1}`, tipo: "TECNICA" as const }));
     render(<TalentCard talent={makeTalentListItem({ competencias })} />);
 
     expect(screen.queryByText(/^\+\d+$/)).toBeNull();

@@ -41,9 +41,12 @@ export interface CurriculoResponse {
   nomeArquivo: string | null;
 }
 
+export type TipoCompetencia = "TECNICA" | "COMPORTAMENTAL";
+
 export interface CompetenciaResponse {
   id: number;
   nome: string;
+  tipo: TipoCompetencia;
 }
 
 export interface AlunoIdiomaResponse {
@@ -56,7 +59,7 @@ export interface CatalogoCompetenciaResponse {
   id: number;
   nome: string;
   categoria: string;
-  tipo: "TECNICA" | "COMPORTAMENTAL";
+  tipo: TipoCompetencia;
 }
 
 export interface CatalogoIdiomaResponse {

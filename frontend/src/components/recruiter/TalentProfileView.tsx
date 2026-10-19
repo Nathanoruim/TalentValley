@@ -17,6 +17,7 @@ import PersonSearchOutlined from "@mui/icons-material/PersonSearchOutlined";
 import SchoolOutlined from "@mui/icons-material/SchoolOutlined";
 import VerifiedOutlined from "@mui/icons-material/VerifiedOutlined";
 import { brandWash } from "@/components/common/surfaceGradient";
+import { CompetencyGroups } from "@/components/common/CompetencyGroups";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Reveal } from "@/components/common/Reveal";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
@@ -58,7 +59,7 @@ export function TalentProfileView({ slug }: { slug: string }) {
     {fileError && <Alert severity="error" onClose={() => setFileError(null)}>{fileError}</Alert>}
     <ProfileHeader profile={profile} onFileError={setFileError} onFavoriteChange={(favorite) => setProfile((current) => current ? { ...current, favorito: favorite } : current)} onUnavailable={() => setNotFound(true)} />
     <Section title="Sobre" index={1}><Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={profile.bio ? "text.primary" : "text.secondary"}>{profile.bio || "Este talento ainda não informou uma apresentação profissional."}</Typography></Section>
-    <Section title="Competências gerais" index={2}>{profile.competencias.length ? <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.competencias.map((item) => <Chip key={item.id} label={item.nome} />)}</Stack> : <Empty />}</Section>
+    <Section title="Competências gerais" index={2}>{profile.competencias.length ? <CompetencyGroups competencias={profile.competencias} size="medium" /> : <Empty />}</Section>
     <TrajectorySection formations={profile.formacoes} experiences={profile.experiencias} onFileError={setFileError} />
     <Section title="Projetos" index={4}>{profile.projetos.length ? <Stack spacing={2} divider={<Divider />}>
       {profile.projetos.map((project) => <Stack key={project.id} spacing={1}>

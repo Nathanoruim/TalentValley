@@ -223,7 +223,7 @@ public sealed class AlunoService(AppDbContext database, SignInManager<Applicatio
         new(aluno.Bio),
         new(aluno.Telefone, aluno.EmailProfissional, aluno.LinkedInUrl, aluno.GitHubUrl, aluno.PortfolioUrl),
         aluno.Competencias.OrderBy(x => x.Competencia.NomeBusca)
-            .Select(x => new CompetenciaResponse(x.CompetenciaId, x.Competencia.Nome)).ToList(),
+            .Select(x => new CompetenciaResponse(x.CompetenciaId, x.Competencia.Nome, x.Competencia.Categoria.Tipo())).ToList(),
         aluno.Idiomas.OrderBy(x => x.Idioma.NomeBusca)
             .Select(x => new AlunoIdiomaResponse(x.IdiomaId, x.Idioma.Nome, x.Nivel)).ToList(),
         aluno.Disponibilidades.OrderBy(x => x.Tipo).Select(x => x.Tipo).ToList(),

@@ -259,7 +259,7 @@ public sealed class TalentDiscoveryService(AppDbContext database)
         return new(x.UserId, x.Slug, x.User.NomeCompleto,
             x.FotoStorageKey is null ? null : PhotoUrl(x), x.Cidade, x.Uf, x.Bio,
             x.Competencias.OrderBy(c => c.Competencia.NomeBusca).ThenBy(c => c.CompetenciaId)
-                .Select(c => new TalentCompetencyResponse(c.CompetenciaId, c.Competencia.Nome)).ToList(),
+                .Select(c => new TalentCompetencyResponse(c.CompetenciaId, c.Competencia.Nome, c.Competencia.Categoria.Tipo())).ToList(),
             principal is null ? null : new(principal.Tipo, principal.Nome, principal.Instituicao, IsVerified(principal)),
             x.Disponibilidades.OrderBy(d => d.Tipo).Select(d => d.Tipo).ToList(),
             x.Modalidades.OrderBy(m => m.Modalidade).Select(m => m.Modalidade).ToList(),
@@ -273,7 +273,7 @@ public sealed class TalentDiscoveryService(AppDbContext database)
         new(x.Telefone, x.EmailProfissional, x.LinkedInUrl, x.GitHubUrl, x.PortfolioUrl),
         x.Bio,
         x.Competencias.OrderBy(c => c.Competencia.NomeBusca).ThenBy(c => c.CompetenciaId)
-            .Select(c => new TalentCompetencyResponse(c.CompetenciaId, c.Competencia.Nome)).ToList(),
+            .Select(c => new TalentCompetencyResponse(c.CompetenciaId, c.Competencia.Nome, c.Competencia.Categoria.Tipo())).ToList(),
         x.Idiomas.OrderBy(i => i.Idioma.NomeBusca).ThenBy(i => i.IdiomaId)
             .Select(i => new TalentLanguageResponse(i.IdiomaId, i.Idioma.Nome, i.Nivel)).ToList(),
         x.Disponibilidades.OrderBy(d => d.Tipo).Select(d => d.Tipo).ToList(),
@@ -290,7 +290,7 @@ public sealed class TalentDiscoveryService(AppDbContext database)
             .Select(p => new TalentProjectResponse(p.Id, p.Ordem, p.Nome, p.DataInicio,
                 p.DataFim, p.EmAndamento, p.Descricao, p.DemoUrl, p.RepositorioUrl,
                 p.Competencias.OrderBy(c => c.Competencia.NomeBusca).ThenBy(c => c.CompetenciaId)
-                    .Select(c => new TalentCompetencyResponse(c.CompetenciaId, c.Competencia.Nome)).ToList())).ToList(),
+                    .Select(c => new TalentCompetencyResponse(c.CompetenciaId, c.Competencia.Nome, c.Competencia.Categoria.Tipo())).ToList())).ToList(),
         new(x.CurriculoStorageKey is not null, x.CurriculoStorageKey is null ? null : CurriculumUrl(x)),
         favorite,
         x.AtualizadoEm);

@@ -60,7 +60,7 @@ function makeProject(overrides: Partial<TalentProject> = {}): TalentProject {
     descricao: "Plataforma de talentos.",
     demoUrl: "https://demo.example.com",
     repositorioUrl: "https://github.com/maria/tv",
-    tecnologias: [{ id: 2, nome: "TypeScript" }],
+    tecnologias: [{ id: 2, nome: "TypeScript", tipo: "TECNICA" }],
     ...overrides,
   };
 }
@@ -116,7 +116,7 @@ describe("TalentProfileView", () => {
   it("renders bio, skills, languages, availability and modalities", async () => {
     await renderProfile({
       bio: "Linha 1\nLinha 2",
-      competencias: [{ id: 1, nome: "React" }, { id: 2, nome: "SQL" }],
+      competencias: [{ id: 1, nome: "React", tipo: "TECNICA" }, { id: 2, nome: "SQL", tipo: "TECNICA" }],
       idiomas: [{ idiomaId: 1, nome: "Inglês", nivel: "AVANCADO" }],
       disponibilidades: ["ESTAGIO", "CLT"],
       modalidades: ["REMOTO", "HIBRIDO"],

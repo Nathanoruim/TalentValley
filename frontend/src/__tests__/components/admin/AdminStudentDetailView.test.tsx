@@ -150,8 +150,8 @@ describe("AdminStudentDetailView profile", () => {
     renderView(
       makeAdminStudentDetail({
         competencias: [
-          { id: 1, nome: "React" },
-          { id: 2, nome: "C#" },
+          { id: 1, nome: "React", tipo: "TECNICA" },
+          { id: 2, nome: "C#", tipo: "TECNICA" },
         ],
         disponibilidades: ["ESTAGIO", "CLT"],
         modalidades: ["HIBRIDO"],
