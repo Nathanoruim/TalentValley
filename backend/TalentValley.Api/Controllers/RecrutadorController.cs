@@ -14,9 +14,20 @@ public sealed class RecrutadorController(
     TalentComparisonService comparisons,
     RecruiterDashboardService dashboard,
     RecrutadorDeletionService deletion,
+    DataExportService dataExport,
     IHostEnvironment environment) : ControllerBase
 {
     private Guid CurrentUserId => Guid.Parse(User.FindFirst("sub")!.Value);
+
+    // LGPD data export: only the signed-in recruiter's own data (identity-derived, no ID accepted).
+    [HttpGet("me/exportacao")]
+    public async Task<ActionResult<ExportacaoRecrutadorResponse>> ExportMyData(CancellationToken cancellationToken)
+    {
+        var export = await dataExport.ExportRecrutadorAsync(CurrentUserId, cancellationToken);
+        return export is null
+            ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
+            : Ok(export);
+    }
 
     // LGPD self-deletion. Class-level policy requires an active recruiter; the CSRF middleware covers DELETE.
     [HttpDelete("me")]

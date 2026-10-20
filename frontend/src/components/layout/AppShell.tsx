@@ -21,12 +21,13 @@ import Close from "@mui/icons-material/Close";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
+import ShieldOutlined from "@mui/icons-material/ShieldOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useMyPhoto } from "@/hooks/useMyPhoto";
 import { BrandLink } from "@/components/brand/BrandLink";
 import { AuthMotionConfig } from "@/components/auth/motion/AuthMotionConfig";
 import { ROLE_LABELS } from "@/lib/labels";
-import { CHANGE_PASSWORD_HREF, NAV_BY_ROLE } from "./navigation";
+import { CHANGE_PASSWORD_HREF, NAV_BY_ROLE, PRIVACY_HREF } from "./navigation";
 import { SidebarPanel } from "./SidebarPanel";
 import { useSidebarCollapsed } from "./useSidebarCollapsed";
 
@@ -189,6 +190,19 @@ export function AppShell({ children }: AppShellProps) {
             </ListItemIcon>
             <ListItemText>Alterar senha</ListItemText>
           </MenuItem>
+          {user.role === "RECRUTADOR" && (
+            <MenuItem
+              component={Link}
+              href={PRIVACY_HREF}
+              selected={pathname === PRIVACY_HREF}
+              onClick={closeAccountMenu}
+            >
+              <ListItemIcon>
+                <ShieldOutlined fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Privacidade</ListItemText>
+            </MenuItem>
+          )}
           <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
             <ListItemIcon sx={{ color: "inherit" }}>
               <LogoutOutlined fontSize="small" />

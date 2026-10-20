@@ -46,6 +46,7 @@ vi.mock("@/components/profile/DisponibilidadeSection", () => ({ DisponibilidadeS
 vi.mock("@/components/profile/ProjetosSection", () => ({ ProjetosSection: stubs.createStub("Projetos") }));
 vi.mock("@/components/profile/CurriculoSection", () => ({ CurriculoSection: stubs.createStub("Curriculo") }));
 vi.mock("@/components/profile/ExclusaoSection", () => ({ ExclusaoSection: stubs.createStub("Exclusao") }));
+vi.mock("@/components/account/PrivacidadeSection", () => ({ PrivacidadeSection: stubs.createStub("Privacidade") }));
 
 type HookResult = ReturnType<typeof useStudentProfile>;
 
@@ -63,9 +64,10 @@ const SECTION_ORDER = [
   "Disponibilidade",
   "Projetos",
   "Curriculo",
+  "Privacidade",
   "Exclusao",
 ];
-const NOTIFYING_SECTIONS = SECTION_ORDER.filter((name) => name !== "Exclusao");
+const NOTIFYING_SECTIONS = SECTION_ORDER.filter((name) => name !== "Privacidade" && name !== "Exclusao");
 const LOAD_ERROR = "Não foi possível carregar seu perfil. Tente novamente.";
 const REFRESH_ERROR = "Não foi possível atualizar o perfil. Tente novamente.";
 const RETRY_LABEL = "Tentar novamente";

@@ -66,3 +66,8 @@ export function fetchTalentComparison(slugs: readonly [string, string]): Promise
   params.append("slugs", slugs[1]);
   return apiGet<TalentComparison>(`/api/recrutador/comparar?${params}`);
 }
+
+// LGPD export of the signed-in recruiter's own data (downloaded as a JSON file).
+export function fetchMyDataExport(): Promise<unknown> {
+  return apiGet<unknown>("/api/recrutador/me/exportacao");
+}
