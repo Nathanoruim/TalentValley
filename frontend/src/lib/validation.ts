@@ -415,10 +415,12 @@ export const validateCourseName = (value: string) =>
   validateMeaningfulText(value, 2, 200, "um curso");
 export const validateProjectName = (value: string) =>
   validateMeaningfulText(value, 2, 200, "um nome de projeto");
+const INVALID_TEXT = "Revise o texto informado.";
 export const validateFreeText = (value: string, max: number) =>
-  !controlPattern.test(value) && !containsEmoji(value) && value.length <= max
-    ? null
-    : "Revise o texto informado.";
+  !hasForbiddenText(value) && value.length <= max ? null : INVALID_TEXT;
+/** Same as validateFreeText, but paragraph breaks (Enter) are allowed, as in the backend. */
+export const validateMultilineText = (value: string, max: number) =>
+  !hasForbiddenText(value.replace(/[\r\n]/g, "")) && value.length <= max ? null : INVALID_TEXT;
 
 // Compatibility names used by existing profile forms. They intentionally allow
 // technology and business punctuation, unlike person-name validation.

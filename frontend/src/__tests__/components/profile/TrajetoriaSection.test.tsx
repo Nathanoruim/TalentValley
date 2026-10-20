@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderThemed as render } from "../recruiter/renderThemed";
+import { EMOJI, useExecCommandSpy } from "../registration/stepTestHelpers";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { TrajetoriaSection } from "@/components/profile/TrajetoriaSection";
@@ -220,6 +221,14 @@ describe("TrajetoriaSection loading and listing", () => {
     expect(within(lists[0]).getAllByRole("listitem")).toHaveLength(1);
     expect(within(lists[0]).getByText(FORMATION_NAME)).toBeTruthy();
     expect(within(lists[1]).getAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("keeps the line breaks of an experience description", async () => {
+    await renderSection([experienceItem(makeExperience({ descricao: "Primeira linha\nSegunda linha" }))]);
+
+    const description = screen.getByText(/Primeira linha/);
+    expect(description.textContent).toBe("Primeira linha\nSegunda linha");
+    expect(getComputedStyle(description).whiteSpace).toBe("pre-wrap");
   });
 
   it("shows the load error and no groups when the fetch fails", async () => {
@@ -559,6 +568,29 @@ describe("TrajetoriaSection certificate", () => {
 });
 
 describe("TrajetoriaSection formation form", () => {
+  const execCommand = useExecCommandSpy();
+
+  it.each(["Nome", "Instituição"])("drops emoji typed into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openFormationAdd(user);
+
+    fireEvent.change(field(label), { target: { value: "Texto" + EMOJI + "limpo" } });
+
+    expect(field(label).value).toBe("Textolimpo");
+  });
+
+  it.each(["Nome", "Instituição"])("removes emoji from text pasted into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openFormationAdd(user);
+
+    const accepted = fireEvent.paste(field(label), { clipboardData: { getData: () => "Texto" + EMOJI } });
+
+    expect(accepted).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith("insertText", false, "Texto");
+  });
+
   it("opens with sensible defaults and a disabled end date for an in-progress formation", async () => {
     const user = userEvent.setup();
     await renderSection([]);
@@ -878,6 +910,29 @@ describe("TrajetoriaSection formation form", () => {
 });
 
 describe("TrajetoriaSection experience form", () => {
+  const execCommand = useExecCommandSpy();
+
+  it.each(["Empresa", "Cargo", "Descrição"])("drops emoji typed into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openExperienceAdd(user);
+
+    fireEvent.change(field(label), { target: { value: "Texto" + EMOJI + "limpo" } });
+
+    expect(field(label).value).toBe("Textolimpo");
+  });
+
+  it.each(["Empresa", "Cargo", "Descrição"])("removes emoji from text pasted into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openExperienceAdd(user);
+
+    const accepted = fireEvent.paste(field(label), { clipboardData: { getData: () => "Texto" + EMOJI } });
+
+    expect(accepted).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith("insertText", false, "Texto");
+  });
+
   it("opens with professional type and an enabled end date", async () => {
     const user = userEvent.setup();
     await renderSection([]);
@@ -944,7 +999,7 @@ describe("TrajetoriaSection experience form", () => {
 
     await fillValidExperience(user);
     await choose(user, dialog, "Tipo", "Estágio");
-    await fill(user, "Descrição", "Suporte ao time \u{1F600}de dados");
+    fireEvent.change(field("Descrição"), { target: { value: "Suporte ao time " + EMOJI + "de dados" } });
     await user.click(within(dialog).getByRole("button", { name: SAVE }));
 
     await waitFor(() => expect(props.notify).toHaveBeenCalledWith("Experiência adicionada."));

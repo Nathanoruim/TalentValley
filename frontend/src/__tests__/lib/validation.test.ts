@@ -29,6 +29,7 @@ import {
   validateDateRange,
   validateEmail,
   validateFreeText,
+  validateMultilineText,
   validateHttpUrl,
   validateInstitutionName,
   validateInteger,
@@ -378,6 +379,16 @@ describe("search, text and free text", () => {
     expect(validateFreeText("ok", 5)).toBeNull();
     for (const invalid of ["longo demais", "a\u0007", "oi 😀"]) {
       expect(validateFreeText(invalid, 5)).toBe("Revise o texto informado.");
+    }
+    expect(validateFreeText("a\nb", 5)).toBe("Revise o texto informado.");
+  });
+
+  it("validates multiline text, which accepts paragraph breaks", () => {
+    expect(validateMultilineText("ok", 5)).toBeNull();
+    expect(validateMultilineText("a\nb", 5)).toBeNull();
+    expect(validateMultilineText("a\r\nb\n\nc", 9)).toBeNull();
+    for (const invalid of ["longo demais", "a\nlongo", "a\u0007", "a\n\u0007b", "oi\n😀"]) {
+      expect(validateMultilineText(invalid, 5)).toBe("Revise o texto informado.");
     }
   });
 });

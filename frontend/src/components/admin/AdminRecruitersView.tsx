@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatUpdatedAt } from "@/lib/format";
-import { maskPhoneChange, normalizePhone, normalizeWhitespace, sanitizeCityName, sanitizePersonName, validateBrazilianPhone, validateCityName, validateCompanyName, validateEmail, validateJobTitle, validatePersonName, validateSearchTerm, validateUF } from "@/lib/validation";
+import { maskPhoneChange, normalizePhone, normalizeWhitespace, sanitizeCityName, sanitizePersonName, stripEmoji, stripEmojiOnPaste, validateBrazilianPhone, validateCityName, validateCompanyName, validateEmail, validateJobTitle, validatePersonName, validateSearchTerm, validateUF } from "@/lib/validation";
 import { ActivationSnackbar, useActivationFeedback } from "@/components/admin/activationFeedback";
 import type { AdminRecruiter, AdminRecruiterCreated, AdminRecruiterDetail } from "@/types/admin";
 import { useLoad } from "@/components/admin/useLoad";
@@ -113,11 +113,11 @@ export function AdminRecruitersView() {
           fullWidth
           label="Buscar nome ou empresa"
           value={draft}
-          onChange={(e) => setDraft(e.target.value.slice(0, 150))}
+          onChange={(e) => setDraft(stripEmoji(e.target.value).slice(0, 150))}
           error={Boolean(searchError)}
           helperText={searchError}
           slotProps={{
-            htmlInput: { maxLength: 150 },
+            htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste },
             input: {
               startAdornment: (
                 <InputAdornment position="start">
@@ -272,13 +272,11 @@ const BLANK_RECRUITER = {
   uf: "",
 };
 
-const keepAsTyped = (value: string) => value;
-
 const RECRUITER_FIELDS: RecruiterField[] = [
   { key: "nomeCompleto", label: "Nome completo", type: "text", maxLength: 150, sanitize: sanitizePersonName, normalize: normalizeWhitespace },
-  { key: "email", label: "E-mail", type: "email", maxLength: 254, sanitize: keepAsTyped, normalize: normalizeWhitespace },
-  { key: "empresa", label: "Empresa", type: "text", maxLength: 150, sanitize: keepAsTyped, normalize: normalizeWhitespace },
-  { key: "cargo", label: "Cargo", type: "text", maxLength: 150, sanitize: keepAsTyped, normalize: normalizeWhitespace },
+  { key: "email", label: "E-mail", type: "email", maxLength: 254, sanitize: stripEmoji, normalize: normalizeWhitespace },
+  { key: "empresa", label: "Empresa", type: "text", maxLength: 150, sanitize: stripEmoji, normalize: normalizeWhitespace },
+  { key: "cargo", label: "Cargo", type: "text", maxLength: 150, sanitize: stripEmoji, normalize: normalizeWhitespace },
   { key: "telefone", label: "Telefone", type: "tel", sanitize: (_value, event) => maskPhoneChange(event), normalize: normalizePhone },
   { key: "cidade", label: "Cidade", type: "text", maxLength: 120, sanitize: sanitizeCityName, normalize: normalizeWhitespace },
   {
@@ -357,7 +355,7 @@ function RecruiterCreate({
                   const value = sanitize(e.target.value, e);
                   setData((p) => ({ ...p, [key]: value }));
                 }}
-                slotProps={{ htmlInput: { maxLength, inputMode: key === "telefone" ? "tel" : undefined } }}
+                slotProps={{ htmlInput: { maxLength, inputMode: key === "telefone" ? "tel" : undefined, onPaste: stripEmojiOnPaste } }}
               />
             ))}
           </Stack>

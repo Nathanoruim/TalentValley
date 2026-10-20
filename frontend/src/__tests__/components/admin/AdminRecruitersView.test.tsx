@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { EMOJI, useExecCommandSpy } from "../registration/stepTestHelpers";
 import { AdminRecruitersView } from "@/components/admin/AdminRecruitersView";
 import { adminApi } from "@/lib/admin";
 import { ApiError } from "@/lib/api";
@@ -187,6 +188,20 @@ describe("AdminRecruitersView list", () => {
 });
 
 describe("AdminRecruitersView search and filter", () => {
+  const execCommand = useExecCommandSpy();
+
+  it("drops emoji typed into the search and removes them from pasted text", async () => {
+    await renderList();
+    const search = screen.getByLabelText(SEARCH_LABEL) as HTMLInputElement;
+
+    fireEvent.change(search, { target: { value: "ab" + EMOJI + "cd" } });
+    expect(search.value).toBe("abcd");
+
+    const accepted = fireEvent.paste(search, { clipboardData: { getData: () => "ab" + EMOJI } });
+    expect(accepted).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith("insertText", false, "ab");
+  });
+
   it("searches by the trimmed term and returns to the first page", async () => {
     const user = userEvent.setup();
     recruitersMock.mockImplementation((page) =>
@@ -210,8 +225,7 @@ describe("AdminRecruitersView search and filter", () => {
     const callsBefore = recruitersMock.mock.calls.length;
     const field = screen.getByLabelText(SEARCH_LABEL);
 
-    await user.click(field);
-    await user.paste("😀");
+    fireEvent.change(field, { target: { value: "a\u0007" } });
     await user.click(screen.getByRole("button", { name: "Buscar" }));
 
     expect(await screen.findByText("Informe uma busca válida.")).toBeTruthy();
@@ -476,6 +490,30 @@ describe("AdminRecruitersView block and reactivate", () => {
 });
 
 describe("AdminRecruitersView creation", () => {
+  const execCommand = useExecCommandSpy();
+
+  it.each(["Nome completo", "E-mail", "Empresa", "Cargo", "Cidade"])("drops emoji typed into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderList();
+    const dialog = await openCreate(user);
+    const field = within(dialog).getByLabelText(new RegExp("^" + label)) as HTMLInputElement;
+
+    fireEvent.change(field, { target: { value: "ab" + EMOJI + "cd" } });
+
+    expect(field.value).toBe("abcd");
+  });
+
+  it.each(["Nome completo", "E-mail", "Empresa", "Cargo", "Cidade"])("removes emoji from text pasted into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderList();
+    const dialog = await openCreate(user);
+
+    const accepted = fireEvent.paste(within(dialog).getByLabelText(new RegExp("^" + label)), { clipboardData: { getData: () => "ab" + EMOJI } });
+
+    expect(accepted).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith("insertText", false, "ab");
+  });
+
   it("opens the form with empty fields and cancels", async () => {
     const user = userEvent.setup();
     await renderList();
