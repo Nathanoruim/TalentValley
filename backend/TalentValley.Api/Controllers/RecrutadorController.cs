@@ -15,6 +15,7 @@ public sealed class RecrutadorController(
     RecruiterDashboardService dashboard,
     RecrutadorDeletionService deletion,
     DataExportService dataExport,
+    NewsletterService newsletter,
     IHostEnvironment environment) : ControllerBase
 {
     private Guid CurrentUserId => Guid.Parse(User.FindFirst("sub")!.Value);
@@ -27,6 +28,27 @@ public sealed class RecrutadorController(
         return export is null
             ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
             : Ok(export);
+    }
+
+    // LGPD newsletter consent: reads/changes only the signed-in recruiter's own choice (identity-derived).
+    [HttpGet("me/newsletter")]
+    public async Task<ActionResult<NewsletterResponse>> GetNewsletter(CancellationToken cancellationToken)
+    {
+        var response = await newsletter.GetRecrutadorAsync(CurrentUserId, cancellationToken);
+        return response is null
+            ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
+            : Ok(response);
+    }
+
+    [HttpPut("me/newsletter")]
+    public async Task<ActionResult<NewsletterResponse>> UpdateNewsletter(
+        UpdateNewsletterRequest request, CancellationToken cancellationToken)
+    {
+        // [Required] on the DTO guarantees a value here; a missing one never reaches the action (400).
+        var response = await newsletter.SetRecrutadorAsync(CurrentUserId, request.Aceita!.Value, cancellationToken);
+        return response is null
+            ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
+            : Ok(response);
     }
 
     // LGPD self-deletion. Class-level policy requires an active recruiter; the CSRF middleware covers DELETE.
