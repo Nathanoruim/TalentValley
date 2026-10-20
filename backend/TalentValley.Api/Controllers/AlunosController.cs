@@ -12,7 +12,8 @@ namespace TalentValley.Api.Controllers;
 [Authorize(Policy = AppPolicies.RequireActiveStudent)]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class AlunosController(AlunoService alunoService, TrajetoriaService trajetoriaService,
-    StudentFileService files, DataExportService dataExport, IHostEnvironment environment) : ControllerBase
+    StudentFileService files, DataExportService dataExport, NewsletterService newsletter,
+    IHostEnvironment environment) : ControllerBase
 {
     private Guid CurrentUserId => Guid.Parse(User.FindFirst("sub")!.Value);
 
@@ -37,6 +38,27 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
         return export is null
             ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
             : Ok(export);
+    }
+
+    // LGPD newsletter consent: reads/changes only the signed-in student's own choice (identity-derived).
+    [HttpGet("me/newsletter")]
+    public async Task<ActionResult<NewsletterResponse>> GetNewsletter(CancellationToken cancellationToken)
+    {
+        var response = await newsletter.GetAlunoAsync(CurrentUserId, cancellationToken);
+        return response is null
+            ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
+            : Ok(response);
+    }
+
+    [HttpPut("me/newsletter")]
+    public async Task<ActionResult<NewsletterResponse>> UpdateNewsletter(
+        UpdateNewsletterRequest request, CancellationToken cancellationToken)
+    {
+        // [Required] on the DTO guarantees a value here; a missing one never reaches the action (400).
+        var response = await newsletter.SetAlunoAsync(CurrentUserId, request.Aceita!.Value, cancellationToken);
+        return response is null
+            ? Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.")
+            : Ok(response);
     }
 
     // LGPD self-deletion. Class-level policy requires an active student; the CSRF middleware covers DELETE.

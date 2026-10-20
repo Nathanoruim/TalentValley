@@ -25,6 +25,7 @@ builder.Services.AddScoped<SolicitacaoCadastroService>();
 builder.Services.AddScoped<SlugService>();
 builder.Services.AddScoped<AlunoService>();
 builder.Services.AddScoped<DataExportService>();
+builder.Services.AddScoped<NewsletterService>();
 builder.Services.AddScoped<StudentFileService>();
 builder.Services.AddSingleton<FileUploadValidator>();
 builder.Services.AddFileStorage(builder.Configuration, builder.Environment);
