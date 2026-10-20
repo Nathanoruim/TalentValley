@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { TalentFilters } from "@/components/recruiter/TalentFilters";
 import type { CatalogoCompetenciaResponse } from "@/types/student";
 import type { TalentSearchFilters } from "@/types/recruiter";
+import { useExecCommandSpy } from "../registration/stepTestHelpers";
 import { makeFilters } from "./recruiterDiscoveryFixtures";
 
 vi.setConfig({ testTimeout: 15_000 });
@@ -262,6 +263,8 @@ describe("TalentFilters", () => {
   });
 
   describe("applying", () => {
+    const execCommand = useExecCommandSpy();
+
     it("applies valid criteria once, without showing an error", async () => {
       const user = userEvent.setup({ delay: null });
       const setup = renderFilters({ nome: "Maria", cidade: "Rio Pomba", uf: "MG", formacaoNome: "Sistemas" });
@@ -286,16 +289,33 @@ describe("TalentFilters", () => {
     });
 
     it.each([
-      ["name", "Nome", EMOJI, INVALID_SEARCH],
-      ["city", "Cidade", EMOJI, INVALID_SEARCH],
-      ["formation name", "Nome da formação", EMOJI, INVALID_SEARCH],
-    ])("blocks a %s with emoji and explains why", async (_name, label, term, message) => {
+      ["name", "nome"],
+      ["city", "cidade"],
+      ["formation name", "formacaoNome"],
+    ] as const)("blocks a %s with emoji coming from the URL and explains why", async (_name, key) => {
       const user = userEvent.setup({ delay: null });
-      const setup = renderFilters();
-      fireEvent.change(screen.getByLabelText(label), { target: { value: term } });
+      const setup = renderFilters({ [key]: EMOJI });
       await user.click(screen.getByRole("button", { name: "Aplicar" }));
-      expect(screen.getByRole("alert").textContent).toBe(message);
+      expect(screen.getByRole("alert").textContent).toBe(INVALID_SEARCH);
       expect(setup.onApply).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["Nome", "nome"],
+      ["Cidade", "cidade"],
+      ["Nome da formação", "formacaoNome"],
+    ] as const)("drops emoji typed into %s", (label, key) => {
+      const setup = renderFilters();
+      fireEvent.change(screen.getByLabelText(label), { target: { value: `Ana${EMOJI}` } });
+      expect(lastChange(setup)[key]).toBe("Ana");
+      expect((screen.getByLabelText(label) as HTMLInputElement).value).toBe("Ana");
+    });
+
+    it.each(["Nome", "Cidade", "Nome da formação"])("removes emoji from text pasted into %s", (label) => {
+      renderFilters();
+      const accepted = fireEvent.paste(screen.getByLabelText(label), { clipboardData: { getData: () => `Ana${EMOJI}` } });
+      expect(accepted).toBe(false);
+      expect(execCommand).toHaveBeenCalledWith("insertText", false, "Ana");
     });
 
     it.each([

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderThemed as render } from "../recruiter/renderThemed";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,6 +6,7 @@ import { ProjetosSection } from "@/components/profile/ProjetosSection";
 import { ApiError } from "@/lib/api";
 import { createProjeto, deleteProjeto, fetchCompetenciaCatalog, fetchProjetos, updateProjeto } from "@/lib/student";
 import type { CatalogoCompetenciaResponse, ProjetoResponse } from "@/types/student";
+import { EMOJI, useExecCommandSpy } from "../registration/stepTestHelpers";
 import { deferred, makeSectionProps } from "./profileFixtures";
 
 vi.mock("@/lib/student");
@@ -155,6 +156,14 @@ describe("ProjetosSection loading and listing", () => {
     expect(screen.queryByText(EMPTY_MESSAGE)).toBeNull();
   });
 
+  it("keeps the line breaks of the description when listing a project", async () => {
+    await renderSection([makeProject({ descricao: "Primeira linha\nSegunda linha" })]);
+
+    const description = screen.getByText(/Primeira linha/);
+    expect(description.textContent).toBe("Primeira linha\nSegunda linha");
+    expect(getComputedStyle(description).whiteSpace).toBe("pre-wrap");
+  });
+
   it("disables the add action once two projects exist", async () => {
     await renderSection([makeProject(), second()]);
 
@@ -163,6 +172,8 @@ describe("ProjetosSection loading and listing", () => {
 });
 
 describe("ProjetosSection add form", () => {
+  const execCommand = useExecCommandSpy();
+
   it("suggests position 1 when no project exists yet", async () => {
     const user = userEvent.setup();
     await renderSection([]);
@@ -319,8 +330,58 @@ describe("ProjetosSection add form", () => {
     expect(field("Nome").getAttribute("aria-invalid")).toBe("false");
     expect(screen.getByText(`${NEW_NAME.length}/200`)).toBeTruthy();
 
-    await fill(user, "Descrição", "Texto \u{1F600}ok");
+    fireEvent.change(field("Descrição"), { target: { value: `Texto ${EMOJI}ok` } });
     expect(field("Descrição").value).toBe("Texto ok");
+    fireEvent.change(field("Nome"), { target: { value: `Meu ${EMOJI}App` } });
+    expect(field("Nome").value).toBe("Meu App");
+  });
+
+  it("accepts Enter in the description and sends the line breaks", async () => {
+    const user = userEvent.setup();
+    createMock.mockResolvedValue(makeProject());
+    const props = await renderSection([]);
+    const dialog = await openAddDialog(user);
+
+    await fillValidForm(user);
+    await user.type(field("Descrição"), "{Enter}Segunda linha");
+
+    expect(field("Descrição").getAttribute("aria-invalid")).toBe("false");
+    expect(within(dialog).queryByText("Revise o texto informado.")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: SAVE }));
+
+    await waitFor(() => expect(props.notify).toHaveBeenCalledWith("Projeto adicionado."));
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ descricao: `${NEW_DESCRIPTION}\nSegunda linha` }));
+  });
+
+  it("still flags control characters in the description", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openAddDialog(user);
+
+    fireEvent.change(field("Descrição"), { target: { value: "Texto\u0007" } });
+    expect(field("Descrição").getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText("Revise o texto informado.")).toBeTruthy();
+  });
+
+  it.each(["Link da demo", "Link do repositório"])("drops emoji typed into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openAddDialog(user);
+
+    fireEvent.change(field(label), { target: { value: "https://a" + EMOJI + ".com" } });
+
+    expect(field(label).value).toBe("https://a.com");
+  });
+
+  it.each(["Nome", "Descrição", "Link da demo", "Link do repositório"])("removes emoji from text pasted into %s", async (label) => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openAddDialog(user);
+
+    const accepted = fireEvent.paste(field(label), { clipboardData: { getData: () => `Texto${EMOJI}` } });
+
+    expect(accepted).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith("insertText", false, "Texto");
   });
 
   it("flags invalid links as the user types and falls back to the neutral hint when empty", async () => {

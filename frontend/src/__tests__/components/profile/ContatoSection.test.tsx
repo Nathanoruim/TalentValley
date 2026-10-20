@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContatoSection } from "@/components/profile/ContatoSection";
 import { updateContato } from "@/lib/student";
 import type { ContatoResponse } from "@/types/student";
+import { EMOJI, useExecCommandSpy } from "../registration/stepTestHelpers";
 import { makeProfile, makeSectionProps } from "./profileFixtures";
 
 vi.mock("@/lib/student", () => ({ updateContato: vi.fn() }));
@@ -180,6 +181,8 @@ describe("ContatoSection display", () => {
 });
 
 describe("ContatoSection form", () => {
+  const execCommand = useExecCommandSpy();
+
   beforeEach(() => {
     mockUpdate.mockReset();
     mockUpdate.mockResolvedValue(undefined);
@@ -196,6 +199,27 @@ describe("ContatoSection form", () => {
     expect(input(LINKEDIN_LABEL).value).toBe(LINKEDIN_URL);
     expect(input(GITHUB_LABEL).value).toBe("https://github.com/maria");
     expect(input(PORTFOLIO_LABEL).value).toBe("https://maria.dev");
+  });
+
+  it.each([EMAIL_LABEL, LINKEDIN_LABEL, GITHUB_LABEL, PORTFOLIO_LABEL])("drops emoji typed into %s", async (label) => {
+    const user = userEvent.setup();
+    renderEmpty();
+    await openForm(user);
+
+    fireEvent.change(input(label), { target: { value: "a" + EMOJI + "b" } });
+
+    expect(input(label).value).toBe("ab");
+  });
+
+  it.each([EMAIL_LABEL, LINKEDIN_LABEL, GITHUB_LABEL, PORTFOLIO_LABEL])("removes emoji from text pasted into %s", async (label) => {
+    const user = userEvent.setup();
+    renderEmpty();
+    await openForm(user);
+
+    const accepted = fireEvent.paste(input(label), { clipboardData: { getData: () => "ab" + EMOJI } });
+
+    expect(accepted).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith("insertText", false, "ab");
   });
 
   it("opens with empty fields when the profile has no contact", async () => {

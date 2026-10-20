@@ -25,7 +25,7 @@ import {
   STATUS_FORMACAO_LABELS,
   TIPO_FORMACAO_LABELS,
 } from "@/lib/labels";
-import { normalizeUF, validateSearchTerm, validateUF } from "@/lib/validation";
+import { normalizeUF, stripEmoji, stripEmojiOnPaste, validateSearchTerm, validateUF } from "@/lib/validation";
 import type { CatalogoCompetenciaResponse } from "@/types/student";
 import type { TalentSearchFilters } from "@/types/recruiter";
 
@@ -91,16 +91,16 @@ export function TalentFilters({
       <TextField
         label="Nome"
         value={value.nome}
-        onChange={(event) => set("nome", event.target.value.slice(0, 150))}
-        slotProps={{ htmlInput: { maxLength: 150 } }}
+        onChange={(event) => set("nome", stripEmoji(event.target.value).slice(0, 150))}
+        slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }}
         fullWidth
       />
       <Stack direction="row" spacing={1}>
         <TextField
           label="Cidade"
           value={value.cidade}
-          onChange={(event) => set("cidade", event.target.value.slice(0, 120))}
-          slotProps={{ htmlInput: { maxLength: 120 } }}
+          onChange={(event) => set("cidade", stripEmoji(event.target.value).slice(0, 120))}
+          slotProps={{ htmlInput: { maxLength: 120, onPaste: stripEmojiOnPaste } }}
           fullWidth
         />
         <TextField
@@ -173,9 +173,9 @@ export function TalentFilters({
         label="Nome da formação"
         value={value.formacaoNome}
         onChange={(event) =>
-          set("formacaoNome", event.target.value.slice(0, 200))
+          set("formacaoNome", stripEmoji(event.target.value).slice(0, 200))
         }
-        slotProps={{ htmlInput: { maxLength: 200 } }}
+        slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }}
         fullWidth
       />
       <CheckSection label="Tipo de formação">
