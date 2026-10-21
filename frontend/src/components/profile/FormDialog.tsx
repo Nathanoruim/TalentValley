@@ -23,6 +23,12 @@ interface FormDialogProps {
   maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
+/** TextField props that show `message` under the field only after the user tried to save. */
+export function fieldError(message: string | null, attempted: boolean) {
+  const shown = attempted ? message : null;
+  return { error: shown !== null, helperText: shown };
+}
+
 // Shared editing dialog for profile sections. It owns the MUI Dialog so the
 // title is announced to assistive technology, closing is blocked while a save is
 // pending, and duplicate submissions are ignored. Each section mounts it only
