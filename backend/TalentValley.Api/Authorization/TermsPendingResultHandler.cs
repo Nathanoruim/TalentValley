@@ -23,6 +23,7 @@ public sealed class TermsPendingResultHandler : IAuthorizationMiddlewareResultHa
         };
         problem.Extensions["code"] = ActiveAccountHandler.TermsPendingReason;
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return context.Response.WriteAsJsonAsync(problem, options: null, contentType: "application/problem+json");
+        return context.Response.WriteAsJsonAsync(problem, options: null, contentType: "application/problem+json",
+            cancellationToken: context.RequestAborted);
     }
 }
