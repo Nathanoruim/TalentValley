@@ -13,4 +13,6 @@ export interface ProblemDetails {
   instance?: string;
   traceId?: string;
   errors?: Record<string, string[]>;
+  /** Stable machine-readable reason, for example TERMOS_PENDENTES. */
+  code?: string;
 }

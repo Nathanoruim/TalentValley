@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -117,6 +118,7 @@ public static class SecurityRegistration
                 .RequireRole(AppRoles.Student, AppRoles.Recruiter).AddRequirements(new ActiveAccountRequirement()));
         });
         services.AddScoped<IAuthorizationHandler, ActiveAccountHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, TermsPendingResultHandler>();
         services.AddScoped<AccountAccess>();
         services.AddScoped<IdentityBootstrap>();
         services.AddScoped<JwtTokenService>();

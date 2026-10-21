@@ -31,6 +31,7 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
     }
 
     // LGPD data export: only the signed-in student's own data (identity-derived, no ID accepted).
+    [AllowPendingTerms]
     [HttpGet("me/exportacao")]
     public async Task<ActionResult<ExportacaoAlunoResponse>> ExportMyData(CancellationToken cancellationToken)
     {
@@ -41,6 +42,7 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
     }
 
     // LGPD newsletter consent: reads/changes only the signed-in student's own choice (identity-derived).
+    [AllowPendingTerms]
     [HttpGet("me/newsletter")]
     public async Task<ActionResult<NewsletterResponse>> GetNewsletter(CancellationToken cancellationToken)
     {
@@ -50,6 +52,7 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
             : Ok(response);
     }
 
+    [AllowPendingTerms]
     [HttpPut("me/newsletter")]
     public async Task<ActionResult<NewsletterResponse>> UpdateNewsletter(
         UpdateNewsletterRequest request, CancellationToken cancellationToken)
@@ -62,6 +65,7 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
     }
 
     // LGPD self-deletion. Class-level policy requires an active student; the CSRF middleware covers DELETE.
+    [AllowPendingTerms]
     [HttpDelete("me")]
     public async Task<IActionResult> DeleteMyProfile(DeleteOwnProfileRequest request, CancellationToken cancellationToken)
     {

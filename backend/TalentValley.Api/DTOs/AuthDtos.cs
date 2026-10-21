@@ -6,7 +6,7 @@ public sealed record LoginRequest(
     [Required, EmailAddress, SafeEmail, StringLength(256), NoEmoji, NoControlCharacters] string Email,
     [Required, StringLength(1024)] string Senha);
 
-public sealed record UsuarioAutenticadoResponse(Guid Id, string Nome, string Email, string Role);
+public sealed record UsuarioAutenticadoResponse(Guid Id, string Nome, string Email, string Role, bool TermosPendentes);
 public sealed record LoginResponse(UsuarioAutenticadoResponse Usuario, string DestinoInicial);
 public sealed record ForgotPasswordRequest([Required, EmailAddress, SafeEmail, StringLength(256), NoEmoji, NoControlCharacters] string Email);
 public sealed record ResetPasswordRequest(
