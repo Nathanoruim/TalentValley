@@ -6,10 +6,11 @@ import AddOutlined from "@mui/icons-material/AddOutlined";
 import BusinessCenterOutlined from "@mui/icons-material/BusinessCenterOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import { EmptyState } from "@/components/common/EmptyState";
+import { CityStateFields } from "@/components/registration/CityStateFields";
 import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatUpdatedAt } from "@/lib/format";
-import { maskPhoneChange, normalizePhone, normalizeWhitespace, sanitizeCityName, sanitizePersonName, stripEmoji, stripEmojiOnPaste, validateBrazilianPhone, validateCityName, validateCompanyName, validateEmail, validateJobTitle, validatePersonName, validateSearchTerm, validateUF } from "@/lib/validation";
+import { maskPhoneChange, normalizeEmailInput, normalizePhone, normalizeWhitespace, sanitizePersonName, stripEmoji, stripEmojiOnPaste, validateBrazilianPhone, validateCityName, validateCompanyName, validateEmail, validateJobTitle, validatePersonName, validateSearchTerm, validateUF } from "@/lib/validation";
 import { ActivationSnackbar, useActivationFeedback } from "@/components/admin/activationFeedback";
 import type { AdminRecruiter, AdminRecruiterCreated, AdminRecruiterDetail } from "@/types/admin";
 import { useLoad } from "@/components/admin/useLoad";
@@ -274,19 +275,10 @@ const BLANK_RECRUITER = {
 
 const RECRUITER_FIELDS: RecruiterField[] = [
   { key: "nomeCompleto", label: "Nome completo", type: "text", maxLength: 150, sanitize: sanitizePersonName, normalize: normalizeWhitespace },
-  { key: "email", label: "E-mail", type: "email", maxLength: 254, sanitize: stripEmoji, normalize: normalizeWhitespace },
+  { key: "email", label: "E-mail", type: "email", maxLength: 254, sanitize: stripEmoji, normalize: normalizeEmailInput },
   { key: "empresa", label: "Empresa", type: "text", maxLength: 150, sanitize: stripEmoji, normalize: normalizeWhitespace },
   { key: "cargo", label: "Cargo", type: "text", maxLength: 150, sanitize: stripEmoji, normalize: normalizeWhitespace },
   { key: "telefone", label: "Telefone", type: "tel", sanitize: (_value, event) => maskPhoneChange(event), normalize: normalizePhone },
-  { key: "cidade", label: "Cidade", type: "text", maxLength: 120, sanitize: sanitizeCityName, normalize: normalizeWhitespace },
-  {
-    key: "uf",
-    label: "UF",
-    type: "text",
-    maxLength: 2,
-    sanitize: (value) => value.toUpperCase().slice(0, 2),
-    normalize: (value) => value.trim().toUpperCase(),
-  },
 ];
 
 function RecruiterCreate({
@@ -311,8 +303,8 @@ function RecruiterCreate({
       validateCompanyName(data.empresa) ??
       validateJobTitle(data.cargo) ??
       validateBrazilianPhone(data.telefone) ??
-      validateCityName(data.cidade) ??
-      validateUF(data.uf);
+      validateUF(data.uf) ??
+      validateCityName(data.cidade);
     if (validation) {
       setError(validation);
       return;
@@ -320,9 +312,11 @@ function RecruiterCreate({
     setBusy(true);
     setError(null);
     try {
-      const created = await adminApi.createRecruiter(
-        Object.fromEntries(RECRUITER_FIELDS.map(({ key, normalize }) => [key, normalize(data[key])])),
-      );
+      const created = await adminApi.createRecruiter({
+        ...Object.fromEntries(RECRUITER_FIELDS.map(({ key, normalize }) => [key, normalize(data[key])])),
+        cidade: normalizeWhitespace(data.cidade),
+        uf: data.uf,
+      });
       setData(BLANK_RECRUITER);
       onSuccess(created);
     } catch (reason) {
@@ -339,7 +333,7 @@ function RecruiterCreate({
       maxWidth="sm"
       aria-labelledby={titleId}
     >
-      <Box component="form" onSubmit={submit}>
+      <Box component="form" noValidate onSubmit={submit}>
         <DialogTitle id={titleId}>Criar acesso de recrutador</DialogTitle>
         <DialogContent>
           <Stack spacing={1.5} sx={{ pt: 1 }}>
@@ -358,6 +352,14 @@ function RecruiterCreate({
                 slotProps={{ htmlInput: { maxLength, inputMode: key === "telefone" ? "tel" : undefined, onPaste: stripEmojiOnPaste } }}
               />
             ))}
+            <CityStateFields
+              idPrefix="recrutador"
+              cidade={data.cidade}
+              uf={data.uf}
+              onCidadeChange={(cidade) => setData((p) => ({ ...p, cidade }))}
+              onUfChange={(uf) => setData((p) => ({ ...p, uf }))}
+              disabled={busy}
+            />
           </Stack>
         </DialogContent>
         <DialogActions>

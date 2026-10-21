@@ -9,6 +9,7 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -25,7 +26,7 @@ import {
   STATUS_FORMACAO_LABELS,
   TIPO_FORMACAO_LABELS,
 } from "@/lib/labels";
-import { normalizeUF, stripEmoji, stripEmojiOnPaste, validateSearchTerm, validateUF } from "@/lib/validation";
+import { BRAZILIAN_UFS, stripEmoji, stripEmojiOnPaste, validateSearchTerm, validateUF } from "@/lib/validation";
 import type { CatalogoCompetenciaResponse } from "@/types/student";
 import type { TalentSearchFilters } from "@/types/recruiter";
 
@@ -104,14 +105,24 @@ export function TalentFilters({
           fullWidth
         />
         <TextField
+          select
           label="UF"
           value={value.uf}
-          onChange={(event) =>
-            set("uf", normalizeUF(event.target.value).replace(/[^A-Z]/g, ""))
-          }
-          slotProps={{ htmlInput: { maxLength: 2 } }}
-          sx={{ width: 92 }}
-        />
+          onChange={(event) => set("uf", event.target.value)}
+          slotProps={{
+            inputLabel: { shrink: true },
+            select: { displayEmpty: true },
+            htmlInput: { "aria-label": "UF" },
+          }}
+          sx={{ width: 120 }}
+        >
+          <MenuItem value="">Todas</MenuItem>
+          {BRAZILIAN_UFS.map((uf) => (
+            <MenuItem key={uf} value={uf}>
+              {uf}
+            </MenuItem>
+          ))}
+        </TextField>
       </Stack>
       <Box>
         <Stack spacing={2}>

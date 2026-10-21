@@ -593,6 +593,26 @@ describe("AdminStudentsView create access", () => {
     expect(screen.queryByRole("button", { name: "Reenviar ativação" })).toBeNull();
   });
 
+  it("sends the e-mail in lowercase and without surrounding spaces", async () => {
+    const user = await renderLoaded([ANA]);
+    createMock.mockResolvedValue(makeStudentCreated());
+
+    const dialog = await openCreate(user);
+    await fillCreate(user, dialog, "Maria Souza", " Maria@Example.COM ");
+    await submitCreate(user, dialog);
+
+    await closed();
+    expect(createMock).toHaveBeenCalledWith({ nomeCompleto: "Maria Souza", email: "maria@example.com" });
+  });
+
+  it("leaves the validation to the app instead of the browser", async () => {
+    const user = await renderLoaded([ANA]);
+
+    const dialog = await openCreate(user);
+
+    expect(dialog.querySelector("form")?.noValidate).toBe(true);
+  });
+
   it("clears the form after a successful creation", async () => {
     const user = await renderLoaded([ANA]);
     await createdAfter(user, makeStudentCreated());
