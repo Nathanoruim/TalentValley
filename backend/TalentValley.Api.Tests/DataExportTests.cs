@@ -117,7 +117,8 @@ public sealed class DataExportTests : IDisposable
     [Fact]
     public async Task Student_without_files_exports_files_as_absent()
     {
-        await factory.CreateUserAsync(StudentEmail);
+        // Never accepted any terms: the export is one of the endpoints that stays available in that state.
+        await factory.CreateUserAsync(StudentEmail, termsVersion: null);
         using var client = await LoggedInAsync(StudentEmail);
 
         var export = (await client.GetFromJsonAsync<ExportacaoAlunoResponse>(

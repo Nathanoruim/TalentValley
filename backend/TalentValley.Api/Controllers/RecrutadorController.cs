@@ -21,6 +21,7 @@ public sealed class RecrutadorController(
     private Guid CurrentUserId => Guid.Parse(User.FindFirst("sub")!.Value);
 
     // LGPD data export: only the signed-in recruiter's own data (identity-derived, no ID accepted).
+    [AllowPendingTerms]
     [HttpGet("me/exportacao")]
     public async Task<ActionResult<ExportacaoRecrutadorResponse>> ExportMyData(CancellationToken cancellationToken)
     {
@@ -31,6 +32,7 @@ public sealed class RecrutadorController(
     }
 
     // LGPD newsletter consent: reads/changes only the signed-in recruiter's own choice (identity-derived).
+    [AllowPendingTerms]
     [HttpGet("me/newsletter")]
     public async Task<ActionResult<NewsletterResponse>> GetNewsletter(CancellationToken cancellationToken)
     {
@@ -40,6 +42,7 @@ public sealed class RecrutadorController(
             : Ok(response);
     }
 
+    [AllowPendingTerms]
     [HttpPut("me/newsletter")]
     public async Task<ActionResult<NewsletterResponse>> UpdateNewsletter(
         UpdateNewsletterRequest request, CancellationToken cancellationToken)
@@ -52,6 +55,7 @@ public sealed class RecrutadorController(
     }
 
     // LGPD self-deletion. Class-level policy requires an active recruiter; the CSRF middleware covers DELETE.
+    [AllowPendingTerms]
     [HttpDelete("me")]
     public async Task<IActionResult> DeleteMyAccount(DeleteOwnProfileRequest request, CancellationToken cancellationToken)
     {
