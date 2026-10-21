@@ -18,7 +18,7 @@ const EDIT_DIALOG = "Editar projeto";
 const DELETE_DIALOG = "Excluir projeto?";
 const LOAD_ERROR = "Não foi possível carregar os projetos.";
 const EMPTY_MESSAGE = "Mostre até dois projetos que melhor representam seu trabalho.";
-const FORM_ERROR = "Revise nome, datas, descrição, tecnologias e links. Os links devem começar com http:// ou https://.";
+const NAME_ERROR = "Informe um nome de projeto válido.";
 const CATALOG_ERROR = "Não foi possível carregar o catálogo de tecnologias.";
 const LIMIT_ERROR = "Você já possui dois projetos em destaque.";
 const SAVE_ERROR_FALLBACK = "Não foi possível salvar o projeto.";
@@ -192,29 +192,37 @@ describe("ProjetosSection add form", () => {
     expect(within(dialog).getByRole("combobox", { name: "Posição" }).textContent).toBe("Destaque 2");
   });
 
-  it("rejects an empty submission with the review message and no API call", async () => {
+  it("shows an error under each required field after an empty submission, with no API call", async () => {
     const user = userEvent.setup();
     await renderSection([]);
     const dialog = await openAddDialog(user);
+    expect(within(dialog).queryByText(NAME_ERROR)).toBeNull();
 
     await user.click(within(dialog).getByRole("button", { name: SAVE }));
 
-    expect((await within(dialog).findByRole("alert")).textContent).toBe(FORM_ERROR);
+    expect(await within(dialog).findByText(NAME_ERROR)).toBeTruthy();
+    expect(within(dialog).getByText("Informe a data de início.")).toBeTruthy();
+    expect(within(dialog).getByText("Informe a descrição do projeto.")).toBeTruthy();
+    expect(within(dialog).queryByRole("alert")).toBeNull();
     expect(createMock).not.toHaveBeenCalled();
   });
 
-  const invalidSubmissions: [string, Record<string, string>][] = [
-    ["a project name that is too short", { Nome: "A" }],
-    ["an incomplete start date", { Início: "0101" }],
-    ["a start date that does not exist", { Início: "31022025" }],
-    ["an end date that does not exist", { Término: "31022025" }],
-    ["an end date before the start date", { Início: "10012025", Término: "09012025" }],
-    ["a missing description", { Descrição: "" }],
-    ["a non-http demo link", { "Link da demo": "ftp://servidor.example.com" }],
-    ["a malformed repository link", { "Link do repositório": "isso nao e url" }],
+  const lastYear = new Date().getFullYear() + 15;
+  const invalidSubmissions: [string, Record<string, string>, string][] = [
+    ["a project name that is too short", { Nome: "A" }, NAME_ERROR],
+    ["an incomplete start date", { Início: "0101" }, "Use o formato dd/mm/aaaa."],
+    ["a start date that does not exist", { Início: "31022025" }, "Informe uma data válida."],
+    ["a start date before 1900", { Início: "31121899" }, `Informe uma data entre 1900 e ${lastYear}.`],
+    ["a start date more than 15 years ahead", { Início: `0101${lastYear + 1}`, Término: "" }, `Informe uma data entre 1900 e ${lastYear}.`],
+    ["an end date that does not exist", { Término: "31022025" }, "Informe uma data válida."],
+    ["an end date more than 15 years ahead", { Término: `0101${lastYear + 1}` }, `Informe uma data entre 1900 e ${lastYear}.`],
+    ["an end date before the start date", { Início: "10012025", Término: "09012025" }, "A data final não pode ser anterior à data inicial."],
+    ["a missing description", { Descrição: "" }, "Informe a descrição do projeto."],
+    ["a non-http demo link", { "Link da demo": "ftp://servidor.example.com" }, URL_HELPER_INVALID],
+    ["a malformed repository link", { "Link do repositório": "isso nao e url" }, URL_HELPER_INVALID],
   ];
 
-  it.each(invalidSubmissions)("rejects %s", async (_label, overrides) => {
+  it.each(invalidSubmissions)("rejects %s", async (_label, overrides, message) => {
     const user = userEvent.setup();
     await renderSection([]);
     const dialog = await openAddDialog(user);
@@ -223,8 +231,24 @@ describe("ProjetosSection add form", () => {
     for (const [label, value] of Object.entries(values)) await fill(user, label, value);
     await user.click(within(dialog).getByRole("button", { name: SAVE }));
 
-    expect((await within(dialog).findByRole("alert")).textContent).toBe(FORM_ERROR);
+    expect(await within(dialog).findByText(message)).toBeTruthy();
+    expect(within(dialog).queryByRole("alert")).toBeNull();
     expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts the earliest and latest allowed dates", async () => {
+    const user = userEvent.setup();
+    createMock.mockResolvedValue(makeProject());
+    const props = await renderSection([]);
+    const dialog = await openAddDialog(user);
+
+    await fillValidForm(user);
+    await fill(user, "Início", "01011900");
+    await fill(user, "Término", `3112${lastYear}`);
+    await user.click(within(dialog).getByRole("button", { name: SAVE }));
+
+    await waitFor(() => expect(props.notify).toHaveBeenCalledWith("Projeto adicionado."));
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ dataInicio: "1900-01-01", dataFim: `${lastYear}-12-31` }));
   });
 
   it("creates the project with trimmed values, ISO dates and null optional links", async () => {

@@ -1,4 +1,5 @@
 import type { ChangeEvent, ClipboardEvent } from "react";
+import { parseDateInput } from "./format";
 
 export const BRAZILIAN_UFS = [
   "AC",
@@ -327,6 +328,20 @@ export function validateIntegerRange(
     : `Informe um valor entre ${min} e ${max}.`;
 }
 
+// Same limits as the backend (YearRange / DateYearRange): from 1900 up to 15 years ahead.
+const MIN_YEAR = 1900;
+const FUTURE_YEARS = 15;
+const maxYear = () => new Date().getFullYear() + FUTURE_YEARS;
+
+const MAX_WORKLOAD_HOURS = 10000;
+
+export function validateWorkloadHours(value: number | null): string | null {
+  if (value === null) return null;
+  return value >= 1 && value <= MAX_WORKLOAD_HOURS
+    ? null
+    : "Informe uma carga horária de 1 a 10.000 horas.";
+}
+
 export function validateYear(
   value: string | number | null | undefined,
 ): string | null {
@@ -334,10 +349,9 @@ export function validateYear(
   const candidate = String(value);
   if (!/^\d{4}$/.test(candidate)) return "Informe um ano com 4 dígitos.";
   const year = Number(candidate);
-  const currentYear = new Date().getFullYear();
-  return year >= 1900 && year <= currentYear + 15
+  return year >= MIN_YEAR && year <= maxYear()
     ? null
-    : `Informe um ano entre 1900 e ${currentYear + 15}.`;
+    : `Informe um ano entre ${MIN_YEAR} e ${maxYear()}.`;
 }
 
 export function validateIsoDate(
@@ -359,10 +373,38 @@ export function validateBrazilianDateInput(value: string): string | null {
   if (!value) return null;
   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return "Use o formato dd/mm/aaaa.";
   const [day, month, year] = value.split("/").map(Number);
-  return validateIsoDate(
+  const invalid = validateIsoDate(
     `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`,
     true,
   );
+  if (invalid) return invalid;
+  return year >= MIN_YEAR && year <= maxYear()
+    ? null
+    : `Informe uma data entre ${MIN_YEAR} e ${maxYear()}.`;
+}
+
+export interface DatePeriodErrors {
+  start: string | null;
+  end: string | null;
+}
+
+/**
+ * Validates a start and an optional end date typed as dd/mm/aaaa.
+ * `endRequiredMessage` makes the end date mandatory and is shown when it is empty.
+ */
+export function validateDatePeriod(
+  start: string,
+  end: string | null,
+  endRequiredMessage: string | null = null,
+): DatePeriodErrors {
+  const startError = start ? validateBrazilianDateInput(start) : "Informe a data de início.";
+  let endError: string | null = null;
+  if (end) endError = validateBrazilianDateInput(end);
+  else if (endRequiredMessage) endError = endRequiredMessage;
+  if (!startError && !endError && end) {
+    endError = validateDateRange(parseDateInput(start), parseDateInput(end));
+  }
+  return { start: startError, end: endError };
 }
 
 export function validateDateRange(

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, MenuItem, Stack, Switch, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, InputAdornment, MenuItem, Stack, Switch, TextField, Typography } from "@mui/material";
 import AddOutlined from "@mui/icons-material/AddOutlined";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
@@ -13,11 +13,11 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { ApiError, apiDownload, getApiErrorMessage } from "@/lib/api";
-import { formatDate, formatDateInput, parseDateInput } from "@/lib/format";
-import { sanitizeIntegerInput, stripEmoji, stripEmojiOnPaste, validateAlphanumericWithPunctuation, validateBrazilianDateInput } from "@/lib/validation";
+import { formatDate, formatDateInput, maskDateInput, parseDateInput } from "@/lib/format";
+import { sanitizeIntegerInput, stripEmoji, stripEmojiOnPaste, validateCompanyName, validateCourseName, validateDatePeriod, validateInstitutionName, validateJobTitle, validateWorkloadHours } from "@/lib/validation";
 import { createExperiencia, createFormacao, deleteExperiencia, deleteFormacao, deleteFormationCertificate, fetchTrajectory, updateExperiencia, updateFormacao, uploadFormationCertificate } from "@/lib/student";
 import type { ExperienciaRequest, ExperienciaResponse, FormacaoRequest, FormacaoResponse, StatusFormacao, TipoExperiencia, TipoFormacao, TrajetoriaItemResponse } from "@/types/student";
-import { FormDialog } from "./FormDialog";
+import { FormDialog, fieldError } from "./FormDialog";
 import type { SectionProps } from "./sectionProps";
 
 const formationLabels: Record<TipoFormacao, string> = { CURSO_LIVRE: "Curso livre", TECNICO: "Técnico", TECNOLOGO: "Tecnólogo", GRADUACAO: "Graduação", POS_GRADUACAO: "Pós-graduação" };
@@ -25,11 +25,6 @@ const formationStatus: Record<StatusFormacao, string> = { EM_ANDAMENTO: "Em anda
 const experienceLabels: Record<TipoExperiencia, string> = { PROFISSIONAL: "Profissional", ESTAGIO: "Estágio" };
 const formatTrajectoryDate = (date: string | null) => date ? formatDate(date) : "Atual";
 const sanitizeFormationText = (value: string) => stripEmoji(value).slice(0, 200);
-const maskFormationDate = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-  return digits.length > 4 ? `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
-    : digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
-};
 const CERTIFICADO_MAX_BYTES = 10 * 1024 * 1024;
 
 // Local PDF validation for formation certificates, mirroring the curriculum
@@ -149,27 +144,76 @@ function FormationCertificate({ formation, onChanged }: { formation: FormacaoRes
     </Stack>;
 }
 
-function FormationForm({ item, onClose, onSaved }: { item?: FormacaoResponse; onClose: () => void; onSaved: () => void }) { const [data, setData] = useState<FormacaoRequest>(item ? { tipo: item.tipo, nome: item.nome, instituicao: item.instituicao, dataInicio: formatDateInput(item.dataInicio), dataFim: formatDateInput(item.dataFim), cargaHoraria: item.cargaHoraria, status: item.status, principal: item.principal, ehRioPombaValley: item.ehRioPombaValley } : { tipo: "GRADUACAO", nome: "", instituicao: "", dataInicio: "", dataFim: null, cargaHoraria: null, status: "EM_ANDAMENTO", principal: false, ehRioPombaValley: false }); const [saving, setSaving] = useState(false); const [error, setError] = useState<string | null>(null); const set = <K extends keyof FormacaoRequest,>(key: K, value: FormacaoRequest[K]) => setData((p) => ({ ...p, [key]: value })); const setDate = (key: "dataInicio" | "dataFim", value: string) => { const masked = maskFormationDate(value); set(key, (masked || (key === "dataInicio" ? "" : null)) as FormacaoRequest[typeof key]); }; const submit = async (e: FormEvent) => { e.preventDefault(); const nome = data.nome.trim(); const instituicao = data.instituicao.trim(); const dataInicio = parseDateInput(data.dataInicio); const dataFim = data.dataFim ? parseDateInput(data.dataFim) : null; if (validateAlphanumericWithPunctuation(nome, 2, 200) || validateAlphanumericWithPunctuation(instituicao, 2, 200) || validateBrazilianDateInput(data.dataInicio) || !dataInicio || (data.dataFim && (!dataFim || validateBrazilianDateInput(data.dataFim))) || (dataFim && dataFim < dataInicio) || (data.cargaHoraria !== null && data.cargaHoraria <= 0) || (data.status === "CONCLUIDO" && !dataFim)) { setError("Revise nome, instituição, datas e carga horária."); return; } setSaving(true); setError(null); try { const request = { ...data, nome, instituicao, dataInicio, dataFim: data.status === "EM_ANDAMENTO" ? null : dataFim }; if (item) { await updateFormacao(item.id, request); } else { await createFormacao(request); } onSaved(); } catch (err) { setError(getApiErrorMessage(err, "Não foi possível salvar a formação.")); } finally { setSaving(false); } }; return <FormDialog title={item ? "Editar formação" : "Adicionar formação"} onClose={onClose} onSubmit={submit} saving={saving} error={error}><Stack spacing={2}><TextField select label="Tipo" value={data.tipo} onChange={(e) => set("tipo", e.target.value as TipoFormacao)}>{Object.entries(formationLabels).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField><TextField required label="Nome" value={data.nome} onChange={(e) => set("nome", sanitizeFormationText(e.target.value))} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} /><TextField required label="Instituição" value={data.instituicao} onChange={(e) => set("instituicao", sanitizeFormationText(e.target.value))} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} /><Stack direction={{ xs: "column", sm: "row" }} spacing={2}><TextField required type="text" label="Início" value={data.dataInicio} onChange={(e) => setDate("dataInicio", e.target.value)} placeholder="dd/mm/aaaa" slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} /><TextField disabled={data.status === "EM_ANDAMENTO"} type="text" label="Conclusão" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} /></Stack><TextField type="text" label="Carga horária" value={data.cargaHoraria ?? ""} onChange={(e) => { const digits = sanitizeIntegerInput(e.target.value); set("cargaHoraria", digits ? Number(digits) : null); }} slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*" } }} /><TextField select label="Status" value={data.status} onChange={(e) => { const status = e.target.value as StatusFormacao; setData((p) => ({ ...p, status, dataFim: status === "EM_ANDAMENTO" ? null : p.dataFim })); }}>{Object.entries(formationStatus).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField><FormControlLabel control={<Switch checked={data.principal} onChange={(e) => set("principal", e.target.checked)} />} label="Formação principal" /><FormControlLabel control={<Switch checked={data.ehRioPombaValley} onChange={(e) => set("ehRioPombaValley", e.target.checked)} />} label="Formação no Rio Pomba Valley" /></Stack></FormDialog>; }
+function FormationForm({ item, onClose, onSaved }: { item?: FormacaoResponse; onClose: () => void; onSaved: () => void }) {
+  const [data, setData] = useState<FormacaoRequest>(item ? { tipo: item.tipo, nome: item.nome, instituicao: item.instituicao, dataInicio: formatDateInput(item.dataInicio), dataFim: formatDateInput(item.dataFim), cargaHoraria: item.cargaHoraria, status: item.status, principal: item.principal, ehRioPombaValley: item.ehRioPombaValley } : { tipo: "GRADUACAO", nome: "", instituicao: "", dataInicio: "", dataFim: null, cargaHoraria: null, status: "EM_ANDAMENTO", principal: false, ehRioPombaValley: false });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
+  const set = <K extends keyof FormacaoRequest,>(key: K, value: FormacaoRequest[K]) => setData((p) => ({ ...p, [key]: value }));
+  const setDate = (key: "dataInicio" | "dataFim", value: string) => {
+    const masked = maskDateInput(value);
+    set(key, (masked || (key === "dataInicio" ? "" : null)) as FormacaoRequest[typeof key]);
+  };
+  const nome = data.nome.trim();
+  const instituicao = data.instituicao.trim();
+  const dates = validateDatePeriod(data.dataInicio, data.status === "EM_ANDAMENTO" ? null : data.dataFim, data.status === "CONCLUIDO" ? "Informe a data de conclusão." : null);
+  const errors = { nome: validateCourseName(nome), instituicao: validateInstitutionName(instituicao), dataInicio: dates.start, dataFim: dates.end, cargaHoraria: validateWorkloadHours(data.cargaHoraria) };
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setAttempted(true);
+    setError(null);
+    const dataInicio = parseDateInput(data.dataInicio);
+    const dataFim = data.dataFim ? parseDateInput(data.dataFim) : null;
+    if (Object.values(errors).some(Boolean) || !dataInicio) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const request = { ...data, nome, instituicao, dataInicio, dataFim: data.status === "EM_ANDAMENTO" ? null : dataFim };
+      if (item) await updateFormacao(item.id, request);
+      else await createFormacao(request);
+      onSaved();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Não foi possível salvar a formação."));
+    } finally {
+      setSaving(false);
+    }
+  };
+  return <FormDialog title={item ? "Editar formação" : "Adicionar formação"} onClose={onClose} onSubmit={submit} saving={saving} error={error}><Stack spacing={2}>
+    <TextField select label="Tipo" value={data.tipo} onChange={(e) => set("tipo", e.target.value as TipoFormacao)}>{Object.entries(formationLabels).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField>
+    <TextField required label="Nome" value={data.nome} onChange={(e) => set("nome", sanitizeFormationText(e.target.value))} {...fieldError(errors.nome, attempted)} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} />
+    <TextField required label="Instituição" value={data.instituicao} onChange={(e) => set("instituicao", sanitizeFormationText(e.target.value))} {...fieldError(errors.instituicao, attempted)} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} />
+    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+      <TextField required type="text" label="Início" value={data.dataInicio} onChange={(e) => setDate("dataInicio", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataInicio, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
+      <TextField disabled={data.status === "EM_ANDAMENTO"} type="text" label="Conclusão" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataFim, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
+    </Stack>
+    <TextField type="text" label="Carga horária" value={data.cargaHoraria ?? ""} onChange={(e) => { const digits = sanitizeIntegerInput(e.target.value, 5); set("cargaHoraria", digits ? Number(digits) : null); }} {...fieldError(errors.cargaHoraria, attempted)} slotProps={{ input: { endAdornment: <InputAdornment position="end">horas</InputAdornment> }, htmlInput: { inputMode: "numeric", pattern: "[0-9]*" } }} />
+    <TextField select label="Status" value={data.status} onChange={(e) => { const status = e.target.value as StatusFormacao; setData((p) => ({ ...p, status, dataFim: status === "EM_ANDAMENTO" ? null : p.dataFim })); }}>{Object.entries(formationStatus).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField>
+    <FormControlLabel control={<Switch checked={data.principal} onChange={(e) => set("principal", e.target.checked)} />} label="Formação principal" />
+    <FormControlLabel control={<Switch checked={data.ehRioPombaValley} onChange={(e) => set("ehRioPombaValley", e.target.checked)} />} label="Formação no Rio Pomba Valley" />
+  </Stack></FormDialog>;
+}
 
 function ExperienceForm({ item, onClose, onSaved }: { item?: ExperienciaResponse; onClose: () => void; onSaved: () => void }) {
   const [data, setData] = useState<ExperienciaRequest>(item ? { empresa: item.empresa, cargo: item.cargo, tipo: item.tipo, dataInicio: formatDateInput(item.dataInicio), dataFim: formatDateInput(item.dataFim), atual: item.atual, descricao: item.descricao } : { empresa: "", cargo: "", tipo: "PROFISSIONAL", dataInicio: "", dataFim: null, atual: false, descricao: null });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
   const set = <K extends keyof ExperienciaRequest,>(key: K, value: ExperienciaRequest[K]) => setData((p) => ({ ...p, [key]: value }));
   const setDate = (key: "dataInicio" | "dataFim", value: string) => {
-    const masked = maskFormationDate(value);
+    const masked = maskDateInput(value);
     set(key, (masked || (key === "dataInicio" ? "" : null)) as ExperienciaRequest[typeof key]);
   };
+  const empresa = data.empresa.trim();
+  const cargo = data.cargo.trim();
+  const dates = validateDatePeriod(data.dataInicio, data.atual ? null : data.dataFim, data.atual ? null : "Informe a data de término.");
+  const errors = { empresa: validateCompanyName(empresa), cargo: validateJobTitle(cargo), dataInicio: dates.start, dataFim: dates.end };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const empresa = data.empresa.trim();
-    const cargo = data.cargo.trim();
+    setAttempted(true);
+    setError(null);
     const dataInicio = parseDateInput(data.dataInicio);
     const dataFim = data.dataFim ? parseDateInput(data.dataFim) : null;
-    if (validateAlphanumericWithPunctuation(empresa, 2, 150) || validateAlphanumericWithPunctuation(cargo, 2, 150) || validateBrazilianDateInput(data.dataInicio) || !dataInicio || (!data.atual && data.dataFim && (!dataFim || validateBrazilianDateInput(data.dataFim))) || (dataFim && dataFim < dataInicio)) {
-      setError("Revise empresa, cargo e datas.");
-      return;
-    }
+    if (Object.values(errors).some(Boolean) || !dataInicio) return;
     setSaving(true);
     setError(null);
     try {
@@ -184,12 +228,12 @@ function ExperienceForm({ item, onClose, onSaved }: { item?: ExperienciaResponse
     }
   };
   return <FormDialog title={item ? "Editar experiência" : "Adicionar experiência"} onClose={onClose} onSubmit={submit} saving={saving} error={error}><Stack spacing={2}>
-    <TextField required label="Empresa" value={data.empresa} onChange={(e) => set("empresa", sanitizeFormationText(e.target.value))} slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }} />
-    <TextField required label="Cargo" value={data.cargo} onChange={(e) => set("cargo", sanitizeFormationText(e.target.value))} slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }} />
+    <TextField required label="Empresa" value={data.empresa} onChange={(e) => set("empresa", sanitizeFormationText(e.target.value))} {...fieldError(errors.empresa, attempted)} slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }} />
+    <TextField required label="Cargo" value={data.cargo} onChange={(e) => set("cargo", sanitizeFormationText(e.target.value))} {...fieldError(errors.cargo, attempted)} slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }} />
     <TextField select label="Tipo" value={data.tipo} onChange={(e) => set("tipo", e.target.value as TipoExperiencia)}>{Object.entries(experienceLabels).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField>
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-      <TextField required type="text" label="Início" value={data.dataInicio ?? ""} onChange={(e) => setDate("dataInicio", e.target.value)} placeholder="dd/mm/aaaa" slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
-      <TextField disabled={data.atual} type="text" label="Término" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
+      <TextField required type="text" label="Início" value={data.dataInicio ?? ""} onChange={(e) => setDate("dataInicio", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataInicio, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
+      <TextField disabled={data.atual} required={!data.atual} type="text" label="Término" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataFim, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
     </Stack>
     <FormControlLabel control={<Switch checked={data.atual} onChange={(e) => setData((p) => ({ ...p, atual: e.target.checked, dataFim: e.target.checked ? null : p.dataFim }))} />} label="Trabalho atual" />
     <TextField label="Descrição" multiline minRows={3} value={data.descricao ?? ""} onChange={(e) => set("descricao", stripEmoji(e.target.value).slice(0, 2000) || null)} slotProps={{ htmlInput: { maxLength: 2000, onPaste: stripEmojiOnPaste } }} />

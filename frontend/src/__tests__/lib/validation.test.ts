@@ -26,6 +26,7 @@ import {
   validateCityName,
   validateCompanyName,
   validateCourseName,
+  validateDatePeriod,
   validateDateRange,
   validateEmail,
   validateFreeText,
@@ -45,6 +46,7 @@ import {
   validateSearchTerm,
   validateTextLength,
   validateUF,
+  validateWorkloadHours,
   validateYear,
 } from "@/lib/validation";
 
@@ -445,6 +447,40 @@ describe("dates", () => {
     expect(validateBrazilianDateInput("29/02/2024")).toBeNull();
     expect(validateBrazilianDateInput("31/04/2024")).toBe(invalidDate);
     expect(validateBrazilianDateInput("1/1/2024")).toBe("Use o formato dd/mm/aaaa.");
+  });
+
+  it("limits Brazilian dates to 1900 and fifteen years ahead", () => {
+    const lastYear = new Date().getFullYear() + 15;
+    const rangeError = `Informe uma data entre 1900 e ${lastYear}.`;
+    expect(validateBrazilianDateInput("01/01/1900")).toBeNull();
+    expect(validateBrazilianDateInput("31/12/1899")).toBe(rangeError);
+    expect(validateBrazilianDateInput(`31/12/${lastYear}`)).toBeNull();
+    expect(validateBrazilianDateInput(`01/01/${lastYear + 1}`)).toBe(rangeError);
+    expect(validateBrazilianDateInput("31/04/1850")).toBe(invalidDate);
+  });
+
+  it("validates a start and an end date together", () => {
+    expect(validateDatePeriod("01/02/2023", "31/01/2024")).toEqual({ start: null, end: null });
+    expect(validateDatePeriod("01/02/2023", null)).toEqual({ start: null, end: null });
+    expect(validateDatePeriod("01/02/2023", "01/02/2023")).toEqual({ start: null, end: null });
+    expect(validateDatePeriod("", null).start).toBe("Informe a data de início.");
+    expect(validateDatePeriod("0102", null).start).toBe("Use o formato dd/mm/aaaa.");
+    expect(validateDatePeriod("01/02/2023", "31/02/2024").end).toBe(invalidDate);
+    expect(validateDatePeriod("01/02/2023", "31/01/2023").end).toBe("A data final não pode ser anterior à data inicial.");
+    expect(validateDatePeriod("01/02/2023", "", "Informe o fim.").end).toBe("Informe o fim.");
+    expect(validateDatePeriod("01/02/2023", null, "Informe o fim.").end).toBe("Informe o fim.");
+    expect(validateDatePeriod("01/02/2023", "31/01/2024", "Informe o fim.").end).toBeNull();
+    // The order is only compared when both dates are valid on their own.
+    expect(validateDatePeriod("31/02/2023", "01/01/2020")).toEqual({ start: invalidDate, end: null });
+  });
+
+  it("limits the workload to 1 through 10,000 hours", () => {
+    const workloadError = "Informe uma carga horária de 1 a 10.000 horas.";
+    expect(validateWorkloadHours(null)).toBeNull();
+    expect(validateWorkloadHours(1)).toBeNull();
+    expect(validateWorkloadHours(10000)).toBeNull();
+    expect(validateWorkloadHours(0)).toBe(workloadError);
+    expect(validateWorkloadHours(10001)).toBe(workloadError);
   });
 
   it("validates date ranges", () => {
