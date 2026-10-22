@@ -99,6 +99,16 @@ public static class SecurityRegistration
                             context.Fail("Session is no longer valid.");
                             return;
                         }
+                        // Demonstration accounts have no password: they authenticate only through an administrator's
+                        // switch, and that session lives only while the administrator is still valid.
+                        var access = context.HttpContext.RequestServices.GetRequiredService<AccountAccess>();
+                        var inDemoSession = context.Principal.FindFirst(JwtTokenService.DemoAdminClaim) is not null;
+                        if (user.EhDemo != inDemoSession ||
+                            (inDemoSession && await access.GetDemoSessionAdminAsync(user, context.Principal) is null))
+                        {
+                            context.Fail("Session is no longer valid.");
+                            return;
+                        }
                         // Antiforgery binds tokens to the stable subject, never to a display name.
                         ((ClaimsIdentity)context.Principal.Identity!).AddClaim(new Claim(ClaimTypes.NameIdentifier, subject));
                     }

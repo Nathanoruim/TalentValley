@@ -26,7 +26,8 @@ public sealed class AlunoService(AppDbContext database, SignInManager<Applicatio
     public async Task<AlunoSelfDeleteResult> DeleteOwnAsync(Guid userId, string password, CancellationToken cancellationToken)
     {
         var user = await signIn.UserManager.FindByIdAsync(userId.ToString());
-        if (user is null) return AlunoSelfDeleteResult.NotFound;
+        // A demonstration account can only be removed by restoring the demonstration.
+        if (user is null || user.EhDemo) return AlunoSelfDeleteResult.NotFound;
         var check = await signIn.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (check.IsLockedOut) return AlunoSelfDeleteResult.LockedOut;
         if (!check.Succeeded) return AlunoSelfDeleteResult.InvalidPassword;
