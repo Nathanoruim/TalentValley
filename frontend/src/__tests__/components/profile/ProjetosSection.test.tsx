@@ -23,8 +23,9 @@ const CATALOG_ERROR = "Não foi possível carregar o catálogo de tecnologias.";
 const LIMIT_ERROR = "Você já possui dois projetos em destaque.";
 const SAVE_ERROR_FALLBACK = "Não foi possível salvar o projeto.";
 const DELETE_ERROR_FALLBACK = "Não foi possível remover o projeto.";
-const URL_HELPER_INVALID = "Informe um link completo começando com http:// ou https://.";
-const URL_HELPER_DEFAULT = "Opcional. Use um endereço HTTP ou HTTPS.";
+const URL_SCHEME_ERROR = "Informe uma URL começando com http:// ou https://.";
+const URL_INVALID = "Informe uma URL válida.";
+const URL_HELPER_DEFAULT = "Opcional. Pode digitar sem https://.";
 const PROJECT_NAME = "Portal de Vagas";
 const SECOND_NAME = "Painel de Métricas";
 const NEW_NAME = "Meu App";
@@ -218,8 +219,8 @@ describe("ProjetosSection add form", () => {
     ["an end date more than 15 years ahead", { Término: `0101${lastYear + 1}` }, `Informe uma data entre 1900 e ${lastYear}.`],
     ["an end date before the start date", { Início: "10012025", Término: "09012025" }, "A data final não pode ser anterior à data inicial."],
     ["a missing description", { Descrição: "" }, "Informe a descrição do projeto."],
-    ["a non-http demo link", { "Link da demo": "ftp://servidor.example.com" }, URL_HELPER_INVALID],
-    ["a malformed repository link", { "Link do repositório": "isso nao e url" }, URL_HELPER_INVALID],
+    ["a non-http demo link", { "Link da demo": "ftp://servidor.example.com" }, URL_SCHEME_ERROR],
+    ["a malformed repository link", { "Link do repositório": "isso nao e url" }, URL_INVALID],
   ];
 
   it.each(invalidSubmissions)("rejects %s", async (_label, overrides, message) => {
@@ -417,12 +418,14 @@ describe("ProjetosSection add form", () => {
 
     await fill(user, "Link da demo", "ftp://x.example.com");
     await fill(user, "Link do repositório", "nao-e-url");
-    expect(screen.getAllByText(URL_HELPER_INVALID)).toHaveLength(2);
+    expect(screen.getByText(URL_SCHEME_ERROR)).toBeTruthy();
+    expect(screen.getByText(URL_INVALID)).toBeTruthy();
     expect(field("Link da demo").getAttribute("aria-invalid")).toBe("true");
 
     await fill(user, "Link da demo", "");
     expect(field("Link da demo").getAttribute("aria-invalid")).toBe("false");
-    expect(screen.getAllByText(URL_HELPER_INVALID)).toHaveLength(1);
+    expect(screen.queryByText(URL_SCHEME_ERROR)).toBeNull();
+    expect(screen.getByText(URL_INVALID)).toBeTruthy();
   });
 
   it("maps a 409 conflict to the two-project limit message and keeps the dialog open", async () => {
@@ -659,5 +662,31 @@ describe("ProjetosSection delete", () => {
     await user.click(within(dialog).getByRole("button", { name: "Excluir" }));
 
     expect((await within(dialog).findByRole("alert")).textContent).toBe(DELETE_ERROR_FALLBACK);
+  });
+});
+
+describe("ProjetosSection links and focus", () => {
+  it("completes the links with https:// when leaving the field", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openAddDialog(user);
+
+    await fill(user, "Link da demo", "exemplo.com/demo");
+    fireEvent.blur(field("Link da demo"));
+    await fill(user, "Link do repositório", "github.com/maria/projeto");
+    fireEvent.blur(field("Link do repositório"));
+
+    expect(field("Link da demo").value).toBe("https://exemplo.com/demo");
+    expect(field("Link do repositório").value).toBe("https://github.com/maria/projeto");
+  });
+
+  it("moves focus to the first invalid field when saving", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    const dialog = await openAddDialog(user);
+
+    await user.click(within(dialog).getByRole("button", { name: SAVE }));
+
+    await waitFor(() => expect(document.activeElement).toBe(field("Nome")));
   });
 });

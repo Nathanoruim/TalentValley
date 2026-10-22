@@ -612,7 +612,7 @@ describe("TrajetoriaSection formation form", () => {
   const formationBase = { Nome: FORMATION_NAME, Instituição: FORMATION_INSTITUTION, Início: "01032020" };
   const invalidFormations: [string, (user: User, dialog: HTMLElement) => Promise<void>, string][] = [
     ["a name that is too short", async (user) => fill(user, "Nome", "A"), "Informe um curso válido."],
-    ["an institution that is too short", async (user) => fill(user, "Instituição", "B"), "Informe uma instituição válido."],
+    ["an institution that is too short", async (user) => fill(user, "Instituição", "B"), "Informe uma instituição válida."],
     ["a missing start date", async (user) => fill(user, "Início", ""), START_REQUIRED_ERROR],
     ["a start date that does not exist", async (user) => fill(user, "Início", "31022020"), DATE_INVALID_ERROR],
     ["an incomplete start date", async (user) => fill(user, "Início", "0103"), DATE_FORMAT_ERROR],
@@ -1034,7 +1034,7 @@ describe("TrajetoriaSection experience form", () => {
 
   const experienceBase = { Empresa: COMPANY, Cargo: ROLE, Início: "01022023", Término: "31012024" };
   const invalidExperiences: [string, Record<string, string>, string][] = [
-    ["a company name that is too short", { Empresa: "A" }, "Informe uma empresa válido."],
+    ["a company name that is too short", { Empresa: "A" }, "Informe uma empresa válida."],
     ["a job title that is too short", { Cargo: "B" }, "Informe um cargo válido."],
     ["a missing start date", { Início: "" }, START_REQUIRED_ERROR],
     ["a start date that does not exist", { Início: "31022023" }, DATE_INVALID_ERROR],
@@ -1414,5 +1414,49 @@ describe("TrajetoriaSection delete", () => {
     await user.click(within(dialog).getByRole("button", { name: "Excluir" }));
 
     expect((await within(dialog).findByRole("alert")).textContent).toBe("Não foi possível remover o item.");
+  });
+});
+
+describe("TrajetoriaSection accessibility and counters", () => {
+  it("moves focus to the first invalid field when saving a formation", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    const dialog = await openFormationAdd(user);
+
+    await user.click(within(dialog).getByRole("button", { name: SAVE }));
+
+    await waitFor(() => expect(document.activeElement).toBe(field("Nome")));
+  });
+
+  it("moves focus to the first invalid field when saving an experience", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    const dialog = await openExperienceAdd(user);
+
+    await user.click(within(dialog).getByRole("button", { name: SAVE }));
+
+    await waitFor(() => expect(document.activeElement).toBe(field("Empresa")));
+  });
+
+  it("marks the formation end date as required only for a concluded formation", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    const dialog = await openFormationAdd(user);
+
+    expect(field("Conclusão").required).toBe(false);
+    await choose(user, dialog, "Status", "Concluído");
+
+    expect(field("Conclusão").required).toBe(true);
+  });
+
+  it("counts the characters of the experience description", async () => {
+    const user = userEvent.setup();
+    await renderSection([]);
+    await openExperienceAdd(user);
+
+    expect(screen.getByText("0/2000")).toBeTruthy();
+    await fill(user, "Descrição", "Atuei com React");
+
+    expect(screen.getByText("15/2000")).toBeTruthy();
   });
 });

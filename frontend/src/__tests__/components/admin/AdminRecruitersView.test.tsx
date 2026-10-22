@@ -592,7 +592,7 @@ describe("AdminRecruitersView creation", () => {
   it.each([
     ["Nome completo", "Al", "Informe um nome válido, sem números."],
     ["E-mail", "paulo@valetech", "Informe um e-mail válido."],
-    ["Empresa", "V", "Informe uma empresa válido."],
+    ["Empresa", "V", "Informe uma empresa válida."],
     ["Cargo", "A", "Informe um cargo válido."],
     ["Telefone", "123", "Informe um telefone brasileiro válido."],
   ])("rejects the invalid %s field without calling the API", async (label, value, message) => {

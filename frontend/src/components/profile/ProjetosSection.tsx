@@ -12,7 +12,7 @@ import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { ApiError, getApiErrorMessage } from "@/lib/api";
 import { formatDateInput, maskDateInput, parseDateInput } from "@/lib/format";
-import { stripEmoji, stripEmojiOnPaste, validateDatePeriod, validateHttpUrl, validateMultilineText, validateProjectName } from "@/lib/validation";
+import { stripEmoji, stripEmojiOnPaste, validateDatePeriod, validateMultilineText, validateProjectName, validateTypedLink, withHttpsScheme, OPTIONAL_LINK_HINT } from "@/lib/validation";
 import { createProjeto, deleteProjeto, fetchCompetenciaCatalog, fetchProjetos, updateProjeto } from "@/lib/student";
 import type { CatalogoCompetenciaResponse, ProjetoRequest, ProjetoResponse } from "@/types/student";
 import { FormDialog, fieldError } from "./FormDialog";
@@ -43,16 +43,16 @@ function ProjectForm({ project, occupied, onClose, onSaved }: { project?: Projet
   const setDate = (key: "dataInicio" | "dataFim", value: string) => { const masked = maskDateInput(value); set(key, (masked || (key === "dataInicio" ? "" : null)) as ProjetoRequest[typeof key]); };
   const nome = data.nome.trim();
   const descricao = data.descricao.trim();
-  const demoUrl = data.demoUrl?.trim() || null;
-  const repositorioUrl = data.repositorioUrl?.trim() || null;
+  const demoUrl = withHttpsScheme(data.demoUrl ?? "") || null;
+  const repositorioUrl = withHttpsScheme(data.repositorioUrl ?? "") || null;
   const dates = validateDatePeriod(data.dataInicio, data.emAndamento ? null : data.dataFim);
   const errors = {
     nome: validateProjectName(nome),
     dataInicio: dates.start,
     dataFim: dates.end,
     descricao: descricao ? validateMultilineText(descricao, 1000) : "Informe a descrição do projeto.",
-    demoUrl: validateHttpUrl(demoUrl),
-    repositorioUrl: validateHttpUrl(repositorioUrl),
+    demoUrl: validateTypedLink(demoUrl),
+    repositorioUrl: validateTypedLink(repositorioUrl),
   };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -84,7 +84,7 @@ function ProjectForm({ project, occupied, onClose, onSaved }: { project?: Projet
   const selected = catalog.filter((item) => data.competenciaIds.includes(item.id));
   const demoUrlInvalid = Boolean(errors.demoUrl);
   const repositorioUrlInvalid = Boolean(errors.repositorioUrl);
-  return <FormDialog title={project ? "Editar projeto" : "Adicionar projeto"} onClose={onClose} onSubmit={submit} saving={saving} error={error}><Stack spacing={2}>
+  return <FormDialog title={project ? "Editar projeto" : "Adicionar projeto"} onClose={onClose} onSubmit={submit} saving={saving} error={error} focusFirstInvalid><Stack spacing={2}>
     {catalogError && <Alert severity="warning">Não foi possível carregar o catálogo de tecnologias.</Alert>}
     <TextField required label="Nome" value={data.nome} onChange={(e) => set("nome", stripEmoji(e.target.value).slice(0, 200))} error={Boolean(nameError)} helperText={nameError ?? `${data.nome.length}/200`} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} />
     <TextField select label="Posição" value={data.ordem} onChange={(e) => set("ordem", Number(e.target.value))}><MenuItem value={1}>Destaque 1</MenuItem><MenuItem value={2}>Destaque 2</MenuItem></TextField>
@@ -94,8 +94,8 @@ function ProjectForm({ project, occupied, onClose, onSaved }: { project?: Projet
     </Stack>
     <FormControlLabel control={<Switch checked={data.emAndamento} onChange={(e) => setData((p) => ({ ...p, emAndamento: e.target.checked, dataFim: e.target.checked ? null : p.dataFim }))} />} label="Projeto em andamento" />
     <TextField required multiline minRows={4} label="Descrição" value={data.descricao} onChange={(e) => set("descricao", stripEmoji(e.target.value).slice(0, 1000))} error={Boolean(descriptionError)} helperText={descriptionError ?? `${data.descricao.length}/1000`} slotProps={{ htmlInput: { maxLength: 1000, onPaste: stripEmojiOnPaste } }} />
-    <TextField label="Link da demo" type="url" value={data.demoUrl ?? ""} onChange={(e) => set("demoUrl", stripEmoji(e.target.value).slice(0, 2048) || null)} error={demoUrlInvalid} helperText={demoUrlInvalid ? "Informe um link completo começando com http:// ou https://." : "Opcional. Use um endereço HTTP ou HTTPS."} slotProps={{ htmlInput: { maxLength: 2048, inputMode: "url", onPaste: stripEmojiOnPaste } }} />
-    <TextField label="Link do repositório" type="url" value={data.repositorioUrl ?? ""} onChange={(e) => set("repositorioUrl", stripEmoji(e.target.value).slice(0, 2048) || null)} error={repositorioUrlInvalid} helperText={repositorioUrlInvalid ? "Informe um link completo começando com http:// ou https://." : "Opcional. Use um endereço HTTP ou HTTPS."} slotProps={{ htmlInput: { maxLength: 2048, inputMode: "url", onPaste: stripEmojiOnPaste } }} />
+    <TextField label="Link da demo" type="url" value={data.demoUrl ?? ""} onChange={(e) => set("demoUrl", stripEmoji(e.target.value).slice(0, 2048) || null)} onBlur={() => set("demoUrl", withHttpsScheme(data.demoUrl ?? "") || null)} error={demoUrlInvalid} helperText={errors.demoUrl ?? OPTIONAL_LINK_HINT} slotProps={{ htmlInput: { maxLength: 2048, inputMode: "url", onPaste: stripEmojiOnPaste } }} />
+    <TextField label="Link do repositório" type="url" value={data.repositorioUrl ?? ""} onChange={(e) => set("repositorioUrl", stripEmoji(e.target.value).slice(0, 2048) || null)} onBlur={() => set("repositorioUrl", withHttpsScheme(data.repositorioUrl ?? "") || null)} error={repositorioUrlInvalid} helperText={errors.repositorioUrl ?? OPTIONAL_LINK_HINT} slotProps={{ htmlInput: { maxLength: 2048, inputMode: "url", onPaste: stripEmojiOnPaste } }} />
     <Autocomplete multiple options={catalog} groupBy={(item) => item.categoria} value={selected} onChange={(_, value) => set("competenciaIds", value.map((item) => item.id))} getOptionLabel={(item) => item.nome} isOptionEqualToValue={(a, b) => a.id === b.id} renderInput={(params) => <TextField {...params} label="Tecnologias" placeholder="Buscar tecnologia" />} />
   </Stack></FormDialog>;
 }

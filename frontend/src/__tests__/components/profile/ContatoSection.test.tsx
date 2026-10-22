@@ -25,7 +25,7 @@ const EMPTY_MESSAGE = "Informe como recrutadores podem falar com você.";
 const PHONE_ERROR = "Informe um telefone brasileiro válido.";
 const PHONE_HINT = "Opcional. Informe um telefone brasileiro.";
 const EMAIL_HELPER_ERROR = "Informe um e-mail válido.";
-const URL_HELPER_ERROR = "Informe uma URL completa iniciada por http:// ou https://.";
+const URL_HELPER_ERROR = "Informe uma URL começando com http:// ou https://.";
 const GENERIC_SAVE_ERROR = "Não foi possível salvar o contato. Tente novamente.";
 const BAD_URL = "ftp://example.com";
 const LINKEDIN_URL = "https://linkedin.com/in/maria";
@@ -393,6 +393,53 @@ describe("ContatoSection form", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText(URL_HELPER_ERROR)).toBeTruthy();
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [LINKEDIN_LABEL, "linkedin.com/in/maria", "https://linkedin.com/in/maria"],
+    [GITHUB_LABEL, "github.com/maria", "https://github.com/maria"],
+    [PORTFOLIO_LABEL, "maria.dev", "https://maria.dev"],
+  ])("completes the %s link with https:// when leaving the field and when saving", async (label, typed, completed) => {
+    const user = userEvent.setup();
+    renderEmpty();
+    await openForm(user);
+
+    setValue(label, typed);
+    fireEvent.blur(input(label));
+    expect(input(label).value).toBe(completed);
+
+    setValue(label, typed);
+    submit();
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    expect(JSON.stringify(mockUpdate.mock.calls[0][0])).toContain(completed);
+  });
+
+  it.each([
+    [LINKEDIN_LABEL, "https://github.com/maria", "Informe um link do LinkedIn (linkedin.com)."],
+    [GITHUB_LABEL, "https://www.linkedin.com/in/maria", "Informe um link do GitHub (github.com)."],
+    [PORTFOLIO_LABEL, "https://semponto", "Informe uma URL válida."],
+  ])("rejects a %s link that belongs to another site", async (label, value, message) => {
+    const user = userEvent.setup();
+    renderEmpty();
+    await openForm(user);
+
+    setValue(label, value);
+
+    expect(screen.getByText(message)).toBeTruthy();
+    submit();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("accepts LinkedIn and GitHub subdomains", async () => {
+    const user = userEvent.setup();
+    renderEmpty();
+    await openForm(user);
+
+    setValue(LINKEDIN_LABEL, "https://br.linkedin.com/in/maria");
+    setValue(GITHUB_LABEL, "https://www.github.com/maria");
+
+    expect(input(LINKEDIN_LABEL).getAttribute("aria-invalid")).toBe("false");
+    expect(input(GITHUB_LABEL).getAttribute("aria-invalid")).toBe("false");
   });
 
   it("shows the neutral phone hint until the first submit attempt", async () => {

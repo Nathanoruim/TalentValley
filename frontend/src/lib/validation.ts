@@ -135,9 +135,17 @@ export function normalizeUF(value: string): string {
   return value.trim().toUpperCase().slice(0, 2);
 }
 
+export const OPTIONAL_LINK_HINT = "Opcional. Pode digitar sem https://.";
+
+/** Adds "https://" to an address typed without a scheme ("github.com/fulano"); anything else is only trimmed. */
+export function withHttpsScheme(value: string): string {
+  const candidate = value.trim();
+  if (!candidate || /^[a-z][a-z\d+.-]*:(?!\d)/i.test(candidate)) return candidate;
+  return `https://${candidate}`;
+}
+
 export function normalizeOptionalUrl(value: string): string | null {
-  const normalized = value.trim();
-  return normalized || null;
+  return withHttpsScheme(value) || null;
 }
 
 /** Filters only characters which can never be part of a person name. */
@@ -273,14 +281,29 @@ export function validateHttpUrl(
     return "Informe uma URL válida.";
   try {
     const url = new URL(candidate);
-    return url.protocol === "http:" || url.protocol === "https:"
-      ? url.hostname
-        ? null
-        : "Informe uma URL válida."
-      : "Informe uma URL começando com http:// ou https://.";
+    if (url.protocol !== "http:" && url.protocol !== "https:")
+      return "Informe uma URL começando com http:// ou https://.";
+    return /^[^.\s]+(\.[^.\s]+)+$/.test(url.hostname) ? null : "Informe uma URL válida.";
   } catch {
     return "Informe uma URL válida.";
   }
+}
+
+/**
+ * Validates a link typed by the user (the scheme may be missing). With `site`, the link must belong
+ * to that site or one of its subdomains, e.g. { domain: "github.com", name: "GitHub" }.
+ */
+export function validateTypedLink(
+  value: string | null | undefined,
+  site?: { domain: string; name: string },
+): string | null {
+  const url = withHttpsScheme(value ?? "");
+  const invalid = validateHttpUrl(url);
+  if (invalid || !url || !site) return invalid;
+  const { hostname } = new URL(url);
+  return hostname === site.domain || hostname.endsWith(`.${site.domain}`)
+    ? null
+    : `Informe um link do ${site.name} (${site.domain}).`;
 }
 
 export function validateSearchTerm(
@@ -433,7 +456,7 @@ export function validateMeaningfulText(
   value: string,
   min: number,
   max: number,
-  label = "um valor",
+  label = "um valor válido",
 ): string | null {
   const text = normalizeWhitespace(value);
   if (
@@ -442,21 +465,21 @@ export function validateMeaningfulText(
     hasForbiddenText(text) ||
     !/[\p{L}\p{N}]/u.test(text)
   ) {
-    return `Informe ${label} válido.`;
+    return `Informe ${label}.`;
   }
   return null;
 }
 
 export const validateCompanyName = (value: string) =>
-  validateMeaningfulText(value, 2, 150, "uma empresa");
+  validateMeaningfulText(value, 2, 150, "uma empresa válida");
 export const validateJobTitle = (value: string) =>
-  validateMeaningfulText(value, 2, 150, "um cargo");
+  validateMeaningfulText(value, 2, 150, "um cargo válido");
 export const validateInstitutionName = (value: string) =>
-  validateMeaningfulText(value, 2, 200, "uma instituição");
+  validateMeaningfulText(value, 2, 200, "uma instituição válida");
 export const validateCourseName = (value: string) =>
-  validateMeaningfulText(value, 2, 200, "um curso");
+  validateMeaningfulText(value, 2, 200, "um curso válido");
 export const validateProjectName = (value: string) =>
-  validateMeaningfulText(value, 2, 200, "um nome de projeto");
+  validateMeaningfulText(value, 2, 200, "um nome de projeto válido");
 const INVALID_TEXT = "Revise o texto informado.";
 export const validateFreeText = (value: string, max: number) =>
   !hasForbiddenText(value) && value.length <= max ? null : INVALID_TEXT;
@@ -490,6 +513,9 @@ export const PASSWORD_RULES = [
   { id: "lower", label: "Uma letra minúscula", test: (s: string) => /[a-z]/.test(s) },
   { id: "digit", label: "Um dígito", test: (s: string) => /\d/.test(s) },
 ] as const;
+
+/** Longest password the API accepts. */
+export const PASSWORD_MAX_LENGTH = 1024;
 
 export function validatePassword(senha: string): string | null {
   if (senha.length < 8) return "A senha deve ter pelo menos 8 caracteres.";
