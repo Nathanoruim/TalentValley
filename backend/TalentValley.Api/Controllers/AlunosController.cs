@@ -243,4 +243,23 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
             return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.");
         }
     }
+
+    // Reconfirms the search status ("Confirmar que continuo assim"); only the signed-in student's own profile.
+    [HttpPost("me/busca/confirmar")]
+    public async Task<IActionResult> ConfirmStatusBusca()
+    {
+        try
+        {
+            await alunoService.ConfirmStatusBuscaAsync(CurrentUserId);
+            return NoContent();
+        }
+        catch (AlunoProfileNotFoundException)
+        {
+            return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.");
+        }
+        catch (StatusBuscaNotInformedException)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: "Informe o status de busca antes de confirmar.");
+        }
+    }
 }
