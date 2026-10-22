@@ -2,6 +2,8 @@ import type { AlunoIdiomaResponse, CompetenciaResponse, ContatoResponse, Experie
 
 export interface PaginatedResponse<T> { items: T[]; page: number; pageSize: number; totalItems: number; totalPages: number; }
 export interface AdminDashboard { alunosAtivos: number; recrutadoresAtivos: number; solicitacoesCadastroPendentes: number; validacoesRpvPendentes: number; perfisAtualizadosUltimos7Dias: number; formacoesRpvVerificadas: number; competenciasMaisUtilizadas: { id: number; nome: string; quantidadeAlunos: number }[]; }
+export interface DemoState { habilitado: boolean; preparado: boolean; }
+export interface DemoChange { alunosCriados: number; recrutadoresCriados: number; }
 export type RegistrationRequestType = "ALUNO" | "RECRUTADOR";
 export type RegistrationRequestStatus = "PENDENTE" | "APROVADA" | "REJEITADA";
 export interface AdminRegistrationRequest { id: string; tipo: RegistrationRequestType; status: RegistrationRequestStatus; nomeCompleto: string; email: string; telefone: string; cidade: string; uf: string; instituicaoEnsino: string | null; curso: string | null; tipoFormacao: TipoFormacao | null; anoConclusaoPrevisto: number | null; empresa: string | null; cargo: string | null; criadoEm: string; }

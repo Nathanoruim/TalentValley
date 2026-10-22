@@ -3,8 +3,10 @@ import {
   acceptTerms,
   activateAccount,
   changePassword,
+  enterDemo,
   fetchCurrentUser,
   forgotPassword,
+  leaveDemo,
   login,
   logout,
   resendActivation,
@@ -56,6 +58,26 @@ describe("auth requests", () => {
 
     expect(calls).toEqual(["ensure", "mutation", "refresh"]);
     expect(apiMutation).toHaveBeenCalledWith("POST", "/api/auth/change-password", request);
+  });
+
+  it("enterDemo posts the chosen role and rebinds the token, returning the response", async () => {
+    const response = { usuario: { id: "9" }, destinoInicial: "/meu-perfil" };
+    vi.mocked(apiMutation).mockImplementationOnce(async () => { calls.push("mutation"); return response; });
+
+    await expect(enterDemo("ALUNO")).resolves.toBe(response);
+
+    expect(calls).toEqual(["ensure", "mutation", "refresh"]);
+    expect(apiMutation).toHaveBeenCalledWith("POST", "/api/admin/demo/entrar", { papel: "ALUNO" });
+  });
+
+  it("leaveDemo posts and rebinds the token, returning the response", async () => {
+    const response = { usuario: { id: "1" }, destinoInicial: "/admin" };
+    vi.mocked(apiMutation).mockImplementationOnce(async () => { calls.push("mutation"); return response; });
+
+    await expect(leaveDemo()).resolves.toBe(response);
+
+    expect(calls).toEqual(["ensure", "mutation", "refresh"]);
+    expect(apiMutation).toHaveBeenCalledWith("POST", "/api/demo/voltar");
   });
 
   it("fetchCurrentUser reads the session user", async () => {

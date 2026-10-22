@@ -42,6 +42,25 @@ export async function logout(): Promise<void> {
   await refreshCsrfToken();
 }
 
+export type DemoRole = "ALUNO" | "RECRUTADOR";
+
+// The administrator views the site as the fictitious student or recruiter account.
+export async function enterDemo(papel: DemoRole): Promise<LoginResponse> {
+  await ensureCsrfToken();
+  const response = await apiMutation<LoginResponse>("POST", "/api/admin/demo/entrar", { papel });
+  // The session cookie changed; rebind the antiforgery pair like after login.
+  await refreshCsrfToken();
+  return response;
+}
+
+// Leaves the demonstration account and signs the administrator back in.
+export async function leaveDemo(): Promise<LoginResponse> {
+  await ensureCsrfToken();
+  const response = await apiMutation<LoginResponse>("POST", "/api/demo/voltar");
+  await refreshCsrfToken();
+  return response;
+}
+
 export async function fetchCurrentUser(): Promise<UsuarioAutenticado> {
   return apiGet<UsuarioAutenticado>("/api/auth/me");
 }
