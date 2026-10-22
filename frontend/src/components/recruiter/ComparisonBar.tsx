@@ -4,12 +4,13 @@ import { Alert, Button, Paper, Stack, Typography } from "@mui/material";
 import CompareArrowsOutlined from "@mui/icons-material/CompareArrowsOutlined";
 import { useRouter } from "next/navigation";
 import { brandWash } from "@/components/common/surfaceGradient";
+import { DEMO_BANNER_HEIGHT_VAR } from "@/components/demo/bannerHeight";
 import type { TalentListItem } from "@/types/recruiter";
 
 export function ComparisonBar({ selected, message }: { selected: TalentListItem[]; message: string | null }) {
   const router = useRouter();
   if (!selected.length && !message) return null;
-  return <Stack spacing={1} aria-live="polite" sx={{ position: "sticky", top: { xs: 76, lg: 16 }, zIndex: 2 }}>
+  return <Stack spacing={1} aria-live="polite" sx={{ position: "sticky", top: { xs: `calc(76px + var(${DEMO_BANNER_HEIGHT_VAR}, 0px))`, lg: `calc(16px + var(${DEMO_BANNER_HEIGHT_VAR}, 0px))` }, zIndex: 2 }}>
     {message && <Alert severity="info">{message}</Alert>}
     {selected.length > 0 && <Paper elevation={0} sx={(theme) => {
       const { primary, surface } = (theme.vars ?? theme).palette;
