@@ -32,6 +32,8 @@ import {
   validateFreeText,
   validateMultilineText,
   validateHttpUrl,
+  validateTypedLink,
+  withHttpsScheme,
   validateInstitutionName,
   validateInteger,
   validateIntegerRange,
@@ -344,6 +346,31 @@ describe("phone, UF and URL", () => {
     expect(validateHttpUrl("exemplo")).toBe("Informe uma URL válida.");
     expect(validateHttpUrl("https://exemplo.com/😀")).toBe("Informe uma URL válida.");
   });
+
+  it("requires a domain with a dot and completes typed links with https://", () => {
+    expect(validateHttpUrl("https://localhost")).toBe("Informe uma URL válida.");
+    expect(validateHttpUrl("https://exemplo.")).toBe("Informe uma URL válida.");
+    expect(withHttpsScheme("  github.com/maria ")).toBe("https://github.com/maria");
+    expect(withHttpsScheme("http://exemplo.com")).toBe("http://exemplo.com");
+    expect(withHttpsScheme("ftp://exemplo.com")).toBe("ftp://exemplo.com");
+    expect(withHttpsScheme("javascript:alert(1)")).toBe("javascript:alert(1)");
+    expect(withHttpsScheme("exemplo.com:8080/x")).toBe("https://exemplo.com:8080/x");
+    expect(withHttpsScheme("   ")).toBe("");
+    expect(normalizeOptionalUrl("exemplo.com")).toBe("https://exemplo.com");
+  });
+
+  it("validates typed links, optionally for one site", () => {
+    expect(validateTypedLink("")).toBeNull();
+    expect(validateTypedLink("exemplo.com")).toBeNull();
+    expect(validateTypedLink("exemplo")).toBe("Informe uma URL válida.");
+    expect(validateTypedLink("ftp://exemplo.com")).toBe("Informe uma URL começando com http:// ou https://.");
+    const github = { domain: "github.com", name: "GitHub" };
+    expect(validateTypedLink("github.com/maria", github)).toBeNull();
+    expect(validateTypedLink("https://www.github.com/maria", github)).toBeNull();
+    expect(validateTypedLink("", github)).toBeNull();
+    expect(validateTypedLink("https://evilgithub.com/maria", github)).toBe("Informe um link do GitHub (github.com).");
+    expect(validateTypedLink("https://github.com.evil.com/maria", github)).toBe("Informe um link do GitHub (github.com).");
+  });
 });
 
 describe("search, text and free text", () => {
@@ -365,11 +392,11 @@ describe("search, text and free text", () => {
   it("validates meaningful text and its named wrappers", () => {
     expect(validateMeaningfulText("ab", 2, 10)).toBeNull();
     expect(validateMeaningfulText("--", 2, 10)).toBe(invalidValue);
-    expect(validateMeaningfulText("a", 2, 10, "um cargo")).toBe("Informe um cargo válido.");
+    expect(validateMeaningfulText("a", 2, 10, "um cargo válido")).toBe("Informe um cargo válido.");
     expect(validateMeaningfulText("a😀b", 2, 10)).toBe(invalidValue);
     for (const validate of [validateCompanyName, validateJobTitle, validateInstitutionName, validateCourseName, validateProjectName]) {
       expect(validate("Nome Válido")).toBeNull();
-      expect(validate("")).toMatch(/válido\.$/);
+      expect(validate("")).toMatch(/^Informe .+ válid[oa]\.$/);
     }
     expect(validateAlphaOnly("ab")).toBeNull();
     expect(validateAlphaOnly("a")).toBe(invalidValue);

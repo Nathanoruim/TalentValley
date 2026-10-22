@@ -178,13 +178,13 @@ function FormationForm({ item, onClose, onSaved }: { item?: FormacaoResponse; on
       setSaving(false);
     }
   };
-  return <FormDialog title={item ? "Editar formação" : "Adicionar formação"} onClose={onClose} onSubmit={submit} saving={saving} error={error}><Stack spacing={2}>
+  return <FormDialog title={item ? "Editar formação" : "Adicionar formação"} onClose={onClose} onSubmit={submit} saving={saving} error={error} focusFirstInvalid><Stack spacing={2}>
     <TextField select label="Tipo" value={data.tipo} onChange={(e) => set("tipo", e.target.value as TipoFormacao)}>{Object.entries(formationLabels).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField>
     <TextField required label="Nome" value={data.nome} onChange={(e) => set("nome", sanitizeFormationText(e.target.value))} {...fieldError(errors.nome, attempted)} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} />
     <TextField required label="Instituição" value={data.instituicao} onChange={(e) => set("instituicao", sanitizeFormationText(e.target.value))} {...fieldError(errors.instituicao, attempted)} slotProps={{ htmlInput: { maxLength: 200, onPaste: stripEmojiOnPaste } }} />
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
       <TextField required type="text" label="Início" value={data.dataInicio} onChange={(e) => setDate("dataInicio", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataInicio, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
-      <TextField disabled={data.status === "EM_ANDAMENTO"} type="text" label="Conclusão" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataFim, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
+      <TextField disabled={data.status === "EM_ANDAMENTO"} required={data.status === "CONCLUIDO"} type="text" label="Conclusão" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataFim, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
     </Stack>
     <TextField type="text" label="Carga horária" value={data.cargaHoraria ?? ""} onChange={(e) => { const digits = sanitizeIntegerInput(e.target.value, 5); set("cargaHoraria", digits ? Number(digits) : null); }} {...fieldError(errors.cargaHoraria, attempted)} slotProps={{ input: { endAdornment: <InputAdornment position="end">horas</InputAdornment> }, htmlInput: { inputMode: "numeric", pattern: "[0-9]*" } }} />
     <TextField select label="Status" value={data.status} onChange={(e) => { const status = e.target.value as StatusFormacao; setData((p) => ({ ...p, status, dataFim: status === "EM_ANDAMENTO" ? null : p.dataFim })); }}>{Object.entries(formationStatus).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField>
@@ -227,7 +227,7 @@ function ExperienceForm({ item, onClose, onSaved }: { item?: ExperienciaResponse
       setSaving(false);
     }
   };
-  return <FormDialog title={item ? "Editar experiência" : "Adicionar experiência"} onClose={onClose} onSubmit={submit} saving={saving} error={error}><Stack spacing={2}>
+  return <FormDialog title={item ? "Editar experiência" : "Adicionar experiência"} onClose={onClose} onSubmit={submit} saving={saving} error={error} focusFirstInvalid><Stack spacing={2}>
     <TextField required label="Empresa" value={data.empresa} onChange={(e) => set("empresa", sanitizeFormationText(e.target.value))} {...fieldError(errors.empresa, attempted)} slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }} />
     <TextField required label="Cargo" value={data.cargo} onChange={(e) => set("cargo", sanitizeFormationText(e.target.value))} {...fieldError(errors.cargo, attempted)} slotProps={{ htmlInput: { maxLength: 150, onPaste: stripEmojiOnPaste } }} />
     <TextField select label="Tipo" value={data.tipo} onChange={(e) => set("tipo", e.target.value as TipoExperiencia)}>{Object.entries(experienceLabels).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField>
@@ -236,7 +236,7 @@ function ExperienceForm({ item, onClose, onSaved }: { item?: ExperienciaResponse
       <TextField disabled={data.atual} required={!data.atual} type="text" label="Término" value={data.dataFim ?? ""} onChange={(e) => setDate("dataFim", e.target.value)} placeholder="dd/mm/aaaa" {...fieldError(errors.dataFim, attempted)} slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 10 } }} />
     </Stack>
     <FormControlLabel control={<Switch checked={data.atual} onChange={(e) => setData((p) => ({ ...p, atual: e.target.checked, dataFim: e.target.checked ? null : p.dataFim }))} />} label="Trabalho atual" />
-    <TextField label="Descrição" multiline minRows={3} value={data.descricao ?? ""} onChange={(e) => set("descricao", stripEmoji(e.target.value).slice(0, 2000) || null)} slotProps={{ htmlInput: { maxLength: 2000, onPaste: stripEmojiOnPaste } }} />
+    <TextField label="Descrição" multiline minRows={3} value={data.descricao ?? ""} onChange={(e) => set("descricao", stripEmoji(e.target.value).slice(0, 2000) || null)} helperText={`${(data.descricao ?? "").length}/2000`} slotProps={{ htmlInput: { maxLength: 2000, onPaste: stripEmojiOnPaste } }} />
   </Stack></FormDialog>;
 }
 
