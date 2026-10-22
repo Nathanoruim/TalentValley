@@ -338,16 +338,17 @@ public sealed class TermsAcceptanceTests : IDisposable
     [Fact]
     public async Task Demonstration_accounts_are_exempt_from_the_terms()
     {
-        var id = await factory.CreateUserAsync(Email, termsVersion: null);
-        await factory.InScopeAsync(async provider =>
-        {
-            var db = provider.GetRequiredService<AppDbContext>();
-            (await db.Users.SingleAsync(x => x.Id == id)).EhDemo = true;
-            await db.SaveChangesAsync();
-        });
+        // Demonstration accounts have no password: the administrator reaches them by switching into the session.
+        factory.Overrides["Demo:Enabled"] = "true";
+        await factory.CreateUserAsync(Email, AppRoles.Admin);
         using var client = await LoggedInAsync();
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsync("/api/admin/demo/preparar", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK,
+            (await client.PostAsJsonAsync("/api/admin/demo/entrar", new EnterDemoRequest(AppRoles.Student))).StatusCode);
 
-        Assert.False((await MeAsync(client)).TermosPendentes);
+        var me = await MeAsync(client);
+        Assert.True(me.ModoDemonstracao);
+        Assert.False(me.TermosPendentes);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/alunos/me")).StatusCode);
     }
 

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TalentValley.Api.Data;
@@ -22,6 +23,18 @@ public sealed class AccountAccess(UserManager<ApplicationUser> users, AppDbConte
     }
 
     public async Task<bool> IsActiveAsync(Guid id, string role) => (await GetStateAsync(id, role)).Active;
+
+    // A demonstration session is valid only for a demo account whose administrator still exists, is still an
+    // administrator and has not had the credentials reset since the switch. Returns that administrator, else null.
+    public async Task<ApplicationUser?> GetDemoSessionAdminAsync(ApplicationUser demoUser, ClaimsPrincipal principal)
+    {
+        if (!demoUser.EhDemo || !Guid.TryParse(principal.FindFirst(JwtTokenService.DemoAdminClaim)?.Value, out var adminId))
+            return null;
+        var admin = await users.FindByIdAsync(adminId.ToString());
+        if (admin is null || await GetRoleAsync(admin) != AppRoles.Admin) return null;
+        var claimed = principal.FindFirst(JwtTokenService.DemoAdminStampClaim)?.Value;
+        return claimed == JwtTokenService.HashSecurityStamp(await users.GetSecurityStampAsync(admin)) ? admin : null;
+    }
 
     public async Task<AccountState> GetStateAsync(Guid id, string role) => role switch
     {

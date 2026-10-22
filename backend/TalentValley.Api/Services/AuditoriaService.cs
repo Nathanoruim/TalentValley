@@ -19,7 +19,14 @@ public sealed class AuditoriaService(AppDbContext database, IHttpContextAccessor
         if (principal?.Identity?.IsAuthenticated != true || !principal.IsInRole(AppRoles.Admin) ||
             !Guid.TryParse(principal.FindFirst("sub")?.Value, out var adminId))
             throw new InvalidOperationException("An authenticated administrator is required for auditing.");
+        await RecordForAdminAsync(adminId, action, entityType, entityId, description);
+    }
 
+    // For the way back from a demonstration session: the caller is a demo account, so the administrator
+    // (already verified against the database by the caller) is named explicitly.
+    public async Task RecordForAdminAsync(Guid adminId, AcaoAuditoria action, string entityType, Guid entityId,
+        string description)
+    {
         var email = await database.Users.Where(x => x.Id == adminId).Select(x => x.Email).SingleAsync();
         database.Auditorias.Add(new Auditoria
         {
