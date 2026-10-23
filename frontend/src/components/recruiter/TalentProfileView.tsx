@@ -173,4 +173,4 @@ function period(start: string, end: string | null, current: boolean): string {
 }
 
 function StatePage({ title }: { title: string }) { return <Container maxWidth="sm" sx={{ py: 8 }}><EmptyState icon={<PersonSearchOutlined />} title={title} titleAs="h1" action={<Button component={Link} href="/recrutador/talentos" startIcon={<ArrowBackOutlined />}>Voltar para talentos</Button>} /></Container>; }
-function ProfileLoading() { return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: 4 }}><Stack spacing={2}>{[150, 140, 180, 260].map((height) => <Skeleton key={height} variant="rounded" height={height} sx={{ borderRadius: "16px" }} />)}</Stack></Container>; }
+function ProfileLoading() { return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: 4 }}><Stack spacing={2}>{[150, 140, 180, 260].map((height) => <Skeleton key={height} variant="rounded" height={height} sx={{ borderRadius: "4px" }} />)}</Stack></Container>; }

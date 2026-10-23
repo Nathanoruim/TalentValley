@@ -1,4 +1,4 @@
-import { createTheme, type Shadows, type Theme } from "@mui/material/styles";
+import { createTheme, type PaletteOptions, type Shadows, type Theme } from "@mui/material/styles";
 
 interface BrandGradients {
   /** Primary call to action of the public landing and entry screens. */
@@ -45,6 +45,14 @@ const actionGradients = {
 
 /** Titles use Manrope (`--font-display`, loaded in the root layout); body text keeps Inter. */
 const displayFont = "var(--font-display), var(--font-inter), system-ui, -apple-system, sans-serif";
+
+/** Neutral grays of the dark scheme: page, panels, text, dividers and the surface tokens. */
+const darkNeutrals = {
+  background: { default: "#26292C", paper: "#2C3033" },
+  text: { primary: "#F4F7F6", secondary: "#A8B2B0" },
+  divider: "#45494D",
+  surface: { raised: "#32363A", sunken: "#1F2224", border: "#80888E", hover: "#3B4044" },
+} satisfies PaletteOptions;
 
 const baseShadows = createTheme().shadows;
 
@@ -117,16 +125,7 @@ export const talentValleyTheme = createTheme({
           dark: "#D97706",
           contrastText: "#1A1203",
         },
-        background: {
-          default: "#0D1114",
-          paper: "#12171B",
-        },
-        text: {
-          primary: "#F4F7F6",
-          secondary: "#A8B2B0",
-        },
-        divider: "#273238",
-        surface: { raised: "#171E23", sunken: "#0A0D10", border: "#5C6D76", hover: "#232E35" },
+        ...darkNeutrals,
         gradient: { ...actionGradients, accent: "linear-gradient(100deg, #35dc90, #8cba53)" },
       },
     },
@@ -145,7 +144,7 @@ export const talentValleyTheme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 1,
   },
   shadows,
   // Native MUI keyboard focus ring (2px, primary color); it moves inside menu items and tabs so it is not clipped.
@@ -157,7 +156,7 @@ export const talentValleyTheme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 4,
           padding: "10px 20px",
         },
       },
@@ -168,7 +167,7 @@ export const talentValleyTheme = createTheme({
           style: ({ theme }) => {
             const { gradient } = palette(theme);
             return {
-              borderRadius: 30,
+              borderRadius: 4,
               background: gradient.action,
               // Doubled selector: the button is usually a link, and plain `a { color: inherit }` rules would win.
               "&&": { color: gradient.actionContrastText },
@@ -181,7 +180,7 @@ export const talentValleyTheme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           fontWeight: 600,
         },
       },
@@ -195,7 +194,7 @@ export const talentValleyTheme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: 10,
+          borderRadius: 4,
           "& .MuiOutlinedInput-notchedOutline": {
             borderColor: palette(theme).surface.border,
           },
@@ -208,7 +207,7 @@ export const talentValleyTheme = createTheme({
       },
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: 16,
+          borderRadius: 4,
           border: `1px solid ${palette(theme).divider}`,
           backgroundColor: palette(theme).surface.raised,
           boxShadow: theme.shadows[1],
@@ -218,7 +217,7 @@ export const talentValleyTheme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          borderRadius: 20,
+          borderRadius: 4,
           border: `1px solid ${palette(theme).divider}`,
           boxShadow: theme.shadows[4],
         }),
@@ -236,7 +235,7 @@ export const talentValleyTheme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: 10,
+          borderRadius: 4,
           transition: theme.transitions.create(["background-color", "color"], { duration: 150 }),
           "&:hover": { backgroundColor: palette(theme).surface.hover },
         }),

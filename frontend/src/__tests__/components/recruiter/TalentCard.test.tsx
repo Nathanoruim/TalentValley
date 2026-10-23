@@ -59,7 +59,7 @@ describe("TalentCard", () => {
   describe("RPV highlight", () => {
     const verified = makeTalentListItem({ formacaoPrincipal: { tipo: "TECNICO", nome: "Informática", instituicao: "Colégio Técnico", rpvVerificado: true } });
 
-    it("plays a single light sweep for a verified main formation", () => {
+    it("plays the repeating light sweep for a verified main formation", () => {
       stubMotionMedia("pointer");
       render(<TalentCard talent={verified} />);
 

@@ -102,7 +102,7 @@ function TalentPreviewContent({ slug, onClose, onFavoriteChange, onUnavailable }
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} useFlexGap sx={(theme) => ({ alignItems: { xs: "center", sm: "flex-start" }, p: 2.5, borderRadius: "16px", position: "relative", backgroundImage: brandWash(theme), ...(rpvVerified && rpvHighlightSx(theme)) })}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} useFlexGap sx={(theme) => ({ alignItems: { xs: "center", sm: "flex-start" }, p: 2.5, borderRadius: "4px", position: "relative", backgroundImage: brandWash(theme), ...(rpvVerified && rpvHighlightSx(theme)) })}>
         {rpvVerified && <RpvShine />}
         <ProtectedTalentPhoto path={profile.fotoUrl} name={profile.nomeCompleto} size={96} />
         <Stack spacing={1} sx={{ minWidth: 0, flex: 1, alignItems: { xs: "center", sm: "flex-start" }, textAlign: { xs: "center", sm: "left" } }}>

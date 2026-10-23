@@ -13,6 +13,7 @@ import {
   makeEmptyAdminStudentDetail,
 } from "./adminDetailFixtures";
 import { deferred } from "./adminFixtures";
+import { stubMotionMedia } from "../auth/motion/motionMedia";
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -526,5 +527,21 @@ describe("AdminStudentDetailView RPV validation removal", () => {
 
     pending.resolve();
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+});
+
+describe("AdminStudentDetailView RPV highlight", () => {
+  it("shows the light sweep when the main formation is verified", async () => {
+    stubMotionMedia("pointer");
+    renderView(makeAdminStudentDetail({ formacoes: [VERIFIED_FORMATION] }));
+    await findProfile();
+    expect(screen.getByTestId("rpv-shine")).toBeTruthy();
+  });
+
+  it("does not highlight a student without a verified main formation", async () => {
+    stubMotionMedia("pointer");
+    renderView(makeAdminStudentDetail({ formacoes: [makeAdminFormation()] }));
+    await findProfile();
+    expect(screen.queryByTestId("rpv-shine")).toBeNull();
   });
 });
