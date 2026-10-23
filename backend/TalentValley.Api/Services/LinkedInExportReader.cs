@@ -106,7 +106,8 @@ public sealed class LinkedInExportReader
 
     private static LinkedInImportedData Build(Dictionary<string, string> files)
     {
-        var profile = Rows(files, ProfileFile).FirstOrDefault();
+        var profileRows = Rows(files, ProfileFile);
+        var profile = profileRows.Count > 0 ? profileRows[0] : null;
         return new LinkedInImportedData(
             new LinkedInContato(Field(profile, "Geo Location"), ParseSites(Field(profile, "Websites")),
                 ReadEmails(Rows(files, EmailsFile)), ReadTelefones(Rows(files, PhonesFile))),
