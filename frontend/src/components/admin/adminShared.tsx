@@ -81,13 +81,13 @@ export function IconTile({ children, size = 48 }: { children: ReactNode; size?: 
       aria-hidden="true"
       className="flex shrink-0 items-center justify-center"
       sx={(theme) => {
-        const { primary } = (theme.vars ?? theme).palette;
+        const { vivid } = (theme.vars ?? theme).palette;
         return {
           width: size,
           height: size,
           borderRadius: 3,
-          color: primary.main,
-          backgroundColor: `color-mix(in srgb, ${primary.main} 14%, transparent)`,
+          color: vivid.contrastText,
+          backgroundColor: vivid.main,
         };
       }}
     >
@@ -114,7 +114,7 @@ export function SearchCard({
       <Card
         component="form"
         onSubmit={onSubmit}
-        sx={(theme) => ({ p: { xs: 2, sm: 2.5 }, backgroundImage: brandWash(theme, 10) })}
+        sx={(theme) => ({ p: { xs: 2, sm: 2.5 }, backgroundImage: brandWash(theme) })}
       >
         <Stack
           direction={{ xs: "column", [breakpoint]: "row" }}

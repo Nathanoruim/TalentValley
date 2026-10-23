@@ -59,7 +59,7 @@ export function AdminStudentDetailView({ id }: { id: string }) {
       }
     >
       <Reveal index={1}>
-        <Card sx={(theme) => ({ p: { xs: 2.5, sm: 3 }, backgroundImage: brandWash(theme, 14), ...(hasVerifiedFormation(p.formacoes) && rpvHighlightSx(theme)) })}>
+        <Card sx={(theme) => ({ p: { xs: 2.5, sm: 3 }, backgroundImage: brandWash(theme), ...(hasVerifiedFormation(p.formacoes) && rpvHighlightSx(theme)) })}>
           {hasVerifiedFormation(p.formacoes) && <RpvShine />}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} sx={{ alignItems: { sm: "center" } }}>
             <ProtectedTalentPhoto path={p.fotoUrl} name={p.nomeCompleto} size={96} />

@@ -6,7 +6,6 @@ import VerifiedOutlined from "@mui/icons-material/VerifiedOutlined";
 import { motion } from "framer-motion";
 import { ease } from "@/components/auth/motion/tokens";
 import { useMotionPolicy } from "@/components/auth/motion/useMotionPolicy";
-import { brandWash } from "@/components/common/surfaceGradient";
 
 export const RPV_VERIFIED_LABEL = "Verificado pelo Rio Pomba Valley";
 
@@ -16,7 +15,7 @@ const SHINE_DURATION = 1.1;
 
 /**
  * Frame for the blocks of a student with any formation verified by the Rio Pomba Valley:
- * neon green border, soft glow and a light green wash. Only visual, it never changes search order or relevance.
+ * neon green border and a soft glow. Only visual, it never changes search order or relevance.
  * `ring` is the width of the outer ring in px (a selected comparison card asks for a thicker one).
  */
 export function rpvHighlightSx(theme: Theme, ring = 1) {
@@ -24,7 +23,7 @@ export function rpvHighlightSx(theme: Theme, ring = 1) {
   return {
     position: "relative",
     borderColor: primary.main,
-    backgroundImage: brandWash(theme, 10),
+    backgroundImage: "none",
     boxShadow: `0 0 0 ${ring}px ${primary.main}, 0 0 12px color-mix(in srgb, ${primary.main} 55%, transparent), 0 0 28px color-mix(in srgb, ${primary.main} 22%, transparent), inset 0 0 14px color-mix(in srgb, ${primary.main} 14%, transparent)`,
   } as const;
 }

@@ -20,14 +20,25 @@ interface SurfaceTokens {
   hover: string;
 }
 
+interface VividColor {
+  main: string;
+  /** Hover of a vivid fill. */
+  dark: string;
+  /** Text and icons placed on top of a vivid fill. */
+  contrastText: string;
+}
+
 declare module "@mui/material/styles" {
   interface Palette {
     gradient: BrandGradients;
     surface: SurfaceTokens;
+    /** Bright brand green for solid fills (buttons, chips, icon tiles). It is the same in both schemes. */
+    vivid: VividColor;
   }
   interface PaletteOptions {
     gradient?: BrandGradients;
     surface?: SurfaceTokens;
+    vivid?: VividColor;
   }
 }
 
@@ -46,13 +57,16 @@ const actionGradients = {
 /** Titles use Manrope (`--font-display`, loaded in the root layout); body text keeps Inter. */
 const displayFont = "var(--font-display), var(--font-inter), system-ui, -apple-system, sans-serif";
 
-/** Neutral grays of the dark scheme: page, panels, text, dividers and the surface tokens. */
+/** Deep black of the dark scheme: page, panels, text, dividers and the surface tokens. */
 const darkNeutrals = {
-  background: { default: "#26292C", paper: "#2C3033" },
-  text: { primary: "#F4F7F6", secondary: "#A8B2B0" },
-  divider: "#45494D",
-  surface: { raised: "#32363A", sunken: "#1F2224", border: "#80888E", hover: "#3B4044" },
+  background: { default: "#0A0B0C", paper: "#131517" },
+  text: { primary: "#F4F7F6", secondary: "#8F9A96" },
+  divider: "#2A2E31",
+  surface: { raised: "#131517", sunken: "#050606", border: "#6F7A76", hover: "#1C1F22" },
 } satisfies PaletteOptions;
+
+/** Solid brand green with dark text, used on buttons, chips and icon tiles in both schemes. */
+const vivid = { main: "#3DDC84", dark: "#2FC472", contrastText: "#03210F" } satisfies VividColor;
 
 const baseShadows = createTheme().shadows;
 
@@ -103,19 +117,20 @@ export const talentValleyTheme = createTheme({
         divider: "#D5DDD4",
         surface: { raised: "#ffffff", sunken: "#EBF0E8", border: "#8A978C", hover: "#EFF4EC" },
         gradient: { ...actionGradients, accent: "linear-gradient(100deg, #008652, #52832e)" },
+        vivid,
       },
     },
     dark: {
       palette: {
         primary: {
-          main: "#A0D060",
-          light: "#C0E394",
-          dark: "#007D32",
-          contrastText: "#15201D",
+          main: "#3DDC84",
+          light: "#7BE8AB",
+          dark: "#2FC472",
+          contrastText: "#03210F",
         },
         secondary: {
           main: "#20C8C0",
-          light: "#A0D060",
+          light: "#7BE8AB",
           dark: "#007D73",
           contrastText: "#15201D",
         },
@@ -127,6 +142,7 @@ export const talentValleyTheme = createTheme({
         },
         ...darkNeutrals,
         gradient: { ...actionGradients, accent: "linear-gradient(100deg, #35dc90, #8cba53)" },
+        vivid,
       },
     },
   },
@@ -162,6 +178,20 @@ export const talentValleyTheme = createTheme({
       },
       // Opt-in look for the public landing and entry screens; internal screens keep the default buttons.
       variants: [
+        // Solid primary buttons use the vivid green with dark text (the plain primary is kept for text, borders and focus).
+        {
+          props: { variant: "contained", color: "primary" },
+          style: ({ theme }) => {
+            const { vivid: fill } = palette(theme);
+            return {
+              "&:not(.Mui-disabled)": {
+                backgroundColor: fill.main,
+                color: fill.contrastText,
+                "&:hover": { backgroundColor: fill.dark },
+              },
+            };
+          },
+        },
         {
           props: { variant: "brand" },
           style: ({ theme }) => {
@@ -184,6 +214,22 @@ export const talentValleyTheme = createTheme({
           fontWeight: 600,
         },
       },
+      // Primary chips (filled or outlined) are solid vivid green with dark text.
+      variants: [
+        {
+          props: { color: "primary" },
+          style: ({ theme }) => {
+            const { vivid: fill } = palette(theme);
+            return {
+              backgroundColor: fill.main,
+              color: fill.contrastText,
+              borderColor: fill.main,
+              "& .MuiChip-icon": { color: "inherit" },
+              "&.MuiChip-clickable:hover": { backgroundColor: fill.dark },
+            };
+          },
+        },
+      ],
     },
     MuiTextField: {
       defaultProps: {
@@ -237,7 +283,7 @@ export const talentValleyTheme = createTheme({
         root: ({ theme }) => ({
           borderRadius: 4,
           transition: theme.transitions.create(["background-color", "color"], { duration: 150 }),
-          "&:hover": { backgroundColor: palette(theme).surface.hover },
+          "&:hover, &.Mui-selected, &.Mui-selected:hover": { backgroundColor: palette(theme).surface.hover },
         }),
       },
     },
