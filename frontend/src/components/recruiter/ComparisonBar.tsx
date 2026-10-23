@@ -14,7 +14,7 @@ export function ComparisonBar({ selected, message }: { selected: TalentListItem[
     {message && <Alert severity="info">{message}</Alert>}
     {selected.length > 0 && <Paper elevation={0} sx={(theme) => {
       const { primary, surface } = (theme.vars ?? theme).palette;
-      return { p: 1.5, border: 1, borderColor: primary.main, boxShadow: theme.shadows[3], backgroundColor: surface.raised, backgroundImage: brandWash(theme, 12) };
+      return { p: 1.5, border: 1, borderColor: primary.main, boxShadow: theme.shadows[3], backgroundColor: surface.raised, backgroundImage: brandWash(theme) };
     }}>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, justifyContent: "space-between" }}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>{selected.length === 1 ? "1 talento selecionado. Selecione mais 1 para comparar." : "2 talentos selecionados para comparação."}</Typography>

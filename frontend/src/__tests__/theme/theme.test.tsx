@@ -26,6 +26,14 @@ describe("brand button variant", () => {
     }
   });
 
+  it("exposes the vivid green fill as theme variables", () => {
+    const vivid = talentValleyTheme.vars?.palette.vivid;
+    expect(vivid).toBeDefined();
+    for (const token of [vivid?.main, vivid?.dark, vivid?.contrastText]) {
+      expect(token).toContain("var(--mui-palette-vivid-");
+    }
+  });
+
   it("defines its own warning color for attention highlights", () => {
     // Darker than the MUI default (#ed6c02) so the attention text keeps 4.5:1 on white.
     expect(talentValleyTheme.palette.warning.main).toBe("#B45309");

@@ -68,7 +68,7 @@ function ComparisonSide({ label, profile, exclusiveCompetencies }: { label: stri
 </Stack></Card>; }
 function Common({ common }: { common: TalentCommon }) { return <Card component="section" sx={(theme) => {
   const { primary, surface } = (theme.vars ?? theme).palette;
-  return { p: { xs: 2, sm: 2.5 }, minWidth: 0, height: "100%", borderColor: primary.main, backgroundColor: `color-mix(in srgb, ${primary.main} 8%, ${surface.raised})` };
+  return { p: { xs: 2, sm: 2.5 }, minWidth: 0, height: "100%", borderColor: primary.main, backgroundColor: surface.raised };
 }}><Stack spacing={2.5}><Typography component="h2" variant="h6" align="center">Em comum</Typography><CompareSection title="Competências gerais"><CompetencyChips values={common.competencias} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Disponibilidade"><Chips values={common.disponibilidades.map((item) => DISPONIBILIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection><CompareSection title="Modalidades"><Chips values={common.modalidades.map((item) => MODALIDADE_LABELS[item])} emptyText="Nenhum item em comum." /></CompareSection></Stack></Card>; }
 function CompareSection({ title, children }: { title: string; children: React.ReactNode }) { return <Box component="section"><Typography variant="subtitle1" sx={{ fontWeight: 700, mb: .75 }}>{title}</Typography>{children}</Box>; }
 function Chips({ values, emptyText = "Nenhuma informação cadastrada." }: { values: string[]; emptyText?: string }) { return values.length ? <Stack direction="row" spacing={.75} useFlexGap sx={{ flexWrap: "wrap" }}>{values.map((item) => <Chip key={item} label={item} size="small" />)}</Stack> : <Empty text={emptyText} />; }
