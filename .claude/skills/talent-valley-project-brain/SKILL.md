@@ -5,7 +5,9 @@ description: Use when an implementation plan is in progress (a plan.md with stat
 
 # Talent Valley Project Brain
 
-The project brain is a **local-only** folder (`.agents/brain/`, listed in `.gitignore`, never committed or pushed). It keeps what must survive a context reset, so a fresh session can continue a plan without searching.
+The project brain is the `.agents/brain/` folder. It keeps what must survive a context reset, so a fresh session can continue a plan without searching.
+
+**Every plan is versioned on GitHub.** Everything under `.agents/brain/plans/` (each `plan.md` and its `reports/`) is committed and pushed, never left only on one machine. The rest of the brain (`solved/`, drafts, samples) is local-only: it is ignored by `.gitignore` and must never be committed or pushed. Because plans go to GitHub, never write real personal data, secrets, local user paths or sample files in them.
 
 Write brain files in the user's language.
 
