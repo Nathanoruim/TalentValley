@@ -1,4 +1,4 @@
-import { createTheme, type Shadows, type Theme } from "@mui/material/styles";
+import { createTheme, type PaletteOptions, type Shadows, type Theme } from "@mui/material/styles";
 
 interface BrandGradients {
   /** Primary call to action of the public landing and entry screens. */
@@ -45,6 +45,14 @@ const actionGradients = {
 
 /** Titles use Manrope (`--font-display`, loaded in the root layout); body text keeps Inter. */
 const displayFont = "var(--font-display), var(--font-inter), system-ui, -apple-system, sans-serif";
+
+/** Neutral grays of the dark scheme: page, panels, text, dividers and the surface tokens. */
+const darkNeutrals = {
+  background: { default: "#26292C", paper: "#2C3033" },
+  text: { primary: "#F4F7F6", secondary: "#A8B2B0" },
+  divider: "#45494D",
+  surface: { raised: "#32363A", sunken: "#1F2224", border: "#80888E", hover: "#3B4044" },
+} satisfies PaletteOptions;
 
 const baseShadows = createTheme().shadows;
 
@@ -117,16 +125,7 @@ export const talentValleyTheme = createTheme({
           dark: "#D97706",
           contrastText: "#1A1203",
         },
-        background: {
-          default: "#26292C",
-          paper: "#2C3033",
-        },
-        text: {
-          primary: "#F4F7F6",
-          secondary: "#A8B2B0",
-        },
-        divider: "#45494D",
-        surface: { raised: "#32363A", sunken: "#1F2224", border: "#80888E", hover: "#3B4044" },
+        ...darkNeutrals,
         gradient: { ...actionGradients, accent: "linear-gradient(100deg, #35dc90, #8cba53)" },
       },
     },
