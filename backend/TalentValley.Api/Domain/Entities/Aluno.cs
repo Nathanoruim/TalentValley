@@ -14,6 +14,8 @@ public class Aluno
     public string? GitHubUrl { get; set; }
     public string? PortfolioUrl { get; set; }
     public string? Bio { get; set; }
+    public string? CargoDesejado { get; set; }
+    public string? ObjetivoProfissional { get; set; }
     public string? CurriculoStorageKey { get; set; }
     public bool Ativo { get; set; }
     public DateTimeOffset AtualizadoEm { get; set; }

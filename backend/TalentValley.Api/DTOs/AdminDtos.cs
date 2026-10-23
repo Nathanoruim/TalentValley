@@ -53,7 +53,8 @@ public sealed record AlunoListItem(Guid Id, string Slug, string NomeCompleto, st
     string? Cidade, string? Uf, bool Ativo, DateTimeOffset AtualizadoEm);
 public sealed record AdminAlunoDetailResponse(
     Guid Id, string Slug, string NomeCompleto, bool Ativo, string? FotoUrl, string? Cidade, string? Uf,
-    ContatoResponse Contato, string? Bio, IReadOnlyCollection<CompetenciaResponse> Competencias,
+    ContatoResponse Contato, string? Bio, ObjetivosResponse Objetivos,
+    IReadOnlyCollection<CompetenciaResponse> Competencias,
     IReadOnlyCollection<AlunoIdiomaResponse> Idiomas, IReadOnlyCollection<TipoDisponibilidade> Disponibilidades,
     IReadOnlyCollection<ModalidadeTrabalho> Modalidades, IReadOnlyCollection<AdminFormacaoResponse> Formacoes,
     IReadOnlyCollection<ExperienciaResponse> Experiencias, IReadOnlyCollection<ProjetoResponse> Projetos,

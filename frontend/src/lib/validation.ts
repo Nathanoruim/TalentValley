@@ -108,6 +108,19 @@ export function sanitizeBio(value: string): string {
   return stripEmoji(value).slice(0, 1500);
 }
 
+export const CARGO_DESEJADO_MAX_LENGTH = 100;
+export const OBJETIVO_PROFISSIONAL_MAX_LENGTH = 500;
+
+// The API rejects control characters (including line breaks) in both fields,
+// so they are removed here instead of failing on save.
+export function sanitizeCargoDesejado(value: string): string {
+  return stripEmoji(value.replace(/\p{Cc}+/gu, " ")).slice(0, CARGO_DESEJADO_MAX_LENGTH);
+}
+
+export function sanitizeObjetivoProfissional(value: string): string {
+  return stripEmoji(value.replace(/\p{Cc}+/gu, " ")).slice(0, OBJETIVO_PROFISSIONAL_MAX_LENGTH);
+}
+
 /**
  * Paste guard: strips emoji characters from clipboard content before they
  * enter the field. If the pasted text contains no emoji, the paste proceeds

@@ -30,6 +30,10 @@ public sealed class AlunoConfiguration : IEntityTypeConfiguration<Aluno>
 
         builder.Property(x => x.Bio).HasMaxLength(1500);
 
+        builder.Property(x => x.CargoDesejado).HasMaxLength(100);
+
+        builder.Property(x => x.ObjetivoProfissional).HasMaxLength(500);
+
         builder.Property(x => x.CurriculoStorageKey).HasMaxLength(500);
 
         builder.Property(x => x.VersaoTermos).HasMaxLength(20);

@@ -51,6 +51,10 @@ export function TalentProfileView({ slug }: { slug: string }) {
     {fileError && <Alert severity="error" onClose={() => setFileError(null)}>{fileError}</Alert>}
     <ProfileHeader profile={profile} onFileError={setFileError} onFavoriteChange={(favorite) => setProfile((current) => current ? { ...current, favorito: favorite } : current)} onUnavailable={() => setNotFound(true)} />
     <Section title="Sobre"><Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={profile.bio ? "text.primary" : "text.secondary"}>{profile.bio || "Este talento ainda não informou uma apresentação profissional."}</Typography></Section>
+    <Section title="Objetivos profissionais"><Stack spacing={1.5}>
+      <Stack spacing={.25}><Typography variant="subtitle2" color="text.secondary">Cargo desejado</Typography><Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={profile.objetivos.cargoDesejado ? "text.primary" : "text.secondary"}>{profile.objetivos.cargoDesejado || "Não informado."}</Typography></Stack>
+      <Stack spacing={.25}><Typography variant="subtitle2" color="text.secondary">Objetivo profissional</Typography><Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={profile.objetivos.objetivoProfissional ? "text.primary" : "text.secondary"}>{profile.objetivos.objetivoProfissional || "Não informado."}</Typography></Stack>
+    </Stack></Section>
     <Section title="Competências gerais">{profile.competencias.length ? <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>{profile.competencias.map((item) => <Chip key={item.id} label={item.nome} />)}</Stack> : <Empty />}</Section>
     <TrajectorySection formations={profile.formacoes} experiences={profile.experiencias} onFileError={setFileError} />
     <Section title="Projetos">{profile.projetos.length ? <Stack spacing={2} divider={<Divider />}>

@@ -765,6 +765,22 @@ export function AdminStudentDetailView({ id }: { id: string }) {
           {p.bio || "Não informado."}
         </Typography>
       </Section>
+      <Section title="Objetivos profissionais">
+        <Stack spacing={1.5}>
+          <Box>
+            <Typography variant="subtitle2" color="text.secondary">Cargo desejado</Typography>
+            <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={p.objetivos.cargoDesejado ? "text.primary" : "text.secondary"}>
+              {p.objetivos.cargoDesejado || "Não informado."}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" color="text.secondary">Objetivo profissional</Typography>
+            <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} color={p.objetivos.objetivoProfissional ? "text.primary" : "text.secondary"}>
+              {p.objetivos.objetivoProfissional || "Não informado."}
+            </Typography>
+          </Box>
+        </Stack>
+      </Section>
       <Section title="Contato">
         <Stack spacing={0.5}>
           <ContactRow label="Telefone" value={p.contato.telefone} kind="phone" />

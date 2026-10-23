@@ -115,6 +115,7 @@ public sealed record TalentProfileResponse(
     string? Uf,
     TalentContactResponse Contato,
     string? Bio,
+    ObjetivosResponse Objetivos,
     IReadOnlyCollection<TalentCompetencyResponse> Competencias,
     IReadOnlyCollection<TalentLanguageResponse> Idiomas,
     IReadOnlyCollection<TipoDisponibilidade> Disponibilidades,

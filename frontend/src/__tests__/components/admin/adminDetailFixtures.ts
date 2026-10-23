@@ -25,6 +25,10 @@ export function makeAdminStudentDetail(
       portfolioUrl: "https://maria.dev",
     },
     bio: "Estudante de sistemas de informação.",
+    objetivos: {
+      cargoDesejado: "Desenvolvedor Full Stack",
+      objetivoProfissional: "Atuar em projetos reais de tecnologia.",
+    },
     competencias: [{ id: 1, nome: "React" }],
     idiomas: [{ idiomaId: 1, nome: "Inglês", nivel: "INTERMEDIARIO" }],
     disponibilidades: ["ESTAGIO"],
@@ -46,6 +50,7 @@ export function makeEmptyAdminStudentDetail(
     cidade: null,
     uf: null,
     bio: null,
+    objetivos: { cargoDesejado: null, objetivoProfissional: null },
     contato: {
       telefone: null,
       emailProfissional: null,

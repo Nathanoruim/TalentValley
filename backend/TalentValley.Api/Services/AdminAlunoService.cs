@@ -124,6 +124,7 @@ public sealed class AdminAlunoService(AppDbContext database, AdminAccountService
         x.UserId, x.Slug, x.User.NomeCompleto, x.Ativo,
         x.FotoStorageKey is null ? null : $"/api/admin/alunos/{x.UserId}/foto", x.Cidade, x.Uf,
         new(x.Telefone, x.EmailProfissional, x.LinkedInUrl, x.GitHubUrl, x.PortfolioUrl), x.Bio,
+        new(x.CargoDesejado, x.ObjetivoProfissional),
         x.Competencias.OrderBy(c => c.Competencia.NomeBusca).ThenBy(c => c.CompetenciaId)
             .Select(c => new CompetenciaResponse(c.CompetenciaId, c.Competencia.Nome)).ToList(),
         x.Idiomas.OrderBy(i => i.Idioma.NomeBusca).ThenBy(i => i.IdiomaId)

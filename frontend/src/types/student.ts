@@ -28,6 +28,11 @@ export interface SobreResponse {
   bio: string | null;
 }
 
+export interface ObjetivosResponse {
+  cargoDesejado: string | null;
+  objetivoProfissional: string | null;
+}
+
 export interface ContatoResponse {
   telefone: string | null;
   emailProfissional: string | null;
@@ -160,6 +165,7 @@ export interface MeResponse {
   slug: string;
   dadosBasicos: DadosBasicosResponse;
   sobre: SobreResponse;
+  objetivos: ObjetivosResponse;
   contato: ContatoResponse;
   competencias: CompetenciaResponse[];
   idiomas: AlunoIdiomaResponse[];
@@ -180,6 +186,11 @@ export interface UpdateDadosBasicosRequest {
 
 export interface UpdateSobreRequest {
   bio: string | null;
+}
+
+export interface UpdateObjetivosRequest {
+  cargoDesejado: string | null;
+  objetivoProfissional: string | null;
 }
 
 export interface UpdateContatoRequest {

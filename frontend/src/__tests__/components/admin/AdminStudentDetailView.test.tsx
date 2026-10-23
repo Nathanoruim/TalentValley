@@ -121,6 +121,21 @@ describe("AdminStudentDetailView profile", () => {
     expect(section("Sobre").getByText("Estudante de sistemas de informação.")).toBeTruthy();
   });
 
+  it("shows the professional objectives read-only, without an edit action", async () => {
+    renderView(makeAdminStudentDetail());
+    await findProfile();
+    expect(section("Objetivos profissionais").getByText("Desenvolvedor Full Stack")).toBeTruthy();
+    expect(section("Objetivos profissionais").getByText("Atuar em projetos reais de tecnologia.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Editar objetivos profissionais" })).toBeNull();
+  });
+
+  it("shows placeholders for missing professional objectives", async () => {
+    renderView(makeEmptyAdminStudentDetail());
+    await findProfile();
+
+    expect(section("Objetivos profissionais").getAllByText("Não informado.")).toHaveLength(2);
+  });
+
   it("shows the blocked status and a partial location", async () => {
     renderView(makeAdminStudentDetail({ ativo: false, uf: null }));
     await findProfile();

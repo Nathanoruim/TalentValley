@@ -9,6 +9,10 @@ export function makeProfile(overrides: Partial<MeResponse> = {}): MeResponse {
     slug: "maria-souza",
     dadosBasicos: { nomeCompleto: "Maria Souza", fotoUrl: null, cidade: "Rio Pomba", uf: "MG" },
     sobre: { bio: "Estudante de sistemas de informação." },
+    objetivos: {
+      cargoDesejado: "Desenvolvedor Full Stack",
+      objetivoProfissional: "Atuar em projetos reais de tecnologia.",
+    },
     contato: {
       telefone: "32999998888",
       emailProfissional: "maria@example.com",

@@ -133,6 +133,16 @@ describe("TalentProfileView", () => {
     expect(availability.getByText("Híbrido")).toBeTruthy();
   });
 
+  it("shows the professional objectives, with placeholders for missing values", async () => {
+    await renderProfile({
+      objetivos: { cargoDesejado: "Analista de Cibersegurança", objetivoProfissional: null },
+    });
+
+    const objectives = within(section("Objetivos profissionais"));
+    expect(objectives.getByText("Analista de Cibersegurança")).toBeTruthy();
+    expect(objectives.getByText("Não informado.")).toBeTruthy();
+  });
+
   it("shows empty-state text for every empty section", async () => {
     await renderProfile({
       bio: null,

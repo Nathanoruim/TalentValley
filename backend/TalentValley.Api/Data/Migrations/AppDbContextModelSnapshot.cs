@@ -158,6 +158,10 @@ namespace TalentValley.Api.Data.Migrations
                         .HasMaxLength(1500)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CargoDesejado")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Cidade")
                         .HasMaxLength(120)
                         .HasColumnType("TEXT");
@@ -183,6 +187,10 @@ namespace TalentValley.Api.Data.Migrations
 
                     b.Property<string>("LinkedInUrl")
                         .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ObjetivoProfissional")
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PortfolioUrl")

@@ -37,6 +37,7 @@ const stubs = vi.hoisted(() => {
 vi.mock("@/components/profile/ProfileHeader", () => ({ ProfileHeader: stubs.createStub("Header") }));
 vi.mock("@/components/profile/DadosBasicosSection", () => ({ DadosBasicosSection: stubs.createStub("DadosBasicos") }));
 vi.mock("@/components/profile/SobreSection", () => ({ SobreSection: stubs.createStub("Sobre") }));
+vi.mock("@/components/profile/ObjetivosSection", () => ({ ObjetivosSection: stubs.createStub("Objetivos") }));
 vi.mock("@/components/profile/ContatoSection", () => ({ ContatoSection: stubs.createStub("Contato") }));
 vi.mock("@/components/profile/TrajetoriaSection", () => ({ TrajetoriaSection: stubs.createStub("Trajetoria") }));
 vi.mock("@/components/profile/CompetenciasSection", () => ({ CompetenciasSection: stubs.createStub("Competencias") }));
@@ -55,6 +56,7 @@ const SECTION_ORDER = [
   "Header",
   "DadosBasicos",
   "Sobre",
+  "Objetivos",
   "Contato",
   "Trajetoria",
   "Competencias",

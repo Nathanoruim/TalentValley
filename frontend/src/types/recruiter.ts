@@ -1,6 +1,7 @@
 import type {
   ModalidadeTrabalho,
   NivelIdioma,
+  ObjetivosResponse,
   StatusFormacao,
   TipoDisponibilidade,
   TipoExperiencia,
@@ -107,6 +108,7 @@ export interface TalentProfile {
   uf: string | null;
   contato: TalentContact;
   bio: string | null;
+  objetivos: ObjetivosResponse;
   competencias: TalentCompetency[];
   idiomas: TalentLanguage[];
   disponibilidades: TipoDisponibilidade[];

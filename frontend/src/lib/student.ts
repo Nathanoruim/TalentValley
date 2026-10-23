@@ -15,6 +15,7 @@ import type {
   UpdateDadosBasicosRequest,
   UpdateDisponibilidadeRequest,
   UpdateIdiomasRequest,
+  UpdateObjetivosRequest,
   UpdateSobreRequest,
 } from "@/types/student";
 
@@ -31,6 +32,10 @@ export function updateDadosBasicos(request: UpdateDadosBasicosRequest): Promise<
 
 export function updateSobre(request: UpdateSobreRequest): Promise<void> {
   return apiMutation<void>("PUT", "/api/alunos/me/sobre", request);
+}
+
+export function updateObjetivos(request: UpdateObjetivosRequest): Promise<void> {
+  return apiMutation<void>("PUT", "/api/alunos/me/objetivos", request);
 }
 
 export function updateContato(request: UpdateContatoRequest): Promise<void> {

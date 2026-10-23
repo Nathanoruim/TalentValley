@@ -12,6 +12,7 @@ public sealed record MeResponse(
     string Slug,
     DadosBasicosResponse DadosBasicos,
     SobreResponse Sobre,
+    ObjetivosResponse Objetivos,
     ContatoResponse Contato,
     IReadOnlyCollection<CompetenciaResponse> Competencias,
     IReadOnlyCollection<AlunoIdiomaResponse> Idiomas,
@@ -25,6 +26,7 @@ public sealed record MeResponse(
 
 public sealed record DadosBasicosResponse(string NomeCompleto, string? FotoUrl, string? Cidade, string? Uf);
 public sealed record SobreResponse(string? Bio);
+public sealed record ObjetivosResponse(string? CargoDesejado, string? ObjetivoProfissional);
 public sealed record ContatoResponse(string? Telefone, string? EmailProfissional, string? LinkedInUrl, string? GitHubUrl, string? PortfolioUrl);
 public sealed record CurriculoResponse(bool PossuiCurriculo, string? NomeArquivo);
 
@@ -55,6 +57,16 @@ public sealed class UpdateSobreRequest
     private string? bio = null;
     [StringLength(1500), NoEmoji, NoControlCharacters]
     public string? Bio { get => bio; init => bio = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
+}
+
+public sealed class UpdateObjetivosRequest
+{
+    private string? cargoDesejado = null;
+    private string? objetivoProfissional = null;
+    [StringLength(100), NoEmoji, NoControlCharacters]
+    public string? CargoDesejado { get => cargoDesejado; init => cargoDesejado = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
+    [StringLength(500), NoEmoji, NoControlCharacters]
+    public string? ObjetivoProfissional { get => objetivoProfissional; init => objetivoProfissional = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
 }
 
 public sealed class UpdateContatoRequest

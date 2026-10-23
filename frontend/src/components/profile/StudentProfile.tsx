@@ -16,6 +16,7 @@ import { DadosBasicosSection } from "./DadosBasicosSection";
 import { DisponibilidadeSection } from "./DisponibilidadeSection";
 import { CurriculoSection } from "./CurriculoSection";
 import { IdiomasSection } from "./IdiomasSection";
+import { ObjetivosSection } from "./ObjetivosSection";
 import { ProfileHeader } from "./ProfileHeader";
 import { SobreSection } from "./SobreSection";
 import { TrajetoriaSection } from "./TrajetoriaSection";
@@ -74,6 +75,7 @@ export function StudentProfile() {
           <ProfileHeader profile={profile} onChanged={refresh} notify={notify} />
           <DadosBasicosSection profile={profile} onChanged={refresh} notify={notify} />
           <SobreSection profile={profile} onChanged={refresh} notify={notify} />
+          <ObjetivosSection profile={profile} onChanged={refresh} notify={notify} />
           <ContatoSection profile={profile} onChanged={refresh} notify={notify} />
           <TrajetoriaSection profile={profile} onChanged={refresh} notify={notify} />
           <CompetenciasSection profile={profile} onChanged={refresh} notify={notify} />

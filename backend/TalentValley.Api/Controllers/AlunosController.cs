@@ -140,6 +140,20 @@ public sealed class AlunosController(AlunoService alunoService, TrajetoriaServic
         }
     }
 
+    [HttpPut("me/objetivos")]
+    public async Task<IActionResult> UpdateObjetivos(UpdateObjetivosRequest request)
+    {
+        try
+        {
+            await alunoService.UpdateObjetivosAsync(CurrentUserId, request);
+            return NoContent();
+        }
+        catch (AlunoProfileNotFoundException)
+        {
+            return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Account access is unavailable.");
+        }
+    }
+
     [HttpPut("me/contato")]
     public async Task<IActionResult> UpdateContato(UpdateContatoRequest request)
     {

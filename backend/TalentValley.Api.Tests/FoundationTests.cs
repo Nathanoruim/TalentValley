@@ -250,7 +250,7 @@ public sealed class FoundationTests
             Assert.Equal(["20260911102241_InitialCreate", "20260911122211_AdminAccountProvisioning",
                 "20260911160808_FormationOptionalWorkload", "20260915130451_ScheduledAccountDeletion",
                 "20260915134219_RegistrationApprovalWorkflow", "20260916123012_RemoveScheduledAccountDeletion",
-                "20261001174220_AddConsentTracking"], migrations);
+                "20261001174220_AddConsentTracking", "20261023190510_AddStudentProfessionalGoals"], migrations);
             await db.Database.OpenConnectionAsync();
             await using var command = db.Database.GetDbConnection().CreateCommand();
             command.CommandText = "PRAGMA journal_mode;";
