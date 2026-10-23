@@ -5,7 +5,7 @@ using TalentValley.Api.Storage;
 namespace TalentValley.Api.Services;
 
 // Reads the ZIP from LinkedIn's "Get a copy of your data" entirely in memory (nothing is written to disk).
-// Only the seven CSV files below are ever opened; every other entry in the archive is ignored unread.
+// Only the CSV files listed below are ever opened; every other entry in the archive is ignored unread.
 // The caller must validate the upload first (FileUploadValidator, UploadKind.Zip).
 public sealed class LinkedInExportReader
 {
@@ -23,6 +23,8 @@ public sealed class LinkedInExportReader
     private const string SkillsFile = "Skills.csv";
     private const string LanguagesFile = "Languages.csv";
     private const string ProjectsFile = "Projects.csv";
+    private const string EmailsFile = "Email Addresses.csv";
+    private const string PhonesFile = "PhoneNumbers.csv";
 
     private const string NameColumn = "Name";
     private const string StartColumn = "Started On";
@@ -30,7 +32,8 @@ public sealed class LinkedInExportReader
 
     private static readonly HashSet<string> ExpectedFiles = new(StringComparer.OrdinalIgnoreCase)
     {
-        ProfileFile, PositionsFile, EducationFile, CertificationsFile, SkillsFile, LanguagesFile, ProjectsFile
+        ProfileFile, PositionsFile, EducationFile, CertificationsFile, SkillsFile, LanguagesFile, ProjectsFile,
+        EmailsFile, PhonesFile
     };
 
     public LinkedInImportedData Read(Stream zip)
@@ -105,7 +108,8 @@ public sealed class LinkedInExportReader
     {
         var profile = Rows(files, ProfileFile).FirstOrDefault();
         return new LinkedInImportedData(
-            new LinkedInContato(Field(profile, "Geo Location"), ParseSites(Field(profile, "Websites"))),
+            new LinkedInContato(Field(profile, "Geo Location"), ParseSites(Field(profile, "Websites")),
+                ReadEmails(Rows(files, EmailsFile)), ReadTelefones(Rows(files, PhonesFile))),
             Field(profile, "Summary"),
             ReadExperiencias(Rows(files, PositionsFile)),
             ReadFormacoes(Rows(files, EducationFile)),
@@ -160,6 +164,19 @@ public sealed class LinkedInExportReader
             .Where(item => item.Titulo is not null)
             .Select(item => new LinkedInProjeto(item.Titulo!, Field(item.Row, "Description"),
                 Field(item.Row, StartColumn), Field(item.Row, EndColumn)))
+            .ToList();
+
+    private static List<LinkedInEmail> ReadEmails(IReadOnlyList<IReadOnlyDictionary<string, string>> rows) =>
+        rows.Select(row => (Endereco: Field(row, "Email Address"), Row: row))
+            .Where(item => item.Endereco is not null)
+            .Select(item => new LinkedInEmail(item.Endereco!,
+                string.Equals(Field(item.Row, "Primary"), "Yes", StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+    private static List<LinkedInTelefone> ReadTelefones(IReadOnlyList<IReadOnlyDictionary<string, string>> rows) =>
+        rows.Select(row => (Numero: Field(row, "Number"), Row: row))
+            .Where(item => item.Numero is not null)
+            .Select(item => new LinkedInTelefone(item.Numero!, Field(item.Row, "Type")))
             .ToList();
 
     // The "Websites" column looks like "[PERSONAL:https://example.test,OTHER:https://example.test/x]";

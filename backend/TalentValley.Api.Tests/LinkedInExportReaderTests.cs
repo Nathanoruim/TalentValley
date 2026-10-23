@@ -29,6 +29,14 @@ public sealed class LinkedInExportReaderTests
 
     private const string Languages = "Name,Proficiency\nInglês,PROFESSIONAL_WORKING\nEspanhol,\n";
 
+    private const string Emails =
+        "Email Address,Confirmed,Primary,Updated On\n" +
+        "ana.secundario@example.test,Yes,No,2024-01-02\n" +
+        "ana@example.test,Yes,Yes,2024-01-03\n" +
+        ",Yes,No,\n";
+
+    private const string Phones = "Extension,Number,Type\n,+55 32 99999-0000,Mobile\n,,Home\n";
+
     private const string Projects =
         "Title,Description,Url,Started On,Finished On\n" +
         "Site da turma,\"Site feito em grupo\",https://turma.example.test,Feb 2024,Jun 2024\n";
@@ -40,11 +48,15 @@ public sealed class LinkedInExportReaderTests
     {
         var zip = LinkedInZipBuilder.Build(("Profile.csv", Profile), ("Positions.csv", Positions),
             ("Education.csv", Education), ("Certifications.csv", Certifications), ("Skills.csv", Skills),
-            ("Languages.csv", Languages), ("Projects.csv", Projects), ("Connections.csv", "First Name\nIgnored\n"));
+            ("Languages.csv", Languages), ("Projects.csv", Projects), ("Email Addresses.csv", Emails), ("PhoneNumbers.csv", Phones),
+            ("Connections.csv", "First Name\nIgnored\n"));
 
         var data = Read(zip);
 
         Assert.Equal("Rio Pomba, Minas Gerais, Brazil", data.Contato.Localizacao);
+        Assert.Equal(new[] { new LinkedInEmail("ana.secundario@example.test", false), new LinkedInEmail("ana@example.test", true) },
+            data.Contato.Emails);
+        Assert.Equal(new LinkedInTelefone("+55 32 99999-0000", "Mobile"), Assert.Single(data.Contato.Telefones));
         Assert.Equal(new[]
         {
             new LinkedInSite("PERSONAL", "https://ana.example.test"),
@@ -75,6 +87,8 @@ public sealed class LinkedInExportReaderTests
         Assert.Null(data.Bio);
         Assert.Null(data.Contato.Localizacao);
         Assert.Empty(data.Contato.Sites);
+        Assert.Empty(data.Contato.Emails);
+        Assert.Empty(data.Contato.Telefones);
         Assert.Empty(data.Experiencias);
         Assert.Empty(data.Formacoes);
         Assert.Empty(data.Certificacoes);
@@ -100,6 +114,8 @@ public sealed class LinkedInExportReaderTests
             ("Education.csv", "School Name\nEscola Fictícia\n"),
             ("Certifications.csv", ""),
             ("Languages.csv", "Name\nFrancês\n"),
+            ("Email Addresses.csv", "Email Address\nana@example.test\n"),
+            ("PhoneNumbers.csv", "Number\n+55 32 98888-0000\n"),
             ("Projects.csv", "Title,Description,Url,Started On,Finished On\n"));
 
         var data = Read(zip);
@@ -107,6 +123,8 @@ public sealed class LinkedInExportReaderTests
         Assert.Equal(new LinkedInExperiencia("Acme", "Dev Jr", null, null, null, null), Assert.Single(data.Experiencias));
         Assert.Equal(new LinkedInFormacao("Escola Fictícia", null, null, null, null), Assert.Single(data.Formacoes));
         Assert.Empty(data.Certificacoes);
+        Assert.Equal(new LinkedInEmail("ana@example.test", false), Assert.Single(data.Contato.Emails));
+        Assert.Equal(new LinkedInTelefone("+55 32 98888-0000", null), Assert.Single(data.Contato.Telefones));
         Assert.Equal(new LinkedInIdioma("Francês", null), Assert.Single(data.Idiomas));
         Assert.Empty(data.Projetos);
     }

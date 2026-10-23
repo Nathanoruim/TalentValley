@@ -12,7 +12,12 @@ public sealed record LinkedInImportedData(
     IReadOnlyList<LinkedInIdioma> Idiomas,
     IReadOnlyList<LinkedInProjeto> Projetos);
 
-public sealed record LinkedInContato(string? Localizacao, IReadOnlyList<LinkedInSite> Sites);
+public sealed record LinkedInContato(string? Localizacao, IReadOnlyList<LinkedInSite> Sites,
+    IReadOnlyList<LinkedInEmail> Emails, IReadOnlyList<LinkedInTelefone> Telefones);
+
+public sealed record LinkedInEmail(string Endereco, bool Primario);
+
+public sealed record LinkedInTelefone(string Numero, string? Tipo);
 
 public sealed record LinkedInSite(string? Tipo, string Url);
 
