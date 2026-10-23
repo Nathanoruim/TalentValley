@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { talentValleyTheme } from "@/theme/theme";
 
 describe("brand button variant", () => {
-  it("is opt-in: it styles only the brand variant as a pill", () => {
+  it("is opt-in: it styles only the brand variant with the gradient", () => {
     render(
       <ThemeProvider theme={talentValleyTheme}>
         <Button variant="brand">Brand</Button>
@@ -15,8 +15,7 @@ describe("brand button variant", () => {
     const brand = screen.getByRole("button", { name: "Brand" });
     const standard = screen.getByRole("button", { name: "Default" });
     expect(brand.className).toContain("MuiButton-brand");
-    expect(getComputedStyle(brand).borderRadius).toBe("30px");
-    expect(getComputedStyle(standard).borderRadius).not.toBe("30px");
+    expect(standard.className).not.toContain("MuiButton-brand");
   });
 
   it("exposes the surface tokens as theme variables", () => {

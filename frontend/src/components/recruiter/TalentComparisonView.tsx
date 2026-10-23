@@ -39,7 +39,7 @@ export function TalentComparisonView() {
     return () => { active = false; };
   }, [slugs, version]);
   if (!slugs) return <ComparisonState title="Selecione exatamente dois talentos para comparar." />;
-  if (loading) return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: 4 }}><Stack spacing={2}>{[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={180} sx={{ borderRadius: "16px" }} />)}</Stack></Container>;
+  if (loading) return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: 4 }}><Stack spacing={2}>{[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={180} sx={{ borderRadius: "4px" }} />)}</Stack></Container>;
   function retry() { setLoading(true); setError(null); setVersion((value) => value + 1); }
   if (error || !comparison) return <Container maxWidth="md" sx={{ py: 5 }}><Alert severity="error" action={<Button color="inherit" onClick={retry}>Tentar novamente</Button>}>{error ?? "Não foi possível carregar a comparação."}</Alert></Container>;
   return <Container maxWidth={false} sx={{ maxWidth: CONTENT_MAX_WIDTH, py: { xs: 3, md: 4 } }}><Stack spacing={2.5}>
