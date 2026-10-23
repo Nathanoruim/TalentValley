@@ -12,7 +12,8 @@ import {
   resendActivation,
   resetPassword,
 } from "@/lib/auth";
-import { apiGet, apiMutation, ensureCsrfToken, refreshCsrfToken } from "@/lib/api";
+import { apiDownload, apiGet, apiMutation, ensureCsrfToken, refreshCsrfToken } from "@/lib/api";
+import { clearProtectedFiles, downloadProtectedFile } from "@/lib/protectedFileCache";
 
 vi.mock("@/lib/api");
 
@@ -78,6 +79,22 @@ describe("auth requests", () => {
 
     expect(calls).toEqual(["ensure", "mutation", "refresh"]);
     expect(apiMutation).toHaveBeenCalledWith("POST", "/api/demo/voltar");
+  });
+
+  it.each([
+    ["login", () => login({ email: "a@b.c", senha: "x" })],
+    ["logout", () => logout()],
+    ["enterDemo", () => enterDemo("ALUNO")],
+    ["leaveDemo", () => leaveDemo()],
+  ])("%s empties the kept protected files so another user never sees them", async (_name, call) => {
+    clearProtectedFiles();
+    vi.mocked(apiDownload).mockImplementation(async () => new Blob(["x"]));
+    await downloadProtectedFile("/api/alunos/me/foto");
+
+    await call();
+    await downloadProtectedFile("/api/alunos/me/foto");
+
+    expect(apiDownload).toHaveBeenCalledTimes(2);
   });
 
   it("fetchCurrentUser reads the session user", async () => {
