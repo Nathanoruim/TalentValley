@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CONTENT_MAX_WIDTH } from "@/components/layout/contentWidth";
 import { Reveal } from "@/components/common/Reveal";
+import { RpvShine, rpvHighlightSx } from "@/components/recruiter/RpvHighlight";
 import type { PaginatedResponse } from "@/types/admin";
 
 export function Page({
@@ -62,10 +63,13 @@ export function LoadState({
 }
 
 /** Row of an admin list: bordered card with a soft entrance, staggered by position. */
-export function AdminRow({ index = 0, children }: { index?: number; children: ReactNode }) {
+export function AdminRow({ index = 0, rpvVerified = false, children }: { index?: number; rpvVerified?: boolean; children: ReactNode }) {
   return (
     <Reveal index={index}>
-      <Card sx={{ p: { xs: 2, sm: 2.5 }, minWidth: 0 }}>{children}</Card>
+      <Card sx={(theme) => ({ p: { xs: 2, sm: 2.5 }, minWidth: 0, ...(rpvVerified && rpvHighlightSx(theme)) })}>
+        {rpvVerified && <RpvShine />}
+        {children}
+      </Card>
     </Reveal>
   );
 }

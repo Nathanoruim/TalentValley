@@ -64,6 +64,32 @@ public sealed class AdminRpvValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task Student_list_marks_only_students_whose_main_formation_is_RPV_verified()
+    {
+        using var admin = await LoginAsync("admin@example.test", AppRoles.Admin);
+        var verifiedId = await factory.CreateUserAsync("verified@example.test");
+        var otherId = await factory.CreateUserAsync("other@example.test");
+        await SetStudentAsync(verifiedId, "Ana Verificada", "ana verificada", "ana-verificada", true, "Rio Pomba", "MG");
+        await SetStudentAsync(otherId, "Bruno Pendente", "bruno pendente", "bruno-pendente", true, "Rio Pomba", "MG");
+        await factory.InScopeAsync(async provider =>
+        {
+            var db = provider.GetRequiredService<AppDbContext>();
+            var verifiedMain = Formation(Guid.NewGuid(), verifiedId, StatusValidacaoRpv.VERIFICADO);
+            verifiedMain.Principal = true;
+            var pendingMain = Formation(Guid.NewGuid(), otherId, StatusValidacaoRpv.PENDENTE);
+            pendingMain.Principal = true;
+            db.Formacoes.AddRange(verifiedMain, pendingMain,
+                Formation(Guid.NewGuid(), otherId, StatusValidacaoRpv.VERIFICADO));
+            await db.SaveChangesAsync();
+        });
+
+        var page = await admin.GetFromJsonAsync<PaginatedResponse<AlunoListItem>>("/api/admin/alunos", ApiFactory.JsonOptions);
+
+        Assert.True(page!.Items.Single(x => x.Id == verifiedId).RpvVerificado);
+        Assert.False(page.Items.Single(x => x.Id == otherId).RpvVerificado);
+    }
+
+    [Fact]
     public async Task Detail_supports_every_RPV_state_and_hides_non_RPV_or_unknown_formations()
     {
         using var admin = await LoginAsync("admin@example.test", AppRoles.Admin);
