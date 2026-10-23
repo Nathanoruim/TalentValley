@@ -279,6 +279,15 @@ No audit filters required.
 
 Audit survives deletion of the target entity.
 
+## Demonstration mode
+
+Fictitious accounts (`EhDemo`) exist only for presentations and are isolated from real data:
+- the admin can view the app as one fictitious student or recruiter (off by default, `Demo:Enabled`);
+- a real recruiter never sees, favorites, compares or downloads a demo student; the demo recruiter sees only demo students (the check lives in `TalentVisibility`);
+- admin lists, dashboard numbers and RPV validations do not include demo accounts;
+- demo accounts are created without files and without a password (an upload made while the admin acts as a demo student is removed by "Restaurar demonstração");
+- the admin may act normally while viewing as a demo account; "Restaurar demonstração" undoes it and never touches real accounts.
+
 ## Data retention
 
 Rejected registration requests are deleted after 30 days, on the next admin list view.
