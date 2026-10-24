@@ -30,7 +30,7 @@ Create folders/files on demand. Never store secrets, tokens, passwords or person
 Must contain, in this order:
 
 1. **Header:** title, `status: em-andamento | concluido`, date, total phases.
-2. **Phase table:** phase, name, branch, status (`pendente | em-execucao | aprovada`), commit hash (when approved).
+2. **Phase table:** phase, name, branch, PR group (only when phases share one pull request; phases of a group show the same branch), status (`pendente | em-execucao | aprovada`), commit hash (when approved). In a PR group, a phase approved before the group's pull request is open is marked `aprovada (PR do grupo pendente)`.
 3. **Per phase** (format from `talent-valley-phased-delivery`: where / what / checks) plus a **Refs** block with direct pointers so the executor goes straight to the solution without searching:
    - source files to open, with the relevant function/section or line range;
    - skills to load (smallest set) and the exact reference files inside them;
