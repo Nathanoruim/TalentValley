@@ -12,9 +12,10 @@ import { adminApi } from "@/lib/admin";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { formatBrazilianPhone, normalizePhone, validateBrazilianPhone, validateEmail, validateHttpUrl } from "@/lib/validation";
-import { DISPONIBILIDADE_LABELS, MODALIDADE_LABELS, NIVEL_IDIOMA_LABELS, STATUS_FORMACAO_LABELS, STATUS_VALIDACAO_RPV_LABELS, TIPO_EXPERIENCIA_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
+import { NIVEL_IDIOMA_LABELS, STATUS_FORMACAO_LABELS, STATUS_VALIDACAO_RPV_LABELS, TIPO_EXPERIENCIA_LABELS, TIPO_FORMACAO_LABELS } from "@/lib/labels";
 import { ProtectedFileButton } from "@/components/recruiter/ProtectedFileButton";
 import { ProtectedTalentPhoto } from "@/components/recruiter/ProtectedTalentPhoto";
+import { BuscaDetails } from "@/components/recruiter/TalentBusca";
 import { useLoad } from "@/components/admin/useLoad";
 import { Page, LoadState, Status, Confirm } from "@/components/admin/adminShared";
 import { RpvShine, hasVerifiedFormation, rpvHighlightSx } from "@/components/recruiter/RpvHighlight";
@@ -181,25 +182,22 @@ export function AdminStudentDetailView({ id }: { id: string }) {
           <Empty />
         )}
       </SurfaceCard>
-      <SurfaceCard title="Idiomas e disponibilidade">
-        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-          {p.idiomas.map((x) => (
-            <Chip
-              key={x.idiomaId}
-              label={`${x.nome} · ${NIVEL_IDIOMA_LABELS[x.nivel]}`}
-            />
-          ))}
-          {p.disponibilidades.map((x) => (
-            <Chip
-              key={x}
-              variant="outlined"
-              label={DISPONIBILIDADE_LABELS[x]}
-            />
-          ))}
-          {p.modalidades.map((x) => (
-            <Chip key={x} variant="outlined" label={MODALIDADE_LABELS[x]} />
-          ))}
-        </Stack>
+      <SurfaceCard title="Idiomas">
+        {p.idiomas.length ? (
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+            {p.idiomas.map((x) => (
+              <Chip
+                key={x.idiomaId}
+                label={`${x.nome} · ${NIVEL_IDIOMA_LABELS[x.nivel]}`}
+              />
+            ))}
+          </Stack>
+        ) : (
+          <Empty />
+        )}
+      </SurfaceCard>
+      <SurfaceCard title="O que busca">
+        <BuscaDetails busca={p.busca} disponibilidades={p.disponibilidades} modalidades={p.modalidades} />
       </SurfaceCard>
       <SurfaceCard title="Projetos">
         {p.projetos.length ? (
