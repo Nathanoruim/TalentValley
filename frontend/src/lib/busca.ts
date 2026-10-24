@@ -37,19 +37,22 @@ export function hojeIso(agora: Date = new Date()): string {
 }
 
 /** A start date that is today or already past means the student is available now. */
-export function disponivelAgora(busca: BuscaResponse, agora: Date = new Date()): boolean {
+export function disponivelAgora(
+  busca: Pick<BuscaResponse, "disponivelImediatamente" | "disponivelAPartirDe">,
+  agora: Date = new Date(),
+): boolean {
   return busca.disponivelImediatamente || (busca.disponivelAPartirDe !== null && busca.disponivelAPartirDe <= hojeIso(agora));
 }
 
 /** Mobility answers that are "yes"; the backend cannot tell "no" from "not informed". */
-export function resumoMobilidade(busca: BuscaResponse): string[] {
+export function resumoMobilidade(busca: Pick<BuscaResponse, "aceitaViajar" | "aceitaMudarDeCidade">): string[] {
   return [
     busca.aceitaViajar ? "Aceita viajar a trabalho" : null,
     busca.aceitaMudarDeCidade ? "Aceita mudar de cidade" : null,
   ].filter((item) => item !== null);
 }
 
-export function resumoHabilitacao(busca: BuscaResponse): string[] {
+export function resumoHabilitacao(busca: Pick<BuscaResponse, "categoriasCnh" | "possuiVeiculoProprio">): string[] {
   return [
     busca.categoriasCnh.length > 0 ? `CNH ${busca.categoriasCnh.join(", ")}` : null,
     busca.possuiVeiculoProprio ? "Veículo próprio" : null,
